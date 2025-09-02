@@ -1,0 +1,10 @@
+:root {
+    --BC: #2b2030;
+    --BC_Compliment: #141420;
+    --Text_Color: #eee;
+}
+
+body {
+    background-color: var(--BC);
+    color: var(--Text_Color);
+}
