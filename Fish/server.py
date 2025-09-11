@@ -18,13 +18,11 @@ def set_text():
     return "AAA"
 
 # Get Emails
-def fetch_emails():
-    # Connect to Gmail IMAP server
-    mail = imaplib.IMAP4_SSL("imap.gmail.com")
-    mail.login("e-mail", "pass")
-    mail.select("inbox")
-
-    return mail.search(None, "ALL")
+@app.post('/upload')
+def upload():
+    if "file" not in request.files:
+        return "No file uploaded", 400
+    file = request.files["file"]
 
 if __name__ == '__main__':
     app.run(debug=True)

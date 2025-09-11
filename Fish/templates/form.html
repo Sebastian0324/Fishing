@@ -8,7 +8,13 @@
 </head>
 <body>
     <h1>Fishing</h1>
-    <button id="btn-test" type="button">Test</button>
+    <form id="uploadForm" method="post" enctype="multipart/form-data" action="/upload">
+        <div class="mb-3 form-check">
+            <input type="file" name="file" accept=".eml" id="dropBox"/>
+            <label class="form-check-label" for="dropBox">Email</label>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
     <div id="result">
         <p>{{text}}</p>
     </div>
