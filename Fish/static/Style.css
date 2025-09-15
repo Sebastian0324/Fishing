@@ -8,3 +8,24 @@ body {
     background-color: var(--BC);
     color: var(--Text_Color);
 }
+
+#nav {
+    justify-content: left;
+    font-weight: bold;
+}
+
+form#Login {
+    position: absolute;
+    display: none;
+
+    transform: translate(-50%, -50%);
+    left: 50%;
+    top: 50%;
+
+    border: white 2px solid;
+    border-radius: 5em;
+
+    border: white 2px solid;
+    border-radius: 5em;
+    padding: 5em 10em;
+}

@@ -1,19 +1,3 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('btn-test');
-  const out = document.getElementById('result');
-
-  btn.addEventListener('click', async () => {
-    try {
-      const res = await fetch('/test', { method: 'POST' });
-      const text = await res.text();
-      out.textContent = text; // show response
-    } catch (e) {
-      console.error(e);
-      out.textContent = 'Error';
-    }
-  });
-});
-
 document.getElementById("uploadForm").onsubmit = async (e) => {
   e.preventDefault();
 
@@ -24,3 +8,12 @@ document.getElementById("uploadForm").onsubmit = async (e) => {
   document.getElementById("result").innerHTML =
     `<b>${data.subject}</b><br>From: ${data.from}<br>${data.preview}`;
 };
+
+let form = document.getElementById("Login");
+document.getElementById("Login_btn").addEventListener("click", function() {
+  form.style.display = "block";
+  console.log("Block");
+});
+document.getElementById("Close_Login").addEventListener("click", function() {
+  form.style.display = "None";
+});
