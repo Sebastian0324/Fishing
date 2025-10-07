@@ -1,13 +1,25 @@
 {% extends "form.html" %}
 {% block content %}
-    <form id="uploadForm" method="post" enctype="multipart/form-data" action="/upload">
-        <div class="mb-3 form-check">
-            <input type="file" class="form-control" name="file" accept=".eml" id="dropBox" required/>
-            <label class="form-check-label" for="dropBox">Email</label>
+    <div class="page-container">
+        <!-- Page Title -->
+        <h1 class="page-title">Upload Email</h1>
+        
+        <!-- Upload Form Section -->
+        <div class="content-section">
+            <h3 class="section-header">Upload .eml File</h3>
+            <div class="placeholder-content">
+                <p class="placeholder-text">Select an email file to analyze for phishing threats</p>
+                <form id="uploadForm" method="post" enctype="multipart/form-data" action="/upload">
+                    <div class="mb-3 form-check">
+                        <input type="file" class="form-control" name="file" accept=".eml" id="dropBox" required/>
+                        <label class="form-check-label" for="dropBox">Email</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+                <div id="result">
+                    <p>{{text}}</p>
+                </div>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
-    <div id="result">
-        <p>{{text}}</p>
     </div>
 {% endblock %}
