@@ -30,3 +30,54 @@ CREATE TABLE IF NOT EXISTS Analysis(
 
 
 
+-- Viktigt för att FK ska fungera i SQLite
+PRAGMA foreign_keys = ON;
+
+-- ===== DISCUSSION =====
+CREATE TABLE IF NOT EXISTS "Discussion" (
+  Discussion_ID  INTEGER PRIMARY KEY,
+  Email_ID       INTEGER NOT NULL,
+  Title          TEXT    NOT NULL CHECK (length(Title) BETWEEN 1 AND 200),
+  Text           TEXT    NOT NULL,
+  Created_At     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  Updated_At     DATETIME,
+  FOREIGN KEY (Email_ID)
+    REFERENCES "Email"(Email_ID)
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT   -- inget raderingsflöde nu
+);
+
+CREATE INDEX IF NOT EXISTS idx_discussion_email   ON "Discussion"(Email_ID);
+CREATE INDEX IF NOT EXISTS idx_discussion_created ON "Discussion"(Created_At);
+
+CREATE TRIGGER IF NOT EXISTS trg_discussion_set_updated
+AFTER UPDATE ON "Discussion"
+FOR EACH ROW
+WHEN NEW.Updated_At IS NULL
+BEGIN
+  UPDATE "Discussion"
+  SET Updated_At = CURRENT_TIMESTAMP
+  WHERE Discussion_ID = NEW.Discussion_ID;
+END;
+
+-- ===== COMMENT =====
+CREATE TABLE IF NOT EXISTS "Comment" (
+  Comment_ID     INTEGER PRIMARY KEY,
+  Discussion_ID  INTEGER NOT NULL,
+  User_ID        INTEGER NOT NULL,
+  Reference      TEXT,
+  Text           TEXT    NOT NULL,
+  Created_At     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (Discussion_ID)
+    REFERENCES "Discussion"(Discussion_ID)
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT,
+  FOREIGN KEY (User_ID)
+    REFERENCES "User"(User_ID)
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
+);
+
+CREATE INDEX IF NOT EXISTS idx_comment_discussion ON "Comment"(Discussion_ID);
+CREATE INDEX IF NOT EXISTS idx_comment_user       ON "Comment"(User_ID);
+CREATE INDEX IF NOT EXISTS idx_comment_created    ON "Comment"(Created_At);
