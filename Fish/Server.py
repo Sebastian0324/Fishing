@@ -28,6 +28,11 @@ def admin():
 def account():
     return render_template('Account.html')
 
+# Routes
+@app.route('/AboutUs')
+def info():
+    return render_template('AboutUs.html')
+
 # test function
 @app.post('/test')
 def set_text():
