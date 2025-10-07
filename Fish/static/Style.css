@@ -1,4 +1,5 @@
 :root {
+    --BG_IMG: linear-gradient(to bottom right, #6E5DC6, #a05182);
     --BC: #2b2030;
     --BC_Compliment: #141420;
     --Text_Color: #eee;
@@ -6,5 +7,61 @@
 
 body {
     background-color: var(--BC);
+    background-image: var(--BG_IMG);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+
     color: var(--Text_Color);
+}
+
+#nav {
+    justify-content: left;
+    font-weight: bold;
+}
+
+#Login_btn {
+    margin: 0 2em;
+}
+
+form#Login {
+    position: absolute;
+    display: none;
+
+    transform: translate(-50%, -50%);
+    left: 50%;
+    top: 50%;
+
+    background-color: color-mix(in srgb, var(--BC), #000000aa);
+    border: white 2px solid;
+    border-radius: 5em;
+    padding: 5em 10em 5em 7em;
+}
+#Login #Close_Login {
+    position: absolute;
+    right: 4em;
+    top: 3em;
+}
+
+/* --------    Sign up    -------- */
+#SignUp.hidden, #SignIn.hidden {
+    transition: 1s;
+    height: 0em;
+}
+#SignUp {
+    transition: 1s;
+    overflow: hidden;
+    height: 21em;
+}
+#SignIn {
+    transition: 1s;
+    overflow: hidden;
+    height: 12em;
+}
+
+/* ################################## */
+/* ###########    main    ########### */
+/* ################################## */
+
+#uploadForm {
+    background-color: color-mix(in srgb, var(--BC), #000000aa);
 }
