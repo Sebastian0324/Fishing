@@ -1,0 +1,32 @@
+{% extends "form.html" %}
+{% block content %}
+    <div class="page-container">
+        <!-- Page Title -->
+        <h1 class="page-title">Forum</h1>
+        
+        <!-- Two Column Layout -->
+        <div class="forum-layout">
+            <!-- Left Column: Topics List -->
+            <div class="forum-sidebar">
+                <div class="content-section">
+                    <h3 class="section-header">Topics</h3>
+                    <div class="placeholder-content">
+                        <p class="placeholder-text">Forum topics will be listed here</p>
+                        <ul class="topic-list">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column: Discussion View -->
+            <div class="forum-main">
+                <div class="content-section discussion-view">
+                    <h3 class="section-header">Current Topic</h3>
+                    <div class="placeholder-content">
+                        <p class="placeholder-text">A selected discussion will be shown here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -13,10 +13,18 @@ body {
 
     color: var(--Text_Color);
 }
-
+nav.navbar {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+}
 #nav {
     justify-content: left;
     font-weight: bold;
+}
+#nav .navbar-nav {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 18em;
 }
 
 #Login_btn {
@@ -63,5 +71,232 @@ form#Login {
 /* ################################## */
 
 #uploadForm {
+    margin-top: 1em;
+}
+
+/* ################################## */
+/* ######    General Styles    ###### */
+/* ################################## */
+
+/* Page Container - Use for any page content wrapper */
+.page-container {
+    max-width: 1200px;
+    margin: 2em auto;
+    padding: 2em;
+}
+
+/* Page Title - Large title style for any page */
+.page-title {
+    font-size: 3rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 2em;
+    color: var(--Text_Color);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Content Section - Styled container for page sections */
+.content-section {
     background-color: color-mix(in srgb, var(--BC), #000000aa);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1em;
+    padding: 2em;
+    margin-bottom: 2em;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Section Header - Header for content sections */
+.section-header {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 1em;
+    padding-bottom: 0.5em;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+    color: var(--Text_Color);
+}
+
+/* Placeholder Content - Container for placeholder content */
+.placeholder-content {
+    padding: 1em;
+}
+
+/* Placeholder Text - Italic, faded text for placeholders */
+.placeholder-text {
+    font-style: italic;
+    color: rgba(238, 238, 238, 0.6);
+    margin-bottom: 1em;
+}
+
+/* ################################## */
+/* #########    Account    ########## */
+/* ################################## */
+
+/* Backward compatibility - Account classes map to general classes */
+.account-container {
+    max-width: 1200px;
+    margin: 2em auto;
+    padding: 2em;
+}
+
+.account-title {
+    font-size: 3rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 2em;
+    color: var(--Text_Color);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.account-section {
+    background-color: color-mix(in srgb, var(--BC), #000000aa);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1em;
+    padding: 2em;
+    margin-bottom: 2em;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.email-list {
+    list-style: none;
+    padding: 0;
+    margin: 1em 0;
+}
+
+.email-item {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 1em;
+    margin-bottom: 0.5em;
+    border-radius: 0.5em;
+    border-left: 4px solid #6E5DC6;
+    transition: all 0.3s ease;
+}
+
+/* ################################## */
+/* ##########    Forum    ########### */
+/* ################################## */
+
+/* Two-column layout for forum */
+.forum-layout {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 2em;
+    align-items: start;
+}
+
+/* Left sidebar for topics */
+.forum-sidebar {
+    position: sticky;
+    top: 2em;
+}
+
+/* Right main area for discussion */
+.forum-main {
+    min-height: 500px;
+}
+
+/* Topics list */
+.topic-list {
+    list-style: none;
+    padding: 0;
+    margin: 1em 0 0 0;
+}
+
+.topic-item {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 1em;
+    margin-bottom: 0.5em;
+    border-radius: 0.5em;
+    border-left: 3px solid transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.topic-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-left-color: #6E5DC6;
+    transform: translateX(5px);
+}
+
+.topic-item.active {
+    background-color: rgba(110, 93, 198, 0.2);
+    border-left-color: #6E5DC6;
+}
+
+.topic-item h4 {
+    margin: 0 0 0.5em 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--Text_Color);
+}
+
+.topic-meta {
+    font-size: 0.85rem;
+    color: rgba(238, 238, 238, 0.6);
+    margin: 0;
+}
+
+/* Discussion view */
+.discussion-view {
+    min-height: 400px;
+}
+
+.discussion-header {
+    margin-bottom: 1.5em;
+    padding-bottom: 1em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.discussion-body {
+    line-height: 1.6;
+}
+
+.discussion-body p {
+    margin-bottom: 1em;
+}
+
+.placeholder-posts {
+    margin-top: 2em;
+}
+
+.forum-post {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 1em;
+    margin-bottom: 1em;
+    border-radius: 0.5em;
+    border-left: 3px solid #a05182;
+}
+
+.forum-post p {
+    margin: 0;
+    line-height: 1.6;
+}
+
+.forum-post strong {
+    color: #a05182;
+}
+
+/* Responsive layout for smaller screens */
+@media (max-width: 968px) {
+    .forum-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .forum-sidebar {
+        position: relative;
+        top: 0;
+    }
+}
+
+/* ################################## */
+/* #########    About Us    ######### */
+/* ################################## */
+
+main {
+    background: var(--BC);
+    margin: 0 6em;
+    padding: 2em;
+    border-radius: 2em;
+}
+main h1 {
+    margin: 0 0 1em;
 }

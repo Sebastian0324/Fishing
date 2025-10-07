@@ -4,14 +4,14 @@ A Flask-based web application for processing and managing email files (.eml form
 
 ## Project Overview
 
-Fish is a Python web application built with Flask that allows users to upload and process email files. The application features a clean interface with multiple views including an admin panel and blog section.
+Fish is a Python web application built with Flask that allows users to upload and process email files. The application features a clean interface with multiple views including an admin panel and Forum section.
 
 ## Features
 
 - **Email Upload**: Upload and process .eml (email) files through a web interface
 - **Multiple Views**: 
   - Main index page with file upload form
-  - Blog section
+  - Forum section
   - Admin / User panel
 
 ## Technology Stack
@@ -36,8 +36,8 @@ Fish/
 └── templates
     ├── form.html         
     ├── index.html        
-    ├── blogg.html        
-    └── AdminPanel.html   
+    ├── Forum.html        
+    └── Dashboard.html   
 ```
 
 ## Installation
