@@ -7,11 +7,14 @@ document.getElementById("Close_Login").addEventListener("click", function() {
   document.getElementById("Login").style.display = "None";
 });
 
+let Sign = document.getElementById("SignIn/Up");
 let SignIn = document.getElementById("SignIn");
 let SignUp = document.getElementById("SignUp");
 document.getElementById("SignIn/Up").addEventListener("click", function() {
     SignIn.classList.toggle("hidden");
     SignUp.classList.toggle("hidden");
+    Sign.classList.toggle("btn-dark");
+    Sign.classList.toggle("btn-secondary");
 });
 
 

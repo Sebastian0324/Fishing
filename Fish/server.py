@@ -24,6 +24,11 @@ def blogg():
 def admin():
     return render_template('AdminPanel.html')
 
+# Routes
+@app.route('/AboutUs')
+def info():
+    return render_template('AboutUs.html')
+
 # test function
 @app.post('/test')
 def set_text():

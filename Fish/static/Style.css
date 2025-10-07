@@ -13,10 +13,18 @@ body {
 
     color: var(--Text_Color);
 }
-
+nav.navbar {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+}
 #nav {
     justify-content: left;
     font-weight: bold;
+}
+#nav .navbar-nav {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 18em;
 }
 
 #Login_btn {
@@ -64,4 +72,18 @@ form#Login {
 
 #uploadForm {
     background-color: color-mix(in srgb, var(--BC), #000000aa);
+}
+
+/* ################################## */
+/* #########    About Us    ######### */
+/* ################################## */
+
+main {
+    background: var(--BC);
+    margin: 0 6em;
+    padding: 2em;
+    border-radius: 2em;
+}
+main h1 {
+    margin: 0 0 1em;
 }
