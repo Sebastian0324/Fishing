@@ -10,15 +10,30 @@
             <div class="placeholder-content">
                 <p class="placeholder-text">Select an email file to analyze for phishing threats</p>
                 <form id="uploadForm" method="post" enctype="multipart/form-data" action="/upload">
-                    <div class="mb-3 form-check">
+                    <div id="uploadControls" class="mb-3 form-check">
                         <input type="file" class="form-control" name="file" accept=".eml" id="dropBox" required/>
                         <label class="form-check-label" for="dropBox">Email</label>
                     </div>
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="submit" id="submitButton" class="btn btn-primary">Submit</button>
+
+
+                    <!-- After Submit -->
+                    <div id="analysis" class="analysis-section" style="display:none; margin-top:1rem;">
+                        <h4> Analyzing... </h4>
+                        <div class="spinner-grow" role="status">
+                        <span class="sr-only"></span>
+                        </div>
+                        <div class="alert alert-primary" role="alert">
+                        This may take a few seconds.
+                        </div>
+                         <button type="submit" id="downloadButton" class="btn btn-primary">Download</button>  <!-- Placeholder for download button -->
+                    </div>
+
                 </form>
                 <div id="result">
                     <p>{{text}}</p>
                 </div>
+               
             </div>
         </div>
     </div>
