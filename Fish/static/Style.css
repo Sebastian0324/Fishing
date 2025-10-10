@@ -24,7 +24,7 @@ nav.navbar {
 #nav .navbar-nav {
     flex-direction: row;
     justify-content: space-between;
-    width: 18em;
+    width: 25em;
 }
 
 #Login_btn {
@@ -78,6 +78,11 @@ form#Login {
 /* ######    General Styles    ###### */
 /* ################################## */
 
+/* stops img from escaping its box */
+img {
+    max-width: 100%;
+    max-height: 100%;
+}
 /* Page Container - Use for any page content wrapper */
 .page-container {
     max-width: 1200px;
