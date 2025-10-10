@@ -32,3 +32,25 @@ if (UpForm != null) {
       `<b>${data.subject}</b><br>From: ${data.from}<br>${data.preview}`;
   };
 }
+
+// -------========-------    Account Page Toggle    -------========-------
+let showEmailsBtn = document.getElementById("showEmailsBtn");
+let showSettingsBtn = document.getElementById("showSettingsBtn");
+let emailsSection = document.getElementById("emailsSection");
+let settingsSection = document.getElementById("settingsSection");
+
+if (showEmailsBtn != null && showSettingsBtn != null) {
+  showEmailsBtn.addEventListener("click", function() {
+    emailsSection.style.display = "block";
+    settingsSection.style.display = "none";
+    showEmailsBtn.classList.add("active");
+    showSettingsBtn.classList.remove("active");
+  });
+
+  showSettingsBtn.addEventListener("click", function() {
+    emailsSection.style.display = "none";
+    settingsSection.style.display = "block";
+    showSettingsBtn.classList.add("active");
+    showEmailsBtn.classList.remove("active");
+  });
+}

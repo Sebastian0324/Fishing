@@ -147,6 +147,37 @@ form#Login {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+.account-toggle-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1em;
+    margin-bottom: 2em;
+}
+
+.toggle-btn {
+    padding: 0.8em 2em;
+    font-size: 1rem;
+    font-weight: 600;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 0.5em;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--Text_Color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.toggle-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+.toggle-btn.active {
+    background-color: #6E5DC6;
+    border-color: #6E5DC6;
+    box-shadow: 0 4px 8px rgba(110, 93, 198, 0.4);
+}
+
 .account-section {
     background-color: color-mix(in srgb, var(--BC), #000000aa);
     border: 2px solid rgba(255, 255, 255, 0.2);
