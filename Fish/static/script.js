@@ -3,7 +3,7 @@ let login = document.getElementById("Login");
 document.getElementById("Login_btn").addEventListener("click", function() {
   login.style.display = "block";
 });
-document.getElementById("Close_Login").addEventListener("click", function() {
+document.getElementById("Close_Login").children[1].addEventListener("click", function() {
   document.getElementById("Login").style.display = "None";
 });
 

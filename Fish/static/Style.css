@@ -31,7 +31,7 @@ nav.navbar {
     margin: 0 2em;
 }
 
-form#Login {
+div#Login {
     position: absolute;
     display: none;
 
@@ -39,6 +39,7 @@ form#Login {
     left: 50%;
     top: 50%;
 
+    width: 44em;
     background-color: color-mix(in srgb, var(--BC), #000000aa);
     border: white 2px solid;
     border-radius: 5em;
@@ -52,18 +53,17 @@ form#Login {
 
 /* --------    Sign up    -------- */
 #SignUp.hidden, #SignIn.hidden {
-    transition: 1s;
     height: 0em;
 }
 #SignUp {
     transition: 1s;
     overflow: hidden;
-    height: 21em;
+    height: 24em;
 }
 #SignIn {
     transition: 1s;
     overflow: hidden;
-    height: 12em;
+    height: 14em;
 }
 
 /* ################################## */
