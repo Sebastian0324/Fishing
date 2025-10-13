@@ -74,16 +74,63 @@ python server.py
 5. Access the application at `http://localhost:5000`
 
 ## Usage
+The `/upload` endpoint has been modified to parse `.eml` files and extract key information for phishing detection.
 
-### Uploading Email Files
-```
-# ADD Rought tutorial here and/ord consult the Tutorial on the website
+### Features
+
+#### Data Extraction
+When a `.eml` file is uploaded, the system automatically extracts:
+
+1. **Sender IP Address** - Extracted from the "Received" headers
+2. **Sender Email Address** - Extracted from the "From" header
+3. **Plain Text Body** - The email body in plain text format
+4. **URLs** - All HTTP/HTTPS URLs found in the email body
+
+#### Database Storage
+All extracted data is stored in the SQLite database (`db/emails.db`) in the `Email` table with the following fields:
+
+- `Sender_IP` - The sender's IP address
+- `Body_Text` - Full plain text body of the email
+- `Extracted_URLs` - JSON array of all URLs found
+- `From_Addr` - Sender email address
+- `SHA256` - Hash of the file for duplicate detection
+- `Size_Bytes` - File size
+- `Received_At` - Timestamp when uploaded
+
+## API Endpoint
+
+#### POST /upload
+
+**Request:**
+- Method: `POST`
+- Content-Type: `multipart/form-data`
+- Field name: `file`
+- File type: `.eml`
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "email_id": 1,
+  "data": {
+    "sender_ip": "192.168.1.100",
+    "sender_email": "john.doe@example.com",
+    "body_preview": "Hello,\n\nThis is a test email...",
+    "urls_count": 3,
+    "urls": [
+      "https://example.com",
+      "https://secure-site.com/login",
+      "http://another-example.org/page"
+    ]
+  }
+}
 ```
 
-### API Endpoints
-
-```
-# ADD enpoints and what they do here
+**Error Response (400/500):**
+```json
+{
+  "error": "Error message here"
+}
 ```
 
 ## Configuration

@@ -13,7 +13,10 @@ CREATE TABLE IF NOT EXISTS Email(
     Size_Bytes INTEGER, 
     Received_At TEXT,
     From_Addr TEXT,  
-    Tag TEXT, 
+    Tag TEXT,
+    Sender_IP TEXT,
+    Body_Text TEXT,
+    Extracted_URLs TEXT,
     FOREIGN KEY(User_ID) REFERENCES User(User_ID)  
 );
 
