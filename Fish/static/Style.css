@@ -13,17 +13,25 @@ body {
 
     color: var(--Text_Color);
 }
-
+nav.navbar {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+}
 #nav {
     justify-content: left;
     font-weight: bold;
+}
+#nav .navbar-nav {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 25em;
 }
 
 #Login_btn {
     margin: 0 2em;
 }
 
-form#Login {
+div#Login {
     position: absolute;
     display: none;
 
@@ -31,6 +39,7 @@ form#Login {
     left: 50%;
     top: 50%;
 
+    width: 44em;
     background-color: color-mix(in srgb, var(--BC), #000000aa);
     border: white 2px solid;
     border-radius: 5em;
@@ -44,18 +53,17 @@ form#Login {
 
 /* --------    Sign up    -------- */
 #SignUp.hidden, #SignIn.hidden {
-    transition: 1s;
     height: 0em;
 }
 #SignUp {
     transition: 1s;
     overflow: hidden;
-    height: 21em;
+    height: 24em;
 }
 #SignIn {
     transition: 1s;
     overflow: hidden;
-    height: 12em;
+    height: 14em;
 }
 
 /* ################################## */
@@ -63,5 +71,393 @@ form#Login {
 /* ################################## */
 
 #uploadForm {
+    margin-top: 1em;
+}
+
+/* ################################## */
+/* ######    General Styles    ###### */
+/* ################################## */
+
+/* stops img from escaping its box */
+img {
+    max-width: 100%;
+    max-height: 100%;
+}
+/* Page Container - Use for any page content wrapper */
+.page-container {
+    max-width: 1200px;
+    margin: 2em auto;
+    padding: 2em;
+}
+
+/* Page Title - Large title style for any page */
+.page-title {
+    font-size: 3rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 1em;
+    color: var(--Text_Color);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Content Section - Styled container for page sections */
+.content-section {
     background-color: color-mix(in srgb, var(--BC), #000000aa);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1em;
+    padding: 2em;
+    margin-bottom: 2em;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Section Header - Header for content sections */
+.section-header {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 1em;
+    padding-bottom: 0.5em;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+    color: var(--Text_Color);
+}
+
+/* Placeholder Content - Container for placeholder content */
+.placeholder-content {
+    padding: 1em;
+}
+
+/* Placeholder Text - Italic, faded text for placeholders */
+.placeholder-text {
+    font-style: italic;
+    color: rgba(238, 238, 238, 0.6);
+    margin-bottom: 1em;
+}
+
+/* ################################## */
+/* #########    Account    ########## */
+/* ################################## */
+
+/* Backward compatibility - Account classes map to general classes */
+.account-container {
+    max-width: 1200px;
+    margin: 2em auto;
+    padding: 2em;
+}
+
+.account-title {
+    font-size: 3rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 2em;
+    color: var(--Text_Color);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.account-toggle-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1em;
+    margin-bottom: 2em;
+}
+
+.toggle-btn {
+    padding: 0.8em 2em;
+    font-size: 1rem;
+    font-weight: 600;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 0.5em;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--Text_Color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.toggle-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+.toggle-btn.active {
+    background-color: #6E5DC6;
+    border-color: #6E5DC6;
+    box-shadow: 0 4px 8px rgba(110, 93, 198, 0.4);
+}
+
+.account-section {
+    background-color: color-mix(in srgb, var(--BC), #000000aa);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1em;
+    padding: 2em;
+    margin-bottom: 2em;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.email-list {
+    list-style: none;
+    padding: 0;
+    margin: 1em 0;
+}
+
+.email-item {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 1em;
+    margin-bottom: 0.5em;
+    border-radius: 0.5em;
+    border-left: 4px solid #6E5DC6;
+    transition: all 0.3s ease;
+}
+
+/* ################################## */
+/* ##########    Forum    ########### */
+/* ################################## */
+
+/* Two-column layout for forum */
+.forum-layout {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 2em;
+    align-items: start;
+}
+
+/* Left sidebar for topics */
+.forum-sidebar {
+    position: sticky;
+    top: 2em;
+}
+
+/* Right main area for discussion */
+.forum-main {
+    min-height: 500px;
+}
+
+/* Topics list */
+.topic-list {
+    list-style: none;
+    padding: 0;
+    margin: 1em 0 0 0;
+}
+
+.topic-item {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 1em;
+    margin-bottom: 0.5em;
+    border-radius: 0.5em;
+    border-left: 3px solid transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.topic-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-left-color: #6E5DC6;
+    transform: translateX(5px);
+}
+
+.topic-item.active {
+    background-color: rgba(110, 93, 198, 0.2);
+    border-left-color: #6E5DC6;
+}
+
+.topic-item h4 {
+    margin: 0 0 0.5em 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--Text_Color);
+}
+
+/* Discussion Title - Title-sized text for discussions */
+.discussion-title {
+    margin: 0 0 0.5em 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--Text_Color);
+    line-height: 1.3;
+}
+
+.discussion-title.highlighted {
+    font-size: 1.8rem;
+    margin-bottom: 0.3em;
+}
+
+.topic-meta {
+    font-size: 0.85rem;
+    color: rgba(238, 238, 238, 0.6);
+    margin: 0;
+}
+
+/* Highlighted Discussion Block */
+.highlighted-discussion {
+    position: relative;
+    background: linear-gradient(135deg, rgba(110, 93, 198, 0.2), rgba(160, 81, 130, 0.2));
+    border: 2px solid rgba(110, 93, 198, 0.5);
+    margin-bottom: 2em;
+}
+
+.highlight-badge {
+    position: absolute;
+    top: -12px;
+    right: 2em;
+    background: linear-gradient(135deg, #6E5DC6, #a05182);
+    color: white;
+    padding: 0.4em 1em;
+    border-radius: 1em;
+    font-size: 0.85rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(110, 93, 198, 0.4);
+}
+
+.discussion-preview {
+    margin: 1.5em 0;
+    padding: 1em;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 0.5em;
+    border-left: 3px solid #6E5DC6;
+}
+
+.discussion-preview p {
+    margin: 0 0 1em 0;
+    line-height: 1.6;
+    color: rgba(238, 238, 238, 0.9);
+}
+
+.view-discussion-btn {
+    padding: 0.6em 1.5em;
+    background: linear-gradient(135deg, #6E5DC6, #a05182);
+    color: white;
+    border: none;
+    border-radius: 0.5em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(110, 93, 198, 0.3);
+}
+
+.view-discussion-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(110, 93, 198, 0.5);
+}
+
+.discussion-stats {
+    display: flex;
+    gap: 2em;
+    margin-top: 1.5em;
+    padding-top: 1em;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-item {
+    font-size: 0.95rem;
+    color: rgba(238, 238, 238, 0.8);
+    font-weight: 500;
+}
+
+/* Discussion view */
+.discussion-view {
+    min-height: 400px;
+}
+
+.discussion-header {
+    margin-bottom: 2em;
+    padding-bottom: 1.5em;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.discussion-title-large {
+    font-size: 2.2rem;
+    font-weight: bold;
+    color: var(--Text_Color);
+    margin: 0 0 0.5em 0;
+    line-height: 1.3;
+}
+
+.discussion-body {
+    line-height: 1.8;
+    font-size: 1.05rem;
+}
+
+.discussion-body p {
+    margin-bottom: 1.2em;
+}
+
+.discussion-body h3 {
+    font-size: 1.5rem;
+    margin-top: 1.5em;
+    margin-bottom: 0.8em;
+    color: var(--Text_Color);
+    border-bottom: 1px solid rgba(110, 93, 198, 0.3);
+    padding-bottom: 0.3em;
+}
+
+.discussion-body ul {
+    margin-left: 2em;
+    margin-bottom: 1.2em;
+}
+
+.discussion-body li {
+    margin-bottom: 0.5em;
+    line-height: 1.6;
+}
+
+.discussion-body strong {
+    color: #a05182;
+    font-weight: 600;
+}
+
+.reply-section {
+    margin-top: 3em;
+    padding-top: 2em;
+    border-top: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.reply-section h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1em;
+    color: var(--Text_Color);
+}
+
+.placeholder-posts {
+    margin-top: 2em;
+}
+
+.forum-post {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 1em;
+    margin-bottom: 1em;
+    border-radius: 0.5em;
+    border-left: 3px solid #a05182;
+}
+
+.forum-post p {
+    margin: 0;
+    line-height: 1.6;
+}
+
+.forum-post strong {
+    color: #a05182;
+}
+
+/* Responsive layout for smaller screens */
+@media (max-width: 968px) {
+    .forum-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .forum-sidebar {
+        position: relative;
+        top: 0;
+    }
+}
+
+/* ################################## */
+/* #########    About Us    ######### */
+/* ################################## */
+
+main {
+    background: var(--BC);
+    margin: 0 6em;
+    padding: 2em;
+    border-radius: 2em;
+}
+main h1 {
+    margin: 0 0 1em;
 }

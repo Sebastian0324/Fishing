@@ -8,59 +8,62 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='Style.css') }}">
 </head>
 <body data-bs-theme="dark">
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <nav class="navbar bg-body-tertiary">
         <div id="nav" class="container-fluid">
-            <h2 class="navbar-brand">Navbar</h2>
+            <h2 class="navbar-brand">Angler</h2>
             <div class="navbar-nav">
                 <a class="nav-link" href="/">Home</a>
-                <a class="nav-link" href="/Blogg">Forum</a>
-                <a class="nav-link" href="/AdminPanel">Statistik</a>
+                <a class="nav-link" href="/Forum">Forum</a>
+                <a class="nav-link" href="/Dashboard">Dashboard</a>
+                <a class="nav-link" href="/Account">Account</a>
+                <a class="nav-link" href="/AboutUs">About Us</a>
             </div>
         </div>
         <button id="Login_btn" class="btn btn-light">Login</button>
     </nav>
-    <form action="/login" method="post" id="Login">
-        <button type="button" class="btn btn-secondary" id="Close_Login">X</button>
+    <div id="Login">
+        <div id="Close_Login">
+            <button type="button" id="SignIn/Up" class="btn btn-dark">Sign up</button>
+            <button type="button" class="btn btn-secondary">X</button>
+        </div>
         {% if session.name %}
             <!-- Logout -->
             <button type="submit" class="btn btn-primary">Sign out</button>
         {% else %}
             <!-- Login -->
-            <div id="SignIn">
-                <div class="mb-3">
-                    <label for="name" class="form-label">Enter your E-mail or Username</label>
-                    <input type="text" class="form-control" id="name" placeholder="E-mail / Usermane" required>
-                </div>
-                <div class="mb-3">
-                    <label for="pass" class="form-label">Enter your password:</label>
-                    <input type="password" class="form-control" id="pass" placeholder="Password" required>
-                </div>
+        <form action="/login" method="post" id="SignIn">
+            <div class="mb-3">
+                <label for="name" class="form-label">Enter your E-mail or Username</label>
+                <input type="text" class="form-control" id="name" placeholder="E-mail / Usermane" required>
             </div>
-            <div>
-                <button type="submit" class="btn btn-primary">Sign in</button>
-                <button type="button" id="SignIn/Up" class="btn btn-dark">Sign up</button>
+            <div class="mb-3">
+                <label for="pass" class="form-label">Enter your password:</label>
+                <input type="password" class="form-control" id="pass" placeholder="Password" required>
             </div>
-            <div id="SignUp" class="hidden">
-                <div class="mb-3">
-                    <label for="E-mail" class="form-label">Enter your E-mail</label>
-                    <input type="text" class="form-control" id="E-mail" placeholder="E-mail" required>
-                </div>
-                <div class="mb-3">
-                    <label for="Usermane" class="form-label">Enter your Username</label>
-                    <input type="text" class="form-control" id="Usermane" placeholder="Usermane" required>
-                </div>
-                <div class="mb-3">
-                    <label for="pass-req" class="form-label">Enter your password:</label>
-                    <input type="password" class="form-control" id="pass-req" placeholder="Password" required>
-                </div>
-                <div class="mb-3">
-                    <label for="pass-ver" class="form-label">Verify your password:</label>
-                    <input type="password" class="form-control" id="pass-ver" placeholder="Password" required>
-                </div>
+            <button type="submit" class="btn btn-primary">Sign in</button>
+        </form>
+            <!-- Signup -->
+        <form action="/Signup" method="post" id="SignUp" class="hidden">
+            <div class="mb-3">
+                <label for="E-mail" class="form-label">Enter your E-mail</label>
+                <input type="text" class="form-control" id="E-mail" placeholder="E-mail" required>
             </div>
+            <div class="mb-3">
+                <label for="Usermane" class="form-label">Enter your Username</label>
+                <input type="text" class="form-control" id="Usermane" placeholder="Usermane" required>
+            </div>
+            <div class="mb-3">
+                <label for="pass-req" class="form-label">Enter your password:</label>
+                <input type="password" class="form-control" id="pass-req" placeholder="Password" required>
+            </div>
+            <div class="mb-3">
+                <label for="pass-ver" class="form-label">Verify your password:</label>
+                <input type="password" class="form-control" id="pass-ver" placeholder="Password" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Sign up</button>
+        </form>
         {% endif %}
-    </form>
-    <h1>Fishing</h1>
+        </div>
    {% block content %}{% endblock %}
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <!-- Bootstrap JS + Popper -->

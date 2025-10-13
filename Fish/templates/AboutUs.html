@@ -1,0 +1,25 @@
+{% extends "form.html" %}
+{% block content %}
+    <div class="page-container">
+        <!-- Page Title -->
+        <h1 class="page-title">About Us</h1>
+        
+        <!-- About Section -->
+        <div class="content-section">
+            <h3 class="section-header">Our Mission</h3>
+            <div class="placeholder-content">
+                <p>This is a community-driven initiative to combat phishing by turning deceptive emails into learning opportunities. Instead of ignoring suspicious messages, we invite users to submit them to our platform — helping others recognize and avoid scams.</p>
+                <p>Our website showcases real phishing examples, making it easier for everyone to spot red flags. With a focus on usability, security, and education, this project blends web development, cybersecurity, and creative design into one impactful experience.</p>
+                <p>Whether you're a curious learner or a seasoned developer, this is your chance to contribute to a safer internet — one email at a time.</p>
+            </div>
+        </div>
+        
+        <!-- How It Works Section -->
+        <div class="content-section">
+            <h3 class="section-header">How It Works</h3>
+            <div class="placeholder-content">
+                <img src="{{ url_for('static', filename='how_to_temp.png') }}" alt="img of first page">
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -13,18 +13,27 @@ app.config["SESSION_PERMANENT"] = False
 # Routes
 @app.route('/')
 def form():
-    text = "Hello, World!"
-    return render_template('index.html', text=text)
+    return render_template('index.html')
 
 # Routes
-@app.route('/Blogg')
-def blogg():
-    return render_template('blogg.html')
+@app.route('/Forum')
+def Forum():
+    return render_template('Forum.html')
 
 # Routes
-@app.route('/AdminPanel')
+@app.route('/Dashboard')
 def admin():
-    return render_template('AdminPanel.html')
+    return render_template('Dashboard.html')
+
+# Routes
+@app.route('/Account')
+def account():
+    return render_template('Account.html')
+
+# Routes
+@app.route('/AboutUs')
+def info():
+    return render_template('AboutUs.html')
 
 # test function
 @app.post('/test')
@@ -104,9 +113,6 @@ def upload():
         
     except Exception as e:
         return jsonify({"error": f"Failed to process file: {str(e)}"}), 500
-
-
-
 
 if __name__ == '__main__':
     # Initialize database on startup

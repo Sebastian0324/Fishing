@@ -1,0 +1,28 @@
+{% extends "form.html" %}
+{% block content %}
+    <div class="account-container">
+        <!-- Account Name Title -->
+        <h1 class="account-title">Account Name</h1>
+        
+        <!-- Toggle Buttons -->
+        <div class="account-toggle-buttons">
+            <button id="showEmailsBtn" class="toggle-btn active">Uploaded Emails</button>
+            <button id="showSettingsBtn" class="toggle-btn">Account Settings</button>
+        </div>
+        
+        <!-- Uploaded Emails Section -->
+        <div class="account-section uploaded-emails-section" id="emailsSection">
+            <h3 class="section-header">Uploaded Emails</h3>
+            <div class="placeholder-content">
+                <p class="placeholder-text">Uploaded emails will be displayed here</p>
+            </div>
+        </div>
+        <!-- Account Settings Section -->
+        <div class="account-section settings-section" id="settingsSection" style="display: none;">
+            <h3 class="section-header">Account Settings</h3>
+            <div class="placeholder-content">
+                <p class="placeholder-text">Account settings will be displayed here</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
