@@ -6,34 +6,36 @@
         
         <!-- Upload Form Section -->
         <div class="content-section">
-            <h3 class="section-header">Upload .eml File</h3>
-            <div class="placeholder-content">
-                <p class="placeholder-text">Select an email file to analyze for phishing threats</p>
-                <form id="uploadForm" method="post" enctype="multipart/form-data" action="/upload">
-                    <div id="uploadControls" class="mb-3 form-check">
-                        <input type="file" class="form-control" name="file" accept=".eml" id="dropBox" required/>
-                        <label class="form-check-label" for="dropBox">Email</label>
-                    </div>
-                    <button type="submit" id="submitButton" class="btn btn-primary">Submit</button>
+            <div id="uploadForm"> <!-- Before Uploade -->
+                <h3 class="section-header">Upload .eml File</h3>
+                <div class="placeholder-content">
+                    <p class="placeholder-text">Select an email file to analyze for phishing threats</p>
+                    <form method="post" enctype="multipart/form-data" action="/upload">
 
-
-                    <!-- After Submit -->
-                    <div id="analysis" class="analysis-section" style="display:none; margin-top:1rem;">
-                        <h4> Analyzing... </h4>
-                        <div class="spinner-grow" role="status">
-                        <span class="sr-only"></span>
+                        <div id="uploadControls" class="mb-3 form-check">
+                            <input type="file" class="form-control" name="file" accept=".eml" id="dropBox" required/>
+                            <label class="form-check-label" for="dropBox">Email</label>
                         </div>
-                        <div class="alert alert-primary" role="alert">
-                        This may take a few seconds.
-                        </div>
-                         <button type="submit" id="downloadButton" class="btn btn-primary">Download</button>  <!-- Placeholder for download button -->
-                    </div>
+                        <button type="submit" id="submitButton" class="btn btn-primary">Submit</button>
 
-                </form>
-                <div id="result">
-                    <p>{{text}}</p>
+                    </form>
                 </div>
-               
+            </div>
+            <div id="analysis" style="margin-top:1rem;" class="hidden"> <!-- After Submit -->
+                <div class="section-header">
+                    <h3> Analyzing... </h3>
+                    <button id="ToUpload" type="reset" class="btn">Back</button>
+                </div>
+                <div class="analysis-section">
+                    <div class="spinner-grow" role="status">
+                        <span class="sr-only"></span>
+                    </div>
+                    <div id="result"></div>
+                    <div class="alert alert-primary" role="alert">
+                        This may take a few seconds.
+                    </div>
+                    <button type="submit" id="downloadButton" class="btn btn-primary">Download</button>  <!-- Placeholder for download button -->
+                </div>
             </div>
         </div>
     </div>

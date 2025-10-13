@@ -70,8 +70,19 @@ div#Login {
 /* ###########    main    ########### */
 /* ################################## */
 
-#uploadForm {
+#uploadForm, #analysis {
+    overflow: hidden;
     margin-top: 1em;
+    transition: 1s;
+}
+
+#uploadForm.hidden, #analysis.hidden {
+    height: 0;
+}
+
+#analysis .section-header {
+    display: flex;
+    justify-content: space-between;
 }
 
 /* ################################## */
