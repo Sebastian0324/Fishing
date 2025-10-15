@@ -11,7 +11,7 @@ app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = False
 
 # Limit upload size to 1MB
-# Change to 10*1024*1024 for 10 MB after test
+# Change to 10*1024*1024 for 10 MB after test or exact size needed
 app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024
 
 #Change to accual size after test
@@ -138,12 +138,8 @@ def upload():
             "uploaded_files": uploaded_results
         }), 200
     
-
-        
-
     except Exception as e:
         return jsonify({"error": f"Failed to process file: {str(e)}"}), 500
-
 
 if __name__ == '__main__':
     # Initialize database on startup
