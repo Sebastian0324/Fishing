@@ -19,10 +19,14 @@ document.getElementById("SignIn/Up").addEventListener("click", function() {
 
 
 // -------========-------    Front Page    -------========-------
+// -------========-------    Upload Page    -------========-------  
 let UpForm = document.getElementById("uploadForm");
+let analysis = document.getElementById("analysis");
 if (UpForm != null) {
   UpForm.onsubmit = async (e) => {
     e.preventDefault();
+
+  toggleAnalysis();
 
     let formData = new FormData(e.target);
     let response = await fetch("/upload", { method: "POST", body: formData });
@@ -70,33 +74,14 @@ if (UpForm != null) {
   };
 }
 
+function toggleAnalysis() {
+  UpForm.classList.toggle("hidden");
+  analysis.classList.toggle("hidden");
+}
+
+document.getElementById("ToUpload").addEventListener("click", toggleAnalysis);
 
 
-
-// -------========-------    Upload Page    -------========-------  
- document.addEventListener('DOMContentLoaded', function() {
-                        var form = document.getElementById('uploadForm');
-                        var uploadControls = document.getElementById('uploadControls');
-                        var dropBox = document.getElementById('dropBox');
-                        var submitBtn = document.getElementById('submitButton');
-                        var analysis = document.getElementById('analysis');
-                        var loading = document.getElementById('loading');
-                        var error = document.getElementById('error');
-
-                        if (!form) return;
-
-                        form.addEventListener('submit', function(e) {
-                            // show analysis/loading and hide upload controls
-                            if (uploadControls) uploadControls.style.display = 'none';
-                            if (dropBox) dropBox.style.display = 'none';
-                            if (submitBtn) submitBtn.style.display = 'none';
-                            if (analysis) analysis.style.display = 'block';
-                            if (loading) loading.style.display = 'block';
-                            if (error) error.style.display = 'none';
-
-                           
-                        });
-                    });
 
 
 // -------========-------    End of Upload Page    -------========-------
