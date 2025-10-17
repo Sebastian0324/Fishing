@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS User(
 CREATE TABLE IF NOT EXISTS Email(
     Email_ID INTEGER PRIMARY KEY AUTOINCREMENT,
     User_ID INTEGER NOT NULL,
-    eml_file BLOB, 
+    Eml_file BLOB, 
     SHA256 TEXT,
     Size_Bytes INTEGER, 
     Received_At TEXT,

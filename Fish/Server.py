@@ -4,7 +4,7 @@ import sqlite3
 import hashlib
 import json
 from datetime import datetime
-from static.Helper_eml import parse_eml_file, init_db, DB_PATH
+from static.Helper_eml import generate_llm_body, parse_Eml_file, init_db, DB_PATH
 
 app = Flask(__name__)
 
@@ -64,43 +64,40 @@ def upload():
         uploaded_results = [] 
 
         for file in files:
-            # Check if file was selected
             if file.filename == '':
                 return jsonify({"error": "Empty filename detected"}), 400
             
-            # Check if file is .eml
             if not file.filename.endswith('.eml'):
                 return jsonify({"error": "Only .eml files are supported"}), 400
         
-            # Read file content
             file_content = file.read()
             file_size = len(file_content)
             sha256_hash = hashlib.sha256(file_content).hexdigest()
-            parsed_data = parse_eml_file(file_content)
-            
+
+            # Parse email with enhanced format
+            parsed_data = parse_Eml_file(file_content, enhanced_format=True)
+            llm_body_text = generate_llm_body(parsed_data)
 
             # Connect to database
             conn = sqlite3.connect(DB_PATH)
             cursor = conn.cursor()
-            
-            # Convert URLs list to JSON string
             urls_json = json.dumps(parsed_data['urls'])
-            
-            # Insert into database (using User_ID = 1 as default, adjust as needed)
+
+            # Insert into database
             cursor.execute("""
                 INSERT INTO Email (
-                    User_ID, eml_file, SHA256, Size_Bytes, Received_At,
+                    User_ID, Eml_file, SHA256, Size_Bytes, Received_At,
                     From_Addr, Sender_IP, Body_Text, Extracted_URLs
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
-                1, # Default user ID - modify based on your authentication system
+                1,  # Default user ID
                 file_content,
                 sha256_hash,
                 file_size,
                 datetime.now().isoformat(),
-                parsed_data['sender_email'],
-                parsed_data['sender_ip'],
-                parsed_data['body_text'],
+                parsed_data['sender']['email'],
+                parsed_data['sender']['ip'],
+                llm_body_text,
                 urls_json
             ))
             
@@ -108,33 +105,32 @@ def upload():
             conn.commit()
             conn.close()
 
-            #List for multiple file upload content print
+            # Prepare results for frontend
             uploaded_results.append({
                 "email_id": email_id,
                 "filename": file.filename,
                 "data": {
-                    "sender_ip": parsed_data['sender_ip'],
-                    "sender_email": parsed_data['sender_email'],
-                    "body_preview": parsed_data['body_text'][:200] + "..." if len(parsed_data['body_text']) > 200 else parsed_data['body_text'],
+                    "sender_ip": parsed_data['sender']['ip'],
+                    "sender_email": parsed_data['sender']['email'],
+                    "body_preview": parsed_data['body']['text'][:200] + "..." if len(parsed_data['body']['text']) > 200 else parsed_data['body']['text'],
                     "urls_count": len(parsed_data['urls']),
                     "urls": parsed_data['urls']
                 }
             })
 
-        # Return success response with extracted data for last file 
+        # Return response for last file
         return jsonify({
             "success": True,
             "email_id": email_id,
             "filename": file.filename,
             "data": {
-                "sender_ip": parsed_data['sender_ip'],
-                "sender_email": parsed_data['sender_email'],
-                "body_preview": parsed_data['body_text'][:200] + "..." if len(parsed_data['body_text']) > 200 else parsed_data['body_text'],
+                "sender_ip": parsed_data['sender']['ip'],
+                "sender_email": parsed_data['sender']['email'],
+                "body_text": llm_body_text,
+                "body_length": len(parsed_data['body']['text']),
                 "urls_count": len(parsed_data['urls']),
                 "urls": parsed_data['urls']
             },
-
-        # Can be used for multiple file upload content print , Need justification in js to handle it
             "uploaded_files": uploaded_results
         }), 200
     
