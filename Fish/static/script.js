@@ -52,6 +52,16 @@ if (UpForm != null) {
         urlsList = '<p class="text-muted">No URLs found</p>';
       }
       
+      // Escape HTML for safe display
+      const escapeHtml = (text) => {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      };
+      
+      const bodyText = data.data.body_text || 'No content';
+      const bodyLength = data.data.body_length || bodyText.length;
+      
       document.getElementById("result").innerHTML = `
         <div class="alert alert-success" role="alert">
           <h5>Email Analysis Complete - ID: ${data.email_id}</h5>
@@ -62,8 +72,10 @@ if (UpForm != null) {
             <p><strong>From:</strong> ${data.data.sender_email || 'Unknown'}</p>
             <p><strong>Sender IP:</strong> ${data.data.sender_ip || 'Not found'}</p>
             <hr>
-            <h6 class="card-subtitle mb-2 text-muted">Body Preview</h6>
-            <p class="card-text">${data.data.body_preview || 'No content'}</p>
+            <h6 class="card-subtitle mb-2 text-muted">Full Email Body (${bodyLength} characters)</h6>
+            <div style="max-height: 400px; overflow-y: auto; background-color: #000000; color: #ffffff; padding: 15px; border-radius: 5px; white-space: pre-wrap; font-family: monospace; font-size: 0.9em; border: 1px solid #333333;">
+${escapeHtml(bodyText)}
+            </div>
             <hr>
             <h6 class="card-subtitle mb-2 text-muted">Extracted URLs (${data.data.urls_count || 0})</h6>
             ${urlsList}
@@ -80,9 +92,6 @@ function toggleAnalysis() {
 }
 
 document.getElementById("ToUpload").addEventListener("click", toggleAnalysis);
-
-
-
 
 // -------========-------    End of Upload Page    -------========-------
 
