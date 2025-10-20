@@ -22,15 +22,102 @@ document.getElementById("SignIn/Up").addEventListener("click", function() {
 // -------========-------    Upload Page    -------========-------  
 let UpForm = document.getElementById("uploadForm");
 let analysis = document.getElementById("analysis");
+let submitError = document.getElementById("SubmitError");
+let selectedFilesBox = document.getElementById("selectedFiles");
+
+// Maximum file size (1 MB = 1 * 1024 * 1024 bytes)
+const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB
+const MAX_FILES = 5;
+
+
 if (UpForm != null) {
+  // Show selected file names under the input
+  const fileInput = document.getElementById("dropBox");
+  if (fileInput) {
+    fileInput.addEventListener("change", function () {
+      if (!selectedFilesBox) return;
+      const files = Array.from(fileInput.files || []);
+      if (files.length === 0) {
+        selectedFilesBox.innerHTML = "";
+        return;
+      }
+      const items = files.map((f, idx) => `<li class="list-group-item">${idx + 1}. ${f.name}</li>`).join("");
+      selectedFilesBox.innerHTML = `
+        <div class="alert alert-info p-2 mb-2" role="status">
+          Selected ${files.length} file${files.length > 1 ? 's' : ''}
+        </div>
+        <ul class="list-group">${items}</ul>`;
+    });
+  }
+
   UpForm.onsubmit = async (e) => {
     e.preventDefault();
 
-  toggleAnalysis();
+  // -------========-------    ERROR HANDLING BEFORE SUBMIT    -------========-------
+
+    // Clear previous errors
+    if (submitError) {
+      submitError.innerHTML = '';
+    }
+    
+    // Validate file input
+    const fileInput = document.getElementById("dropBox");
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+      if (submitError) {
+        submitError.innerHTML = '<div class="alert alert-danger" role="alert"><strong>Error:</strong> Please select at least one .eml file</div>';
+      }
+      return;
+    }
+    
+    // Validate number of files
+    if (fileInput.files.length > MAX_FILES) {
+      if (submitError) {
+        submitError.innerHTML = `<div class="alert alert-danger" role="alert"><strong>Error:</strong> Maximum ${MAX_FILES} files allowed</div>`;
+      }
+      return;
+    }
+    
+    // Validate file type and size
+    for (let i = 0; i < fileInput.files.length; i++) {
+      const file = fileInput.files[i];
+      
+      // Check file extension
+      if (!file.name.endsWith('.eml')) {
+        if (submitError) {
+          submitError.innerHTML = '<div class="alert alert-danger" role="alert"><strong>Error:</strong> Only .eml files are allowed</div>';
+        }
+        return;
+      }
+      
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
+        if (submitError) {
+          submitError.innerHTML = `<div class="alert alert-danger" role="alert"><strong>Error:</strong> File "${file.name}" is ${fileSizeMB} MB. Maximum file size is ${maxSizeMB} MB</div>`;
+        }
+        return;
+      }
+    }
+    // -------========-------    END OF ERROR HANDLING BEFORE SUBMIT    -------========-------
+
+    // Show analysis section
+    toggleAnalysis();
+    
+    // Show loading spinner
+    const loadingSpinner = document.getElementById("loadingSpinner");
+    const downloadSection = document.getElementById("downloadSection");
+    if (loadingSpinner) loadingSpinner.style.display = "block";
+    if (downloadSection) downloadSection.classList.add("hidden");
 
     let formData = new FormData(e.target);
     let response = await fetch("/upload", { method: "POST", body: formData });
     let data = await response.json();
+    
+    // Hide loading spinner after response
+    setTimeout(() => {
+      if (loadingSpinner) loadingSpinner.style.display = "none";
+    }, 500);
     
     // Handle error response
     if (data.error) {
@@ -64,7 +151,7 @@ if (UpForm != null) {
       
       document.getElementById("result").innerHTML = `
         <div class="alert alert-success" role="alert">
-          <h5>Email Analysis Complete - ID: ${data.email_id}</h5>
+          <h5>✓ Email Analysis Complete - ID: ${data.email_id}</h5>
         </div>
         <div class="card">
           <div class="card-body">
@@ -82,6 +169,9 @@ ${escapeHtml(bodyText)}
           </div>
         </div>
       `;
+      
+      // Show download button after successful analysis
+      if (downloadSection) downloadSection.classList.remove("hidden");
     }
   };
 }
@@ -89,6 +179,20 @@ ${escapeHtml(bodyText)}
 function toggleAnalysis() {
   UpForm.classList.toggle("hidden");
   analysis.classList.toggle("hidden");
+  
+  // Reset analysis section when going back
+  if (UpForm.classList.contains("hidden")) {
+    // Going to analysis view - do nothing special
+  } else {
+    // Going back to upload form - reset everything
+    const loadingSpinner = document.getElementById("loadingSpinner");
+    const downloadSection = document.getElementById("downloadSection");
+    const resultDiv = document.getElementById("result");
+    
+    if (loadingSpinner) loadingSpinner.style.display = "none";
+    if (downloadSection) downloadSection.classList.add("hidden");
+    if (resultDiv) resultDiv.innerHTML = "";
+  }
 }
 
 document.getElementById("ToUpload").addEventListener("click", toggleAnalysis);
