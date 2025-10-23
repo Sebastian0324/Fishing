@@ -18,7 +18,6 @@ document.getElementById("SignIn/Up").addEventListener("click", function() {
 });
 
 
-// -------========-------    Front Page    -------========-------
 // -------========-------    Upload Page    -------========-------  
 let UpForm = document.getElementById("uploadForm");
 let analysis = document.getElementById("analysis");
@@ -26,7 +25,7 @@ if (UpForm != null) {
   UpForm.onsubmit = async (e) => {
     e.preventDefault();
 
-  toggleAnalysis();
+    toggleAnalysis();
 
     let formData = new FormData(e.target);
     let response = await fetch("/upload", { method: "POST", body: formData });
@@ -39,35 +38,11 @@ if (UpForm != null) {
       return;
     }
     
-    // Handle success response with extracted data
+    // Handle success response
     if (data.success && data.data) {
-      let urlsList = '';
-      if (data.data.urls && data.data.urls.length > 0) {
-        urlsList = '<ul class="list-group mt-2">';
-        data.data.urls.forEach(url => {
-          urlsList += `<li class="list-group-item">${url}</li>`;
-        });
-        urlsList += '</ul>';
-      } else {
-        urlsList = '<p class="text-muted">No URLs found</p>';
-      }
-      
       document.getElementById("result").innerHTML = `
         <div class="alert alert-success" role="alert">
-          <h5>Email Analysis Complete - ID: ${data.email_id}</h5>
-        </div>
-        <div class="card">
-          <div class="card-body">
-            <h6 class="card-subtitle mb-2 text-muted">Email Details</h6>
-            <p><strong>From:</strong> ${data.data.sender_email || 'Unknown'}</p>
-            <p><strong>Sender IP:</strong> ${data.data.sender_ip || 'Not found'}</p>
-            <hr>
-            <h6 class="card-subtitle mb-2 text-muted">Body Preview</h6>
-            <p class="card-text">${data.data.body_preview || 'No content'}</p>
-            <hr>
-            <h6 class="card-subtitle mb-2 text-muted">Extracted URLs (${data.data.urls_count || 0})</h6>
-            ${urlsList}
-          </div>
+          <h5>✓ Email Analysis Complete - ID: ${data.email_id}</h5>
         </div>
       `;
     }
@@ -80,9 +55,6 @@ function toggleAnalysis() {
 }
 
 document.getElementById("ToUpload").addEventListener("click", toggleAnalysis);
-
-
-
 
 // -------========-------    End of Upload Page    -------========-------
 
