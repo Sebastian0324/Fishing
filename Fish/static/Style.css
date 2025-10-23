@@ -27,7 +27,7 @@ nav.navbar {
     width: 25em;
 }
 
-#Login_btn {
+#Login_btn, #Logout_btn {
     margin: 0 2em;
 }
 
@@ -44,6 +44,7 @@ div#Login {
     border: white 2px solid;
     border-radius: 5em;
     padding: 5em 10em 5em 7em;
+    z-index: 10000;
 }
 #Login #Close_Login {
     position: absolute;
@@ -58,7 +59,7 @@ div#Login {
 #SignUp {
     transition: 1s;
     overflow: hidden;
-    height: 24em;
+    height: 20em;
 }
 #SignIn {
     transition: 1s;

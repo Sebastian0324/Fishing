@@ -1,5 +1,6 @@
 #!/usr/bin/python
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, session, jsonify, render_template
+from flask_session import Session
 import sqlite3
 import hashlib
 import json
@@ -9,6 +10,8 @@ from static.Helper_eml import generate_llm_body, parse_Eml_file, init_db, DB_PAT
 app = Flask(__name__)
 
 app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)
 
 # Limit upload size to 1MB
 # Change to 10*1024*1024 for 10 MB after test or exact size needed
@@ -50,7 +53,99 @@ def info():
 def set_text():
     return "AAA"
 
+@app.post('/Signup')
+def CreateAccount():
+    if (request.form.get("Username") == None or request.form.get("Password") == None or request.form.get("pass-ver") == None):
+        # if a requierd field is missing, give an error
+    
+        # ToDo::
+        #   -- Show error
+        return jsonify({"success": False,
+                        "error": f"Expected data was not provided"}), 400
+    
+    if (request.form.get("Password") != request.form.get("pass-ver")):
+        return jsonify({"success": False,
+                        "error": f"Password dose not match password verification"}), 400
 
+    username = request.form.get("Username")
+    # conect to DB and check if account allredy exist
+    try:
+        # Connect to database
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute("""SELECT Username FROM USER WHERE Username = ?""",
+                       (username, ))
+
+        if( cursor.fetchall() ):
+            return jsonify({"success": False,
+                            "error": f"This user allredy exist"}), 400
+        # ToDo::
+        #  -- Check password
+        
+        hash = hashlib.sha3_512()
+        hash.update(request.form.get("Password").encode())
+
+        cursor.execute("""
+                        INSERT INTO USER (
+                            Username, Password_Hash
+                        ) VALUES (?, ?)""", (
+                        username,
+                        hash.hexdigest()
+                    ))
+        session["name"] = username
+            
+        conn.commit()
+        conn.close()
+
+        return jsonify({"success": True}), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to acces DataBase: {str(e)}"}), 500
+
+@app.post('/login')
+def Login():
+    if (request.form.get("name") == None or request.form.get("pass") == None):
+        # if a requierd field is missing, give an error
+    
+        # ToDo::
+        #   -- Show error
+        return jsonify({"success": False,
+                        "error": f"Expected data was not provided"}), 400
+    try:
+        # Connect to database
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute("""SELECT Password_Hash FROM USER WHERE Username = ?""",
+                       (request.form.get("name"), ))
+        
+        pass_hash = cursor.fetchall()
+        if( not pass_hash ):
+            return jsonify({"success": False,
+                            "error": f"This user dose not exist"}), 400
+        
+        hash = hashlib.sha3_512()
+        hash.update(request.form.get("pass").encode())
+
+        if (pass_hash[0][0] != hash.hexdigest()):
+            return jsonify({"success": False,
+                            "error": f"Wrong password"}), 400
+        
+        session["name"] = request.form.get("name")
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({"success": True}), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to acces DataBase: {str(e)}"}), 500
+
+@app.route("/logout")
+def logout():
+    session["name"] = None
+    return jsonify({"success": True}), 200
+
+# Get Emails
 @app.post('/upload')
 def upload():
     files = request.files.getlist("file")

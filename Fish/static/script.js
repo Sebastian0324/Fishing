@@ -1,8 +1,22 @@
+
+// -------========-------    Sign Up    -------========-------
+
 let login = document.getElementById("Login");
 
-document.getElementById("Login_btn").addEventListener("click", function() {
-  login.style.display = "block";
-});
+if(document.getElementById("Login_btn")) {
+  document.getElementById("Login_btn").addEventListener("click", function() {
+    login.style.display = "block";
+  });
+
+} else {
+  document.getElementById("Logout_btn").addEventListener("click", async function(e) {
+    e.preventDefault();
+    await fetch("/logout");
+
+    window.open(window.location.href, "_self");
+  });
+}
+
 document.getElementById("Close_Login").children[1].addEventListener("click", function() {
   document.getElementById("Login").style.display = "None";
 });
@@ -17,6 +31,24 @@ document.getElementById("SignIn/Up").addEventListener("click", function() {
     Sign.classList.toggle("btn-secondary");
 });
 
+SignUp.onsubmit = async (e) => {
+  e.preventDefault();
+
+  let SignUpForm = new FormData(e.target);
+  let SignUpResponse = await fetch("/Signup", { method: "POST", body: SignUpForm });
+  let SignUpData = await SignUpResponse.json();
+
+  window.open(window.location.href, "_self");
+};
+SignIn.onsubmit = async (e) => {
+  e.preventDefault();
+
+  let SignInForm = new FormData(e.target);
+  let SignInResponse = await fetch("/login", { method: "POST", body: SignInForm });
+  let SignInData = await SignInResponse.json();
+
+  window.open(window.location.href, "_self");
+};
 
 // -------========-------    Front Page    -------========-------
 // -------========-------    Upload Page    -------========-------  
