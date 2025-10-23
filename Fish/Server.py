@@ -5,7 +5,7 @@ import sqlite3
 import hashlib
 import json
 from datetime import datetime
-from static.Helper_eml import generate_llm_body, parse_Eml_file, init_db, DB_PATH
+from static.helper_eml import generate_llm_body, parse_eml_bytes, init_db, DB_PATH
 from api.llm import query_llm
 import dotenv
 dotenv.load_dotenv()
@@ -186,7 +186,8 @@ def upload():
     if len(files) > 5:
         return jsonify({"error": "Maximum 5 files allowed"}), 400
     try:
-        uploaded_results = [] 
+        uploaded_results = []
+        last_payload = None
 
         for file in files:
             if file.filename == '':
@@ -196,66 +197,62 @@ def upload():
                 return jsonify({"error": "Only .eml files are supported"}), 400
         
             file_content = file.read()
-            file_size = len(file_content)
-            sha256_hash = hashlib.sha256(file_content).hexdigest()
+            parsed = parse_eml_bytes(file_content, enhanced_format=True)
+            if not parsed.get("valid", False):
+                return jsonify({"error": "Failed to parse email"}), 400
 
-            # Parse email with enhanced format
-            parsed_data = parse_Eml_file(file_content, enhanced_format=True)
-            llm_body_text = generate_llm_body(parsed_data)
+            llm_body_text = generate_llm_body(parsed)
+            urls_json = json.dumps(parsed['urls'])
 
-            # Connect to database
+            # Insert into DB
+            uid = session.get("user_id") or 1
             conn = sqlite3.connect(DB_PATH)
-            cursor = conn.cursor()
-            urls_json = json.dumps(parsed_data['urls'])
-
-            # Insert into database
-            cursor.execute("""
-                INSERT INTO Email (
-                    User_ID, Eml_file, SHA256, Size_Bytes, Received_At,
-                    From_Addr, Sender_IP, Body_Text, Extracted_URLs
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                1,  # Default user ID
-                file_content,
-                sha256_hash,
-                file_size,
-                datetime.now().isoformat(),
-                parsed_data['sender']['email'],
-                parsed_data['sender']['ip'],
-                llm_body_text,
-                urls_json
-            ))
+            try:
+                conn.execute("PRAGMA foreign_keys = ON;")
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO Email (
+                        User_ID, Eml_file, SHA256, Size_Bytes, Received_At,
+                        From_Addr, Sender_IP, Body_Text, Extracted_URLs
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    uid,  # Default user ID
+                    file_content,
+                    hashlib.sha256(file_content).hexdigest(),
+                    len(file_content),
+                    parsed['received_at'],
+                    parsed['sender']['email'],
+                    parsed['sender']['ip'],
+                    llm_body_text,
+                    urls_json
+                ))
             
-            email_id = cursor.lastrowid
-            conn.commit()
-            conn.close()
+                email_id = cursor.lastrowid
+                conn.commit()
+            finally:
+                conn.close()
+                
+            body_text = parsed['body']['text']
 
-            # Prepare results for frontend
-            uploaded_results.append({
+            payload = {
                 "email_id": email_id,
                 "filename": file.filename,
                 "data": {
-                    "sender_ip": parsed_data['sender']['ip'],
-                    "sender_email": parsed_data['sender']['email'],
-                    "body_preview": parsed_data['body']['text'][:200] + "..." if len(parsed_data['body']['text']) > 200 else parsed_data['body']['text'],
-                    "urls_count": len(parsed_data['urls']),
-                    "urls": parsed_data['urls']
+                    "sender_ip": parsed['sender']['ip'],
+                    "sender_email": parsed['sender']['email'],
+                    "body_text": body_text,
+                    "urls_count": len(parsed['urls']),
+                    "urls": parsed['urls']
                 }
-            })
+            }
+
+            uploaded_results.append(payload)
+            last_payload = payload
 
         # Return response for last file
         return jsonify({
             "success": True,
-            "email_id": email_id,
-            "filename": file.filename,
-            "data": {
-                "sender_ip": parsed_data['sender']['ip'],
-                "sender_email": parsed_data['sender']['email'],
-                "body_text": llm_body_text,
-                "body_length": len(parsed_data['body']['text']),
-                "urls_count": len(parsed_data['urls']),
-                "urls": parsed_data['urls']
-            },
+            **(last_payload or {}),
             "uploaded_files": uploaded_results
         }), 200
     
