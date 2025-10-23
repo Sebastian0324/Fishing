@@ -61,7 +61,6 @@ let selectedFilesBox = document.getElementById("selectedFiles");
 const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB
 const MAX_FILES = 5;
 
-
 if (UpForm != null) {
   // Show selected file names under the input
   const fileInput = document.getElementById("dropBox");
@@ -73,14 +72,58 @@ if (UpForm != null) {
         selectedFilesBox.innerHTML = "";
         return;
       }
-      const items = files.map((f, idx) => `<li class="list-group-item">${idx + 1}. ${f.name}</li>`).join("");
+      const formatFileSize = (bytes) => {
+        if (bytes < 1024) return bytes + ' B';
+        else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + ' KB';
+        else return (bytes / 1048576).toFixed(2) + ' MB';
+      };
+      
+      // Create a DataTransfer to manage files
+      const dataTransfer = new DataTransfer();
+      files.forEach(f => dataTransfer.items.add(f));
+      
+      const items = files.map((f, idx) => `
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-2 flex-grow-1">
+            <span class="badge bg-primary rounded-pill">${idx + 1}</span>
+            <div class="d-flex flex-column">
+              <span class="text-truncate" style="max-width: 250px;" title="${f.name}">
+                <strong>${f.name}</strong>
+              </span>
+              <small class="text-muted">${formatFileSize(f.size)}</small>
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm btn-danger remove-file-btn" data-index="${idx}" title="Remove file">
+            <i class="bi bi-x-circle"></i> Remove
+          </button>
+        </li>
+      `).join("");
+      
       selectedFilesBox.innerHTML = `
         <div class="alert alert-info p-2 mb-2" role="status">
           Selected ${files.length} file${files.length > 1 ? 's' : ''}
         </div>
         <ul class="list-group">${items}</ul>`;
+      
+      // Add event listeners to remove buttons
+      document.querySelectorAll('.remove-file-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const indexToRemove = parseInt(this.getAttribute('data-index'));
+          const newDataTransfer = new DataTransfer();
+          
+          Array.from(fileInput.files).forEach((file, idx) => {
+            if (idx !== indexToRemove) {
+              newDataTransfer.items.add(file);
+            }
+          });
+          
+          fileInput.files = newDataTransfer.files;
+          fileInput.dispatchEvent(new Event('change'));
+        });
+      });
     });
   }
+
 
   UpForm.onsubmit = async (e) => {
     e.preventDefault();
