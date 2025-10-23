@@ -6,6 +6,9 @@ import hashlib
 import json
 from datetime import datetime
 from static.Helper_eml import generate_llm_body, parse_Eml_file, init_db, DB_PATH
+from api.llm import query_llm
+import dotenv
+dotenv.load_dotenv()
 
 app = Flask(__name__)
 
@@ -52,6 +55,33 @@ def info():
 @app.post('/test')
 def set_text():
     return "AAA"
+
+# LLM API endpoint
+@app.post('/api/llm')
+def llm_api():
+    try:
+        data = request.get_json()
+        
+        if not data or 'message' not in data:
+            return jsonify({
+                "success": False,
+                "error": "No message provided"
+            }), 400
+        
+        # Call the LLM API
+        result = query_llm(data['message'])
+        
+        # Return the result directly (query_llm already returns properly formatted dict)
+        if result['success']:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 500
+            
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Server error: {str(e)}"
+        }), 500
 
 @app.post('/Signup')
 def CreateAccount():

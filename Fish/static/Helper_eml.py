@@ -1,4 +1,3 @@
-import email
 from email import policy
 from email.parser import BytesParser
 import re
@@ -489,20 +488,54 @@ def parse_Eml_file(file_content, max_body_length=5000, include_json=False, enhan
 
 def generate_llm_body(parsed_email):
     """
-    Only include the cleaned text for LLM analysis.
-    Excludes headers, multipart boundaries, and URLs.
+    Generate a structured body text optimized for LLM analysis.
+    Clearly indicates the source format and provides context about the email content.
+    
+    Args:
+        parsed_email: Dictionary containing parsed email data with enhanced format
+    
+    Returns:
+        String with structured, LLM-friendly email content
     """
     subject = parsed_email.get('subject', '')
-    # THIS IS THE CLEANED BODY TEXT
-    body_text = parsed_email.get('body', {}).get('text', '')
-
+    body_data = parsed_email.get('body', {})
+    body_text = body_data.get('text', '')
+    body_format = body_data.get('format', 'unknown')
+    truncated = body_data.get('truncated', False)
+    sender = parsed_email.get('sender', {})
+    
     llm_text_parts = []
-
+    
+    # Header section with metadata
+    llm_text_parts.append("=== EMAIL METADATA ===")
     if subject:
         llm_text_parts.append(f"Subject: {subject}")
-
-    # Only cleaned body text
-    llm_text_parts.append("\nEmail body:\n")
+    if sender.get('email'):
+        sender_name = sender.get('name')
+        if sender_name:
+            llm_text_parts.append(f"From: {sender_name} <{sender.get('email')}>")
+        else:
+            llm_text_parts.append(f"From: {sender.get('email')}")
+    if sender.get('ip'):
+        llm_text_parts.append(f"Sender IP: {sender.get('ip')}")
+    
+    # Body section with clear format indication
+    llm_text_parts.append("\n=== EMAIL BODY ===")
+    
+    # Indicate the source format clearly
+    if body_format == 'html':
+        llm_text_parts.append("[Source: HTML email - converted to plain text for analysis]")
+    elif body_format == 'plain':
+        llm_text_parts.append("[Source: Plain text email]")
+    elif body_format == 'none':
+        llm_text_parts.append("[Source: No text content found in email]")
+    else:
+        llm_text_parts.append(f"[Source: {body_format}]")
+    
+    if truncated:
+        llm_text_parts.append("[Note: Content has been truncated due to length]")
+    
+    llm_text_parts.append("")  # Blank line before body
     llm_text_parts.append(body_text)
-
-    return "\n\n".join(llm_text_parts)
+    
+    return "\n".join(llm_text_parts)

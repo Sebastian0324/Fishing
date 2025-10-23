@@ -2,6 +2,8 @@
 // -------========-------    Sign Up    -------========-------
 
 let login = document.getElementById("Login");
+let loginBtn = document.getElementById("Login_btn");
+let closeLogin = document.getElementById("Close_Login");
 
 if(document.getElementById("Login_btn")) {
   document.getElementById("Login_btn").addEventListener("click", function() {
@@ -24,7 +26,9 @@ document.getElementById("Close_Login").children[1].addEventListener("click", fun
 let Sign = document.getElementById("SignIn/Up");
 let SignIn = document.getElementById("SignIn");
 let SignUp = document.getElementById("SignUp");
-document.getElementById("SignIn/Up").addEventListener("click", function() {
+
+if (Sign && SignIn && SignUp) {
+  Sign.addEventListener("click", function() {
     SignIn.classList.toggle("hidden");
     SignUp.classList.toggle("hidden");
     Sign.classList.toggle("btn-dark");
@@ -203,50 +207,32 @@ if (UpForm != null) {
     
     // Handle success response with extracted data
     if (data.success && data.data) {
-      let urlsList = '';
-      if (data.data.urls && data.data.urls.length > 0) {
-        urlsList = '<ul class="list-group mt-2">';
-        data.data.urls.forEach(url => {
-          urlsList += `<li class="list-group-item">${url}</li>`;
-        });
-        urlsList += '</ul>';
-      } else {
-        urlsList = '<p class="text-muted">No URLs found</p>';
-      }
-      
-      // Escape HTML for safe display
-      const escapeHtml = (text) => {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-      };
-      
       const bodyText = data.data.body_text || 'No content';
-      const bodyLength = data.data.body_length || bodyText.length;
       
       document.getElementById("result").innerHTML = `
         <div class="alert alert-success" role="alert">
           <h5>✓ Email Analysis Complete - ID: ${data.email_id}</h5>
         </div>
-        <div class="card">
-          <div class="card-body">
-            <h6 class="card-subtitle mb-2 text-muted">Email Details</h6>
-            <p><strong>From:</strong> ${data.data.sender_email || 'Unknown'}</p>
-            <p><strong>Sender IP:</strong> ${data.data.sender_ip || 'Not found'}</p>
-            <hr>
-            <h6 class="card-subtitle mb-2 text-muted">Full Email Body (${bodyLength} characters)</h6>
-            <div style="max-height: 400px; overflow-y: auto; background-color: #000000; color: #ffffff; padding: 15px; border-radius: 5px; white-space: pre-wrap; font-family: monospace; font-size: 0.9em; border: 1px solid #333333;">
-${escapeHtml(bodyText)}
+        <div id="llmSection" class="mt-4">
+          <div class="card">
+            <div class="card-body">
+              <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
+              <div class="text-center my-3">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading LLM response...</span>
+                </div>
+                <p class="mt-2 text-muted">Analyzing with AI...</p>
+              </div>
             </div>
-            <hr>
-            <h6 class="card-subtitle mb-2 text-muted">Extracted URLs (${data.data.urls_count || 0})</h6>
-            ${urlsList}
           </div>
         </div>
       `;
       
       // Show download button after successful analysis
       if (downloadSection) downloadSection.classList.remove("hidden");
+      
+      // Call LLM API after displaying email analysis
+      callLLMAPI(bodyText);
     }
   };
 }
@@ -270,31 +256,96 @@ function toggleAnalysis() {
   }
 }
 
-document.getElementById("ToUpload").addEventListener("click", toggleAnalysis);
+// Get the Back button element
+const toUploadBtn = document.getElementById("ToUpload");
+
+if (toUploadBtn) {
+  toUploadBtn.addEventListener("click", toggleAnalysis);
+}
+
+// Function to call LLM API
+async function callLLMAPI(emailBody) {
+  try {
+    const response = await fetch("/api/llm", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: `Analyze this email for phishing threats and provide a detailed security assessment:\n\n${emailBody}`
+      })
+    });
+    
+    const data = await response.json();
+    
+    const llmSection = document.getElementById("llmSection");
+    if (llmSection) {
+      if (data.success) {
+        llmSection.innerHTML = `
+          <div class="card">
+            <div class="card-body">
+              <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
+              <div style="background-color: #000000; color: #ffffff; padding: 15px; border-radius: 5px; white-space: pre-wrap; border: 1px solid #333333;">
+${data.response}
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        llmSection.innerHTML = `
+          <div class="card">
+            <div class="card-body">
+              <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
+              <div class="alert alert-danger" role="alert">
+                <strong>Error:</strong> ${data.error}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+  } catch (error) {
+    const llmSection = document.getElementById("llmSection");
+    if (llmSection) {
+      llmSection.innerHTML = `
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
+            <div class="alert alert-danger" role="alert">
+              <strong>Error:</strong> Failed to connect to LLM API - ${error.message}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  }
+}
 
 // -------========-------    End of Upload Page    -------========-------
 
 // -------========-------    Account Page Toggle    -------========-------
-let showEmailsBtn = document.getElementById("showEmailsBtn");
-let showSettingsBtn = document.getElementById("showSettingsBtn");
-let emailsSection = document.getElementById("emailsSection");
-let settingsSection = document.getElementById("settingsSection");
+document.addEventListener("DOMContentLoaded", function() {
+  let showEmailsBtn = document.getElementById("showEmailsBtn");
+  let showSettingsBtn = document.getElementById("showSettingsBtn");
+  let emailsSection = document.getElementById("emailsSection");
+  let settingsSection = document.getElementById("settingsSection");
 
-if (showEmailsBtn != null && showSettingsBtn != null) {
-  showEmailsBtn.addEventListener("click", function() {
-    emailsSection.style.display = "block";
-    settingsSection.style.display = "none";
-    showEmailsBtn.classList.add("active");
-    showSettingsBtn.classList.remove("active");
-  });
+  if (showEmailsBtn != null && showSettingsBtn != null) {
+    showEmailsBtn.addEventListener("click", function() {
+      emailsSection.style.display = "block";
+      settingsSection.style.display = "none";
+      showEmailsBtn.classList.add("active");
+      showSettingsBtn.classList.remove("active");
+    });
 
-  showSettingsBtn.addEventListener("click", function() {
-    emailsSection.style.display = "none";
-    settingsSection.style.display = "block";
-    showSettingsBtn.classList.add("active");
-    showEmailsBtn.classList.remove("active");
-  });
-}
+    showSettingsBtn.addEventListener("click", function() {
+      emailsSection.style.display = "none";
+      settingsSection.style.display = "block";
+      showSettingsBtn.classList.add("active");
+      showEmailsBtn.classList.remove("active");
+    });
+  }
+});
 
 // -------========-------    Forum Page Discussion Selection    -------========-------
 // Discussion data (placeholder content!!)
@@ -382,3 +433,4 @@ topicItems.forEach(item => {
     }
   });
 });
+}
