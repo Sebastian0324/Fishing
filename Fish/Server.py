@@ -5,10 +5,15 @@ import hashlib
 import json
 from datetime import datetime
 from static.Helper_eml import generate_llm_body, parse_Eml_file, init_db, DB_PATH
+# import sqlite3  # Database
 
 app = Flask(__name__)
 
 app.config["SESSION_PERMANENT"] = False
+app.config['MAX_CONTENT_LENGTH'] = 15 * 1024 * 1024  # 15 MB
+
+# Kör init en gång vid start
+init_db()
 
 # Limit upload size to 1MB
 # Change to 10*1024*1024 for 10 MB after test or exact size needed
