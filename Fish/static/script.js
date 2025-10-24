@@ -18,95 +18,81 @@ document.getElementById("SignIn/Up")?.addEventListener("click", function () {
   Sign.classList.toggle("btn-secondary");
 });
 
-// ===== Upload Page =====
-document.addEventListener("DOMContentLoaded", function () {
-  const form = document.getElementById("uploadForm");
-  if (!form) return;
 
-  const uploadControls = document.getElementById("uploadControls");
-  const dropBox = document.getElementById("dropBox");
-  const submitBtn = document.getElementById("submitButton");
-  const analysis = document.getElementById("analysis");
-  const resultEl = document.getElementById("result");
+// -------========-------    Front Page    -------========-------
+// -------========-------    Upload Page    -------========-------  
+let UpForm = document.getElementById("uploadForm");
+let analysis = document.getElementById("analysis");
+if (UpForm != null) {
+  UpForm.onsubmit = async (e) => {
+    e.preventDefault();
 
-  const showLoading = () => {
-    if (uploadControls) uploadControls.style.display = "none";
-    if (dropBox) dropBox.style.display = "none";
-    if (submitBtn) submitBtn.style.display = "none";
-    if (analysis) analysis.style.display = "block";
-    if (resultEl) resultEl.innerHTML = ""; // clear
-  };
+  toggleAnalysis();
 
-  const showControls = () => {
-    if (uploadControls) uploadControls.style.display = "";
-    if (dropBox) dropBox.style.display = "";
-    if (submitBtn) submitBtn.style.display = "";
-    if (analysis) analysis.style.display = "none";
-  };
-
-  form.addEventListener("submit", async function (e) {
-    e.preventDefault(); // IMPORTANT: prevent default navigation
-
-    // Basic client validation
-    const file = dropBox?.files?.[0];
-    if (!file) {
-      alert("Please choose a .eml file first");
+    let formData = new FormData(e.target);
+    let response = await fetch("/upload", { method: "POST", body: formData });
+    let data = await response.json();
+    
+    // Handle error response
+    if (data.error) {
+      document.getElementById("result").innerHTML = 
+        `<div class="alert alert-danger" role="alert"><strong>Error:</strong> ${data.error}</div>`;
       return;
     }
-
-    showLoading();
-
-    // Build form data
-    const fd = new FormData(form);
-    // If you have a logged-in user_id in JS, append it; otherwise omit and backend will use 'anonymous'
-    // fd.append("user_id", window.CURRENT_USER_ID || "");
-
-    try {
-      const res = await fetch("/upload", { method: "POST", body: fd });
-      // Handle non-200s
-      let data;
-      try {
-        data = await res.json();
-      } catch {
-        throw new Error("Server returned a non-JSON response.");
+    
+    // Handle success response with extracted data
+    if (data.success && data.data) {
+      let urlsList = '';
+      if (data.data.urls && data.data.urls.length > 0) {
+        urlsList = '<ul class="list-group mt-2">';
+        data.data.urls.forEach(url => {
+          urlsList += `<li class="list-group-item">${url}</li>`;
+        });
+        urlsList += '</ul>';
+      } else {
+        urlsList = '<p class="text-muted">No URLs found</p>';
       }
-
-      if (!res.ok || !data.ok) {
-        const msg = (data && data.error) ? data.error : `Upload failed (HTTP ${res.status})`;
-        resultEl.innerHTML = `<div class="alert alert-danger" role="alert">${msg}</div>`;
-        showControls();
-        return;
-      }
-
-      // Success UI
-      const lines = [
-        `<div class="alert alert-success" role="alert"><strong>Uploaded!</strong></div>`,
-        `<div class="content-section">`,
-        `<p><b>Email ID:</b> ${data.email_id}</p>`,
-        data.sha256 ? `<p><b>SHA256:</b> <code>${data.sha256}</code></p>` : ``,
-        data.uploader_user_id ? `<p><b>Uploader User_ID:</b> ${data.uploader_user_id}</p>` : ``,
-        `</div>`
-      ].join("");
-
-      resultEl.innerHTML = lines;
-      // Stay on the result; you can keep controls hidden or show an "Upload another" button:
-      const againBtn = document.createElement("button");
-      againBtn.textContent = "Upload another";
-      againBtn.className = "btn btn-secondary";
-      againBtn.style.marginTop = "0.5rem";
-      againBtn.onclick = () => {
-        form.reset();
-        showControls();
-        resultEl.innerHTML = "";
+      
+      // Escape HTML for safe display
+      const escapeHtml = (text) => {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
       };
-      resultEl.appendChild(againBtn);
-
-    } catch (err) {
-      resultEl.innerHTML = `<div class="alert alert-danger" role="alert">${err.message || err}</div>`;
-      showControls();
+      
+      const bodyText = data.data.body_text || 'No content';
+      const bodyLength = data.data.body_length || bodyText.length;
+      
+      document.getElementById("result").innerHTML = `
+        <div class="alert alert-success" role="alert">
+          <h5>Email Analysis Complete - ID: ${data.email_id}</h5>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">Email Details</h6>
+            <p><strong>From:</strong> ${data.data.sender_email || 'Unknown'}</p>
+            <p><strong>Sender IP:</strong> ${data.data.sender_ip || 'Not found'}</p>
+            <hr>
+            <h6 class="card-subtitle mb-2 text-muted">Full Email Body (${bodyLength} characters)</h6>
+            <div style="max-height: 400px; overflow-y: auto; background-color: #000000; color: #ffffff; padding: 15px; border-radius: 5px; white-space: pre-wrap; font-family: monospace; font-size: 0.9em; border: 1px solid #333333;">
+${escapeHtml(bodyText)}
+            </div>
+            <hr>
+            <h6 class="card-subtitle mb-2 text-muted">Extracted URLs (${data.data.urls_count || 0})</h6>
+            ${urlsList}
+          </div>
+        </div>
+      `;
     }
-  });
-});
+  };
+}
+
+function toggleAnalysis() {
+  UpForm.classList.toggle("hidden");
+  analysis.classList.toggle("hidden");
+}
+
+document.getElementById("ToUpload").addEventListener("click", toggleAnalysis);
 
 // ===== Account / Forum code (unchanged below this line) =====
 

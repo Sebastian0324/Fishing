@@ -8,12 +8,15 @@ CREATE TABLE IF NOT EXISTS User(
 CREATE TABLE IF NOT EXISTS Email(
     Email_ID INTEGER PRIMARY KEY AUTOINCREMENT,
     User_ID INTEGER NOT NULL,
-    eml_file BLOB, 
+    Eml_file BLOB, 
     SHA256 TEXT,
     Size_Bytes INTEGER, 
     Received_At TEXT,
     From_Addr TEXT,  
-    Tag TEXT, 
+    Tag TEXT,
+    Sender_IP TEXT,
+    Body_Text TEXT,
+    Extracted_URLs TEXT,
     FOREIGN KEY(User_ID) REFERENCES User(User_ID)  
 );
 
