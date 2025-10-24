@@ -20,7 +20,8 @@
                 <a class="nav-link" href="/AboutUs">About Us</a>
             </div>
         </div>
-        <button id="Login_btn" class="btn btn-light">Login</button>
+        {% if session.name %}<button id="Logout_btn" class="btn btn-light">Logout</button>
+        {% else %}<button id="Login_btn" class="btn btn-light">Login</button>{% endif %}
     </nav>
     <div id="Login">
         <div id="Close_Login">
@@ -34,34 +35,30 @@
             <!-- Login -->
         <form action="/login" method="post" id="SignIn">
             <div class="mb-3">
-                <label for="name" class="form-label">Enter your E-mail or Username</label>
-                <input type="text" class="form-control" id="name" placeholder="E-mail / Usermane" required>
+                <label for="name" class="form-label">Enter your Username</label>
+                <input type="text" class="form-control" id="name" name="name" placeholder="Usermane" required>
             </div>
             <div class="mb-3">
                 <label for="pass" class="form-label">Enter your password:</label>
-                <input type="password" class="form-control" id="pass" placeholder="Password" required>
+                <input type="password" class="form-control" id="pass" name="pass" placeholder="Password" required>
             </div>
             <button type="submit" class="btn btn-primary">Sign in</button>
         </form>
             <!-- Signup -->
         <form action="/Signup" method="post" id="SignUp" class="hidden">
             <div class="mb-3">
-                <label for="E-mail" class="form-label">Enter your E-mail</label>
-                <input type="text" class="form-control" id="E-mail" placeholder="E-mail" required>
-            </div>
-            <div class="mb-3">
-                <label for="Usermane" class="form-label">Enter your Username</label>
-                <input type="text" class="form-control" id="Usermane" placeholder="Usermane" required>
+                <label for="Username" class="form-label">Enter your Username</label>
+                <input type="text" class="form-control" id="Username" name="Username" placeholder="Usermane" required>
             </div>
             <div class="mb-3">
                 <label for="pass-req" class="form-label">Enter your password:</label>
-                <input type="password" class="form-control" id="pass-req" placeholder="Password" required>
+                <input type="password" class="form-control" id="pass-req" name="Password" placeholder="Password" required>
             </div>
             <div class="mb-3">
                 <label for="pass-ver" class="form-label">Verify your password:</label>
-                <input type="password" class="form-control" id="pass-ver" placeholder="Password" required>
+                <input type="password" class="form-control" id="pass-ver" name="pass-ver" placeholder="Password" required>
             </div>
-            <button type="submit" class="btn btn-primary">Sign up</button>
+            <button type="submit" class="btn btn-primary">Create account</button>
         </form>
         {% endif %}
         </div>

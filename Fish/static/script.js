@@ -1,9 +1,25 @@
-// --- Login toggles (unchanged) ---
+
+// -------========-------    Sign Up    -------========-------
+
 let login = document.getElementById("Login");
-document.getElementById("Login_btn")?.addEventListener("click", function () {
-  login.style.display = "block";
-});
-document.getElementById("Close_Login")?.addEventListener("click", function () {
+let loginBtn = document.getElementById("Login_btn");
+let closeLogin = document.getElementById("Close_Login");
+
+if(document.getElementById("Login_btn")) {
+  document.getElementById("Login_btn").addEventListener("click", function() {
+    login.style.display = "block";
+  });
+
+} else {
+  document.getElementById("Logout_btn").addEventListener("click", async function(e) {
+    e.preventDefault();
+    await fetch("/logout");
+
+    window.open(window.location.href, "_self");
+  });
+}
+
+document.getElementById("Close_Login").children[1].addEventListener("click", function() {
   document.getElementById("Login").style.display = "None";
 });
 
@@ -11,27 +27,177 @@ document.getElementById("Close_Login")?.addEventListener("click", function () {
 let Sign = document.getElementById("SignIn/Up");
 let SignIn = document.getElementById("SignIn");
 let SignUp = document.getElementById("SignUp");
-document.getElementById("SignIn/Up")?.addEventListener("click", function () {
-  SignIn.classList.toggle("hidden");
-  SignUp.classList.toggle("hidden");
-  Sign.classList.toggle("btn-dark");
-  Sign.classList.toggle("btn-secondary");
+
+if (Sign && SignIn && SignUp) {
+  Sign.addEventListener("click", function() {
+    SignIn.classList.toggle("hidden");
+    SignUp.classList.toggle("hidden");
+    Sign.classList.toggle("btn-dark");
+    Sign.classList.toggle("btn-secondary");
 });
 
+SignUp.onsubmit = async (e) => {
+  e.preventDefault();
+
+  let SignUpForm = new FormData(e.target);
+  let SignUpResponse = await fetch("/Signup", { method: "POST", body: SignUpForm });
+  let SignUpData = await SignUpResponse.json();
+
+  window.open(window.location.href, "_self");
+};
+SignIn.onsubmit = async (e) => {
+  e.preventDefault();
+
+  let SignInForm = new FormData(e.target);
+  let SignInResponse = await fetch("/login", { method: "POST", body: SignInForm });
+  let SignInData = await SignInResponse.json();
+
+  window.open(window.location.href, "_self");
+};
 
 // -------========-------    Front Page    -------========-------
 // -------========-------    Upload Page    -------========-------  
 let UpForm = document.getElementById("uploadForm");
 let analysis = document.getElementById("analysis");
+let submitError = document.getElementById("SubmitError");
+let selectedFilesBox = document.getElementById("selectedFiles");
+
+// Maximum file size (1 MB = 1 * 1024 * 1024 bytes)
+const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB
+const MAX_FILES = 5;
+
 if (UpForm != null) {
+  // Show selected file names under the input
+  const fileInput = document.getElementById("dropBox");
+  if (fileInput) {
+    fileInput.addEventListener("change", function () {
+      if (!selectedFilesBox) return;
+      const files = Array.from(fileInput.files || []);
+      if (files.length === 0) {
+        selectedFilesBox.innerHTML = "";
+        return;
+      }
+      const formatFileSize = (bytes) => {
+        if (bytes < 1024) return bytes + ' B';
+        else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + ' KB';
+        else return (bytes / 1048576).toFixed(2) + ' MB';
+      };
+      
+      // Create a DataTransfer to manage files
+      const dataTransfer = new DataTransfer();
+      files.forEach(f => dataTransfer.items.add(f));
+      
+      const items = files.map((f, idx) => `
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-2 flex-grow-1">
+            <span class="badge bg-primary rounded-pill">${idx + 1}</span>
+            <div class="d-flex flex-column">
+              <span class="text-truncate" style="max-width: 250px;" title="${f.name}">
+                <strong>${f.name}</strong>
+              </span>
+              <small class="text-muted">${formatFileSize(f.size)}</small>
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm btn-danger remove-file-btn" data-index="${idx}" title="Remove file">
+            <i class="bi bi-x-circle"></i> Remove
+          </button>
+        </li>
+      `).join("");
+      
+      selectedFilesBox.innerHTML = `
+        <div class="alert alert-info p-2 mb-2" role="status">
+          Selected ${files.length} file${files.length > 1 ? 's' : ''}
+        </div>
+        <ul class="list-group">${items}</ul>`;
+      
+      // Add event listeners to remove buttons
+      document.querySelectorAll('.remove-file-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const indexToRemove = parseInt(this.getAttribute('data-index'));
+          const newDataTransfer = new DataTransfer();
+          
+          Array.from(fileInput.files).forEach((file, idx) => {
+            if (idx !== indexToRemove) {
+              newDataTransfer.items.add(file);
+            }
+          });
+          
+          fileInput.files = newDataTransfer.files;
+          fileInput.dispatchEvent(new Event('change'));
+        });
+      });
+    });
+  }
+
+
   UpForm.onsubmit = async (e) => {
     e.preventDefault();
 
-  toggleAnalysis();
+  // -------========-------    ERROR HANDLING BEFORE SUBMIT    -------========-------
+
+    // Clear previous errors
+    if (submitError) {
+      submitError.innerHTML = '';
+    }
+    
+    // Validate file input
+    const fileInput = document.getElementById("dropBox");
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+      if (submitError) {
+        submitError.innerHTML = '<div class="alert alert-danger" role="alert"><strong>Error:</strong> Please select at least one .eml file</div>';
+      }
+      return;
+    }
+    
+    // Validate number of files
+    if (fileInput.files.length > MAX_FILES) {
+      if (submitError) {
+        submitError.innerHTML = `<div class="alert alert-danger" role="alert"><strong>Error:</strong> Maximum ${MAX_FILES} files allowed</div>`;
+      }
+      return;
+    }
+    
+    // Validate file type and size
+    for (let i = 0; i < fileInput.files.length; i++) {
+      const file = fileInput.files[i];
+      
+      // Check file extension
+      if (!file.name.endsWith('.eml')) {
+        if (submitError) {
+          submitError.innerHTML = '<div class="alert alert-danger" role="alert"><strong>Error:</strong> Only .eml files are allowed</div>';
+        }
+        return;
+      }
+      
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
+        if (submitError) {
+          submitError.innerHTML = `<div class="alert alert-danger" role="alert"><strong>Error:</strong> File "${file.name}" is ${fileSizeMB} MB. Maximum file size is ${maxSizeMB} MB</div>`;
+        }
+        return;
+      }
+    }
+    // -------========-------    END OF ERROR HANDLING BEFORE SUBMIT    -------========-------
+
+    // Show analysis section
+    toggleAnalysis();
+    
+    // Show loading spinner
+    const loadingSpinner = document.getElementById("loadingSpinner");
+    const downloadSection = document.getElementById("downloadSection");
+    if (loadingSpinner) loadingSpinner.style.display = "block";
+    if (downloadSection) downloadSection.classList.add("hidden");
 
     let formData = new FormData(e.target);
     let response = await fetch("/upload", { method: "POST", body: formData });
     let data = await response.json();
+    
+    // Hide loading spinner after response
+    setTimeout(() => {
+      if (loadingSpinner) loadingSpinner.style.display = "none";
+    }, 500);
     
     // Handle error response
     if (data.error) {
@@ -42,47 +208,32 @@ if (UpForm != null) {
     
     // Handle success response with extracted data
     if (data.success && data.data) {
-      let urlsList = '';
-      if (data.data.urls && data.data.urls.length > 0) {
-        urlsList = '<ul class="list-group mt-2">';
-        data.data.urls.forEach(url => {
-          urlsList += `<li class="list-group-item">${url}</li>`;
-        });
-        urlsList += '</ul>';
-      } else {
-        urlsList = '<p class="text-muted">No URLs found</p>';
-      }
-      
-      // Escape HTML for safe display
-      const escapeHtml = (text) => {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-      };
-      
       const bodyText = data.data.body_text || 'No content';
-      const bodyLength = data.data.body_length || bodyText.length;
       
       document.getElementById("result").innerHTML = `
         <div class="alert alert-success" role="alert">
-          <h5>Email Analysis Complete - ID: ${data.email_id}</h5>
+          <h5>✓ Email Analysis Complete - ID: ${data.email_id}</h5>
         </div>
-        <div class="card">
-          <div class="card-body">
-            <h6 class="card-subtitle mb-2 text-muted">Email Details</h6>
-            <p><strong>From:</strong> ${data.data.sender_email || 'Unknown'}</p>
-            <p><strong>Sender IP:</strong> ${data.data.sender_ip || 'Not found'}</p>
-            <hr>
-            <h6 class="card-subtitle mb-2 text-muted">Full Email Body (${bodyLength} characters)</h6>
-            <div style="max-height: 400px; overflow-y: auto; background-color: #000000; color: #ffffff; padding: 15px; border-radius: 5px; white-space: pre-wrap; font-family: monospace; font-size: 0.9em; border: 1px solid #333333;">
-${escapeHtml(bodyText)}
+        <div id="llmSection" class="mt-4">
+          <div class="card">
+            <div class="card-body">
+              <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
+              <div class="text-center my-3">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading LLM response...</span>
+                </div>
+                <p class="mt-2 text-muted">Analyzing with AI...</p>
+              </div>
             </div>
-            <hr>
-            <h6 class="card-subtitle mb-2 text-muted">Extracted URLs (${data.data.urls_count || 0})</h6>
-            ${urlsList}
           </div>
         </div>
       `;
+      
+      // Show download button after successful analysis
+      if (downloadSection) downloadSection.classList.remove("hidden");
+      
+      // Call LLM API after displaying email analysis
+      callLLMAPI(bodyText);
     }
   };
 }
@@ -90,33 +241,112 @@ ${escapeHtml(bodyText)}
 function toggleAnalysis() {
   UpForm.classList.toggle("hidden");
   analysis.classList.toggle("hidden");
+  
+  // Reset analysis section when going back
+  if (UpForm.classList.contains("hidden")) {
+    // Going to analysis view - do nothing special
+  } else {
+    // Going back to upload form - reset everything
+    const loadingSpinner = document.getElementById("loadingSpinner");
+    const downloadSection = document.getElementById("downloadSection");
+    const resultDiv = document.getElementById("result");
+    
+    if (loadingSpinner) loadingSpinner.style.display = "none";
+    if (downloadSection) downloadSection.classList.add("hidden");
+    if (resultDiv) resultDiv.innerHTML = "";
+  }
 }
 
-document.getElementById("ToUpload").addEventListener("click", toggleAnalysis);
+// Get the Back button element
+const toUploadBtn = document.getElementById("ToUpload");
+
+if (toUploadBtn) {
+  toUploadBtn.addEventListener("click", toggleAnalysis);
+}
+
+// Function to call LLM API
+async function callLLMAPI(emailBody) {
+  try {
+    const response = await fetch("/api/llm", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: `Analyze this email for phishing threats and provide a detailed security assessment:\n\n${emailBody}`
+      })
+    });
+    
+    const data = await response.json();
+    
+    const llmSection = document.getElementById("llmSection");
+    if (llmSection) {
+      if (data.success) {
+        llmSection.innerHTML = `
+          <div class="card">
+            <div class="card-body">
+              <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
+              <div style="background-color: #000000; color: #ffffff; padding: 15px; border-radius: 5px; white-space: pre-wrap; border: 1px solid #333333;">
+${data.response}
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        llmSection.innerHTML = `
+          <div class="card">
+            <div class="card-body">
+              <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
+              <div class="alert alert-danger" role="alert">
+                <strong>Error:</strong> ${data.error}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+  } catch (error) {
+    const llmSection = document.getElementById("llmSection");
+    if (llmSection) {
+      llmSection.innerHTML = `
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
+            <div class="alert alert-danger" role="alert">
+              <strong>Error:</strong> Failed to connect to LLM API - ${error.message}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  }
+}
 
 // ===== Account / Forum code (unchanged below this line) =====
 
-// Account Page Toggle
-let showEmailsBtn = document.getElementById("showEmailsBtn");
-let showSettingsBtn = document.getElementById("showSettingsBtn");
-let emailsSection = document.getElementById("emailsSection");
-let settingsSection = document.getElementById("settingsSection");
+// -------========-------    Account Page Toggle    -------========-------
+document.addEventListener("DOMContentLoaded", function() {
+  let showEmailsBtn = document.getElementById("showEmailsBtn");
+  let showSettingsBtn = document.getElementById("showSettingsBtn");
+  let emailsSection = document.getElementById("emailsSection");
+  let settingsSection = document.getElementById("settingsSection");
 
-if (showEmailsBtn && showSettingsBtn) {
-  showEmailsBtn.addEventListener("click", function () {
-    emailsSection.style.display = "block";
-    settingsSection.style.display = "none";
-    showEmailsBtn.classList.add("active");
-    showSettingsBtn.classList.remove("active");
-  });
+  if (showEmailsBtn != null && showSettingsBtn != null) {
+    showEmailsBtn.addEventListener("click", function() {
+      emailsSection.style.display = "block";
+      settingsSection.style.display = "none";
+      showEmailsBtn.classList.add("active");
+      showSettingsBtn.classList.remove("active");
+    });
 
-  showSettingsBtn.addEventListener("click", function () {
-    emailsSection.style.display = "none";
-    settingsSection.style.display = "block";
-    showSettingsBtn.classList.add("active");
-    showEmailsBtn.classList.remove("active");
-  });
-}
+    showSettingsBtn.addEventListener("click", function() {
+      emailsSection.style.display = "none";
+      settingsSection.style.display = "block";
+      showSettingsBtn.classList.add("active");
+      showEmailsBtn.classList.remove("active");
+    });
+  }
+});
 
 // Forum Page (placeholder data)
 const discussions = { /* ... unchanged ... */ };
@@ -146,3 +376,4 @@ topicItems.forEach((item) => {
     }
   });
 });
+}
