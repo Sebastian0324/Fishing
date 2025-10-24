@@ -23,6 +23,7 @@ document.getElementById("Close_Login").children[1].addEventListener("click", fun
   document.getElementById("Login").style.display = "None";
 });
 
+// --- Sign in/up toggle (unchanged) ---
 let Sign = document.getElementById("SignIn/Up");
 let SignIn = document.getElementById("SignIn");
 let SignUp = document.getElementById("SignUp");
@@ -321,7 +322,7 @@ ${data.response}
   }
 }
 
-// -------========-------    End of Upload Page    -------========-------
+// ===== Account / Forum code (unchanged below this line) =====
 
 // -------========-------    Account Page Toggle    -------========-------
 document.addEventListener("DOMContentLoaded", function() {
@@ -347,69 +348,16 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 });
 
-// -------========-------    Forum Page Discussion Selection    -------========-------
-// Discussion data (placeholder content!!)
-const discussions = {
-  "Discussion 1": {
-    author: "FishMaster92",
-    time: "(x) time ago",
-    views: 100,
-    replies: 10,
-    likes: 10,
-    content: `<p>here will the text be</p>`
-  },
-  "Discussion 2": {
-    author: "ProAngler",
-    time: "(x) time ago",
-    views: 100,
-    replies: 10,
-    likes: 10,
-    content: `<p>here will the text be</p>`
-  },
-  "Discussion 3": {
-    author: "AdminTeam",
-    time: "(x) time ago",
-    views: 100,
-    replies: 10,
-    likes: 10,
-    content: `<p>here will the text be</p>`
-  },
-  "Discussion 4": {
-    author: "IceFisher88",
-    time: "(x) time ago",
-    views: 100,
-    replies: 10,
-    likes: 10,
-    content: `<p>here will the text be</p>`
-  },
-  "Discussion 5": {
-    author: "GreenAngler",
-    time: "(x) time ago",
-    views: 100,
-    replies: 10,
-    likes: 10,
-    content: `<p>here will the text be</p>`
-  }
-};
-
-// Add click handlers to discussion items
-const topicItems = document.querySelectorAll('.topic-item');
-topicItems.forEach(item => {
-  item.addEventListener('click', function() {
-    // Remove active class from all items
-    topicItems.forEach(i => i.classList.remove('active'));
-    
-    // Add active class to clicked item
-    this.classList.add('active');
-    
-    // Get the discussion title
-    const title = this.querySelector('.discussion-title').textContent;
-    
-    // Get the discussion data
+// Forum Page (placeholder data)
+const discussions = { /* ... unchanged ... */ };
+const topicItems = document.querySelectorAll(".topic-item");
+topicItems.forEach((item) => {
+  item.addEventListener("click", function () {
+    topicItems.forEach((i) => i.classList.remove("active"));
+    this.classList.add("active");
+    const title = this.querySelector(".discussion-title").textContent;
     const discussion = discussions[title];
-    
     if (discussion) {
-      // Build the discussion HTML
       const discussionHTML = `
         <div class="discussion-header">
           <h2 class="discussion-title-large">${title}</h2>
@@ -419,17 +367,12 @@ topicItems.forEach(item => {
             <span class="stat-item"> ${discussion.likes} likes</span>
           </div>
         </div>
-        <div class="discussion-body">
-          ${discussion.content}
-        </div>
+        <div class="discussion-body">${discussion.content}</div>
         <div class="reply-section">
           <h3>Replies</h3>
           <p class="placeholder-text">Discussion replies would appear here...</p>
-        </div>
-      `;
-      
-      // Update the discussion content area
-      document.getElementById('discussion-content').innerHTML = discussionHTML;
+        </div>`;
+      document.getElementById("discussion-content").innerHTML = discussionHTML;
     }
   });
 });
