@@ -5,7 +5,7 @@ import sqlite3
 import hashlib
 import json
 from datetime import datetime
-from static.helper_eml import generate_llm_body, parse_eml_bytes, init_db, DB_PATH
+from static.Helper_eml import generate_llm_body, parse_eml_bytes, init_db, DB_PATH
 from api.llm import query_llm
 import dotenv
 dotenv.load_dotenv()

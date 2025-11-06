@@ -130,8 +130,8 @@ if (UpForm != null) {
   }
 
 
-  UpForm.onsubmit = async (e) => {
-    e.preventDefault();
+UpForm.onsubmit = async (e) => {
+  e.preventDefault();
 
   // -------========-------    ERROR HANDLING BEFORE SUBMIT    -------========-------
 
@@ -191,8 +191,9 @@ if (UpForm != null) {
     if (downloadSection) downloadSection.classList.add("hidden");
 
     let formData = new FormData(e.target);
-    let response = await fetch("/upload", { method: "POST", body: formData });
-    let data = await response.json();
+    e.preventDefault();
+    respons = await fetch("/upload", { method: "POST", body: formData });
+    let data = await respons.json();
     
     // Hide loading spinner after response
     setTimeout(() => {
