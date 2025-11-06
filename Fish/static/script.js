@@ -209,12 +209,45 @@ UpForm.onsubmit = async (e) => {
     
     // Handle success response with extracted data
     if (data.success && data.data) {
-      const bodyText = data.data.body_text || 'No content';
-      
-      document.getElementById("result").innerHTML = `
+  const bodyText = data.data.body_text?.trim() || 'No content';
+  const downloadSection = document.getElementById("downloadSection");
+
+  // Insert the updated HTML with progress bars and sections
+  document.getElementById("result").innerHTML = `
+    <div class="row">
+      <div class="col-md-8">
         <div class="alert alert-success" role="alert">
           <h5>✓ Email Analysis Complete - ID: ${data.email_id}</h5>
         </div>
+
+        <div id="virusSection" class="mt-4">
+          <div class="card">
+            <div class="card-body">
+              <h6 class="card-subtitle mb-2 text-muted">VirusTotal Analysis</h6>
+              <div class="text-center my-3">
+                <div class="spinner-border text-info" role="status">
+                  <span class="visually-hidden">Loading VirusTotal response...</span>
+                </div>
+                <p class="mt-2 text-muted">Checking with VirusTotal...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="ipSection" class="mt-4">
+          <div class="card">
+            <div class="card-body">
+              <h6 class="card-subtitle mb-2 text-muted">AbuseIPDb Analysis</h6>
+              <div class="text-center my-3">
+                <div class="spinner-border text-warning" role="status">
+                  <span class="visually-hidden">Loading AbuseIPDb response...</span>
+                </div>
+                <p class="mt-2 text-muted">Checking IPs against AbuseIPDb...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div id="llmSection" class="mt-4">
           <div class="card">
             <div class="card-body">
@@ -228,16 +261,120 @@ UpForm.onsubmit = async (e) => {
             </div>
           </div>
         </div>
-      `;
-      
-      // Show download button after successful analysis
-      if (downloadSection) downloadSection.classList.remove("hidden");
-      
-      // Call LLM API after displaying email analysis
-      callLLMAPI(bodyText);
+      </div>
+
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <h6 class="card-subtitle mb-3 text-muted">Analysis Progress</h6>
+
+            ${["vt", "abuse", "llm"].map(id => `
+              <div id="${id}ProgressContainer" class="mb-4">
+                <div class="mb-2 text-muted small">${id === "vt" ? "VirusTotal" : id === "abuse" ? "AbuseIPDb" : "LLM"} analysis progress</div>
+                <div class="progress" style="height: 1.25rem;">
+                  <div id="${id}ProgressBar" class="progress-bar progress-bar-striped progress-bar-animated ${id === "vt" ? "bg-info" : id === "abuse" ? "bg-warning" : "bg-primary"}" 
+                       role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                </div>
+              </div>
+            `).join("")}
+
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+
+
+
+  // Show download button after successful analysis
+  if (downloadSection) downloadSection.classList.remove("hidden");
+  
+  
+  //CALL VirusTotal and AbuseIPDb functions
+  //callVirusTotalAPI(data);
+  //callAbuseIPDbAPI(data);
+
+  // Smooth animated progress helper
+  function animateProgress(barId, duration, onComplete) {
+    const bar = document.getElementById(barId);
+    if (!bar) return;
+    bar.style.width = "0%";
+    bar.setAttribute("aria-valuenow", 0);
+    bar.textContent = "0%";
+    // Ensure initial visual styles
+    bar.classList.add("progress-bar-animated", "progress-bar-striped");
+
+    let start = null;
+    function step(timestamp) {
+      if (!start) start = timestamp;
+      const elapsed = timestamp - start;
+      const pct = Math.min(100, Math.floor((elapsed / duration) * 100));
+      bar.style.width = pct + "%";
+      bar.setAttribute("aria-valuenow", pct);
+      bar.textContent = pct + "%";
+
+      if (pct < 100) {
+    requestAnimationFrame(step);
+      } else {
+    // When reaching 100%, mark completed and make green
+    bar.style.width = "100%";
+    bar.setAttribute("aria-valuenow", 100);
+    // remove animated/striped classes and set success color
+    bar.classList.remove("progress-bar-animated", "progress-bar-striped", "bg-info", "bg-warning", "bg-primary");
+    bar.classList.add("bg-success");
+    bar.textContent = "Completed";
+    if (typeof onComplete === "function") {
+      // small delay to let UI show 100%/Completed
+      setTimeout(onComplete, 300);
+    }
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  // Animate each progress bar and trigger respective checks when complete
+  animateProgress("vtProgressBar", 2000, () => {
+    const virusSection = document.getElementById("virusSection");
+    if (typeof callVirusTotalAPI === "function") {
+      callVirusTotalAPI(data.email_id);
+    } else if (virusSection) {
+      virusSection.innerHTML = `
+    <div class="card">
+      <div class="card-body">
+        <h6 class="card-subtitle mb-2 text-muted">VirusTotal Analysis</h6>
+        <div class="alert alert-info">VirusTotal check queued. <strong>We can show result here</strong></div>
+      </div>
+    </div>`;
+    }
+  });
+
+  animateProgress("abuseProgressBar", 2500, () => {
+    const ipSection = document.getElementById("ipSection");
+    if (typeof callAbuseIPDbAPI === "function") {
+      callAbuseIPDbAPI(data.email_id);
+    } else if (ipSection) {
+      ipSection.innerHTML = `
+    <div class="card">
+      <div class="card-body">
+        <h6 class="card-subtitle mb-2 text-muted">AbuseIPDb Analysis</h6>
+        <div class="alert alert-info">IP reputation check queued. <strong>We can show result here</strong></div>
+      </div>
+    </div>`;
+    }
+  });
+
+  animateProgress("llmProgressBar", 8000);
+
+  
+  callLLMAPI(bodyText);
     }
   };
 }
+
+
+
+
 
 function toggleAnalysis() {
   UpForm.classList.toggle("hidden");
