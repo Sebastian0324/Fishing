@@ -117,6 +117,58 @@ div#Login {
     margin: 0 auto;
 }
 
+.main-content .upload-section {
+    padding: 2em 2em;
+    border: 2px solid rgba(255,255,255,0.28);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--BC), #000000cc), color-mix(in srgb, var(--BC), #000000bb));
+}
+
+.main-content .upload-section form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5em;
+}
+
+.main-content .upload-section #uploadControls {
+    width: 100%;
+    max-width: 600px;
+}
+
+.main-content .upload-section .placeholder-text {
+    text-align: center;
+}
+
+.main-content .upload-section .section-header {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 1em;
+    padding-bottom: 0.5em;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+    color: var(--Text_Color);
+}
+
+.main-content .upload-section .placeholder-content {
+    padding: 1.5em;
+}
+
+.main-content .file-label {
+    padding: 4em 3em;
+    border-radius: 1.2em;
+    font-size: 1.05rem;
+}
+
+.main-content .file-label-text {
+    font-size: 1.35rem;
+}
+
+@media (min-width: 1000px) {
+    .main-content .upload-form {
+        max-width: 900px;
+    }
+}
+
 /* File Upload Area */
 .upload-area {
     margin-bottom: 2em;
@@ -210,23 +262,21 @@ div#Login {
 }
 
 .submit-btn {
-    min-width: 250px;
     padding: 0.8em 2em;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5em;
+    border: 2px solid #6E5DC6;
+    border-radius: 0.5em;
     background: linear-gradient(135deg, #6E5DC6, #a05182);
-    border: none;
-    box-shadow: 0 4px 15px rgba(110, 93, 198, 0.4);
+    color: var(--Text_Color);
+    cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .submit-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(110, 93, 198, 0.6);
+    background-color: rgba(110, 93, 198, 0.2);
+    border-color: #6E5DC6;
+    transform: translateY(-2px);
 }
 
 .submit-btn:active {
@@ -282,14 +332,54 @@ img {
     max-width: 100%;
     max-height: 100%;
 }
-/* Page Container - Use for any page content wrapper */
 .page-container {
-    max-width: 1200px;
-    margin: 2em auto;
-    padding: 2em;
+    max-width: 1600px;
+    margin: 1.5em auto;
+    padding: 1.5em;
 }
 
-/* Page Title - Large title style for any page */
+.layout {
+    display: flex;
+    gap: 2em;
+    align-items: flex-start;
+}
+
+.sidebar {
+    flex: 0 0 380px;
+    max-width: 420px;
+    min-width: 260px;
+    position: sticky;
+    top: 2.5em;
+}
+
+.sidebar .content-section {
+    padding: 1.25em;
+    margin-bottom: 1em;
+}
+
+.main-content {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+@media (max-width: 900px) {
+    .layout {
+        flex-direction: column;
+        gap: 1em;
+    }
+    .sidebar {
+        position: static;
+        width: auto;
+        max-width: none;
+    }
+}
+
+@media (min-width: 1200px) {
+    .main-content .upload-form {
+        max-width: 1100px;
+    }
+}
+
 .page-title {
     font-size: 3rem;
     font-weight: bold;
@@ -317,6 +407,15 @@ img {
     padding-bottom: 0.5em;
     border-bottom: 2px solid rgba(255, 255, 255, 0.3);
     color: var(--Text_Color);
+}
+
+/* Ensure How it Works section header matches Upload section header spacing */
+#howItWorksSection .section-header {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 1em;
+    padding-bottom: 0.5em;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 /* Placeholder Content - Container for placeholder content */
@@ -357,6 +456,28 @@ img {
     gap: 1em;
     margin-bottom: 2em;
 }
+
+/* Page-level toggle buttons (used on Home page) */
+.page-toggle-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1em; /* same spacing as account toggle */
+    margin-bottom: 2em; /* same spacing from other elements as account page */
+}
+
+/* Welcome collapsible card */
+#welcomeSection {
+    position: relative;
+}
+
+.welcome-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1em;
+}
+
+/* The welcome/description is always visible; collapse functionality removed */
 
 .toggle-btn {
     padding: 0.8em 2em;
