@@ -252,8 +252,15 @@ def upload():
         # Return response for last file
         return jsonify({
             "success": True,
-            **(last_payload or {}),
-            "uploaded_files": uploaded_results
+            "email_id": email_id,
+            "data": {
+                "sender_ip": parsed_data['sender_ip'],
+                "sender_email": parsed_data['sender_email'],
+                "body_text": parsed_data['body_text'],
+                "body_preview": parsed_data['body_text'][:200] + "..." if len(parsed_data['body_text']) > 200 else parsed_data['body_text'],
+                "urls_count": len(parsed_data['urls']),
+                "urls": parsed_data['urls']
+            }
         }), 200
     
     except Exception as e:

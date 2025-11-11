@@ -55,7 +55,6 @@ SignIn.onsubmit = async (e) => {
   window.open(window.location.href, "_self");
 };
 
-// -------========-------    Front Page    -------========-------
 // -------========-------    Upload Page    -------========-------  
 let UpForm = document.getElementById("uploadForm");
 let analysis = document.getElementById("analysis");
@@ -206,26 +205,11 @@ if (UpForm != null) {
       return;
     }
     
-    // Handle success response with extracted data
+    // Handle success response
     if (data.success && data.data) {
-      const bodyText = data.data.body_text || 'No content';
-      
       document.getElementById("result").innerHTML = `
         <div class="alert alert-success" role="alert">
           <h5>✓ Email Analysis Complete - ID: ${data.email_id}</h5>
-        </div>
-        <div id="llmSection" class="mt-4">
-          <div class="card">
-            <div class="card-body">
-              <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
-              <div class="text-center my-3">
-                <div class="spinner-border text-primary" role="status">
-                  <span class="visually-hidden">Loading LLM response...</span>
-                </div>
-                <p class="mt-2 text-muted">Analyzing with AI...</p>
-              </div>
-            </div>
-          </div>
         </div>
       `;
       
@@ -257,72 +241,9 @@ function toggleAnalysis() {
   }
 }
 
-// Get the Back button element
-const toUploadBtn = document.getElementById("ToUpload");
+document.getElementById("ToUpload").addEventListener("click", toggleAnalysis);
 
-if (toUploadBtn) {
-  toUploadBtn.addEventListener("click", toggleAnalysis);
-}
-
-// Function to call LLM API
-async function callLLMAPI(emailBody) {
-  try {
-    const response = await fetch("/api/llm", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: `Analyze this email for phishing threats and provide a detailed security assessment:\n\n${emailBody}`
-      })
-    });
-    
-    const data = await response.json();
-    
-    const llmSection = document.getElementById("llmSection");
-    if (llmSection) {
-      if (data.success) {
-        llmSection.innerHTML = `
-          <div class="card">
-            <div class="card-body">
-              <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
-              <div style="background-color: #000000; color: #ffffff; padding: 15px; border-radius: 5px; white-space: pre-wrap; border: 1px solid #333333;">
-${data.response}
-              </div>
-            </div>
-          </div>
-        `;
-      } else {
-        llmSection.innerHTML = `
-          <div class="card">
-            <div class="card-body">
-              <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
-              <div class="alert alert-danger" role="alert">
-                <strong>Error:</strong> ${data.error}
-              </div>
-            </div>
-          </div>
-        `;
-      }
-    }
-  } catch (error) {
-    const llmSection = document.getElementById("llmSection");
-    if (llmSection) {
-      llmSection.innerHTML = `
-        <div class="card">
-          <div class="card-body">
-            <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
-            <div class="alert alert-danger" role="alert">
-              <strong>Error:</strong> Failed to connect to LLM API - ${error.message}
-            </div>
-          </div>
-        </div>
-      `;
-    }
-  }
-}
-
-// ===== Account / Forum code (unchanged below this line) =====
+// -------========-------    End of Upload Page    -------========-------
 
 // -------========-------    Account Page Toggle    -------========-------
 document.addEventListener("DOMContentLoaded", function() {
