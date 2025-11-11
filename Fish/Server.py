@@ -176,7 +176,7 @@ def logout():
     return jsonify({"success": True}), 200
 
 # Get Emails
-@app.post('/upload')
+@app.route('/upload', methods=['POST'])
 def upload():
     files = request.files.getlist("file")
 

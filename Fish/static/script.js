@@ -34,27 +34,27 @@ if (Sign && SignIn && SignUp) {
     SignUp.classList.toggle("hidden");
     Sign.classList.toggle("btn-dark");
     Sign.classList.toggle("btn-secondary");
-});
+  });
 
-SignUp.onsubmit = async (e) => {
-  e.preventDefault();
+  SignUp.onsubmit = async (e) => {
+    e.preventDefault();
 
-  let SignUpForm = new FormData(e.target);
-  let SignUpResponse = await fetch("/Signup", { method: "POST", body: SignUpForm });
-  let SignUpData = await SignUpResponse.json();
+    let SignUpForm = new FormData(e.target);
+    let SignUpResponse = await fetch("/Signup", { method: "POST", body: SignUpForm });
+    let SignUpData = await SignUpResponse.json();
 
-  window.open(window.location.href, "_self");
-};
-SignIn.onsubmit = async (e) => {
-  e.preventDefault();
+    window.open(window.location.href, "_self");
+  };
+  SignIn.onsubmit = async (e) => {
+    e.preventDefault();
 
-  let SignInForm = new FormData(e.target);
-  let SignInResponse = await fetch("/login", { method: "POST", body: SignInForm });
-  let SignInData = await SignInResponse.json();
+    let SignInForm = new FormData(e.target);
+    let SignInResponse = await fetch("/login", { method: "POST", body: SignInForm });
+    let SignInData = await SignInResponse.json();
 
-  window.open(window.location.href, "_self");
-};
-
+    window.open(window.location.href, "_self");
+  };
+}
 // -------========-------    Front Page    -------========-------
 // -------========-------    Upload Page    -------========-------  
 let UpForm = document.getElementById("uploadForm");
@@ -191,8 +191,7 @@ UpForm.onsubmit = async (e) => {
     if (downloadSection) downloadSection.classList.add("hidden");
 
     let formData = new FormData(e.target);
-    e.preventDefault();
-    respons = await fetch("/upload", { method: "POST", body: formData });
+    let respons = await fetch("/upload", { method: "POST", body: formData });
     let data = await respons.json();
     
     // Hide loading spinner after response
@@ -514,4 +513,3 @@ topicItems.forEach((item) => {
     }
   });
 });
-}
