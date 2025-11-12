@@ -107,9 +107,9 @@ def CreateAccount():
         cursor.execute("""SELECT Username FROM USER WHERE Username = ?""",
                        (username, ))
 
-        if( cursor.fetchall() ):
+        if( cursor.fetchone() ):
             return jsonify({"success": False,
-                            "error": f"This user allredy exist"}), 400
+                            "error": f"This user alredy exist"}), 400
         # ToDo::
         #  -- Check password
         
@@ -123,6 +123,8 @@ def CreateAccount():
                         username,
                         hash.hexdigest()
                     ))
+        
+        user_id = cursor.lastrowid
         session["name"] = username
             
         conn.commit()
@@ -146,24 +148,26 @@ def Login():
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
-        cursor.execute("""SELECT Password_Hash FROM USER WHERE Username = ?""",
+        cursor.execute("""SELECT User_ID, Password_Hash FROM USER WHERE Username = ?""",
                        (request.form.get("name"), ))
         
-        pass_hash = cursor.fetchall()
-        if( not pass_hash ):
+        row = cursor.fetchone()
+        if( not row ):
             return jsonify({"success": False,
                             "error": f"This user dose not exist"}), 400
+        
+        user_id, stored_hash = row
         
         hash = hashlib.sha3_512()
         hash.update(request.form.get("pass").encode())
 
-        if (pass_hash[0][0] != hash.hexdigest()):
+        if (stored_hash != hash.hexdigest()):
             return jsonify({"success": False,
                             "error": f"Wrong password"}), 400
         
         session["name"] = request.form.get("name")
+        session["user_id"] = user_id
 
-        conn.commit()
         conn.close()
 
         return jsonify({"success": True}), 200
@@ -172,7 +176,7 @@ def Login():
 
 @app.route("/logout")
 def logout():
-    session["name"] = None
+    session.clear()
     return jsonify({"success": True}), 200
 
 # Get Emails
@@ -216,7 +220,7 @@ def upload():
                         From_Addr, Sender_IP, Body_Text, Extracted_URLs
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
-                    uid,  # Default user ID
+                    uid,
                     file_content,
                     hashlib.sha256(file_content).hexdigest(),
                     len(file_content),
@@ -241,6 +245,7 @@ def upload():
                     "sender_ip": parsed['sender']['ip'],
                     "sender_email": parsed['sender']['email'],
                     "body_text": body_text,
+                    "body_preview": body_text[:200] + "..." if len(body_text) > 200 else body_text,
                     "urls_count": len(parsed['urls']),
                     "urls": parsed['urls']
                 }
@@ -252,15 +257,7 @@ def upload():
         # Return response for last file
         return jsonify({
             "success": True,
-            "email_id": email_id,
-            "data": {
-                "sender_ip": parsed_data['sender_ip'],
-                "sender_email": parsed_data['sender_email'],
-                "body_text": parsed_data['body_text'],
-                "body_preview": parsed_data['body_text'][:200] + "..." if len(parsed_data['body_text']) > 200 else parsed_data['body_text'],
-                "urls_count": len(parsed_data['urls']),
-                "urls": parsed_data['urls']
-            }
+            **(last_payload or {})
         }), 200
     
     except Exception as e:
