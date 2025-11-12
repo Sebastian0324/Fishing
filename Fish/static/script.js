@@ -216,10 +216,198 @@ if (UpForm != null) {
       // Show download button after successful analysis
       if (downloadSection) downloadSection.classList.remove("hidden");
       
-      // Call LLM API after displaying email analysis
-      callLLMAPI(bodyText);
+      // Call both APIs in parallel
+      const bodyText = data.data.body_text || "";
+      const senderIp = data.data.sender_ip || "";
+      
+      if (bodyText) {
+        callLLMAPI(bodyText, data.email_id);
+      }
+      
+      if (senderIp) {
+        callAbuseIPAPI(senderIp);
+      }
     }
   };
+}
+
+// -------========-------    LLM API Call Function    -------========-------
+async function callLLMAPI(bodyText, emailId) {
+  const resultDiv = document.getElementById("result");
+  
+  // Add loading indicator for LLM analysis
+  const llmLoadingHTML = `
+    <div id="llmLoading" class="alert alert-info mt-3" role="status">
+      <div class="d-flex align-items-center">
+        <div class="spinner-border spinner-border-sm me-2" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <span>Analyzing email for phishing indicators...</span>
+      </div>
+    </div>
+  `;
+  
+  if (resultDiv) {
+    resultDiv.insertAdjacentHTML('beforeend', llmLoadingHTML);
+  }
+  
+  try {
+    const llmResponse = await fetch("/api/llm", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message: bodyText })
+    });
+    
+    const llmData = await llmResponse.json();
+    
+    // Remove loading indicator
+    const llmLoadingDiv = document.getElementById("llmLoading");
+    if (llmLoadingDiv) llmLoadingDiv.remove();
+    
+    if (llmData.success && llmData.response) {
+      // Display LLM analysis
+      const analysisHTML = `
+        <div class="alert alert-primary mt-3" role="alert">
+          <h5>🔍 Phishing Analysis Results</h5>
+          <hr>
+          <div style="white-space: pre-wrap;">${llmData.response}</div>
+        </div>
+      `;
+      if (resultDiv) {
+        resultDiv.insertAdjacentHTML('beforeend', analysisHTML);
+      }
+    } else {
+      // Display error
+      const errorHTML = `
+        <div class="alert alert-warning mt-3" role="alert">
+          <strong>Analysis Error:</strong> ${llmData.error || 'Failed to analyze email'}
+        </div>
+      `;
+      if (resultDiv) {
+        resultDiv.insertAdjacentHTML('beforeend', errorHTML);
+      }
+    }
+  } catch (error) {
+    // Remove loading indicator
+    const llmLoadingDiv = document.getElementById("llmLoading");
+    if (llmLoadingDiv) llmLoadingDiv.remove();
+    
+    // Display error
+    const errorHTML = `
+      <div class="alert alert-danger mt-3" role="alert">
+        <strong>Network Error:</strong> Failed to connect to analysis service
+      </div>
+    `;
+    if (resultDiv) {
+      resultDiv.insertAdjacentHTML('beforeend', errorHTML);
+    }
+  }
+}
+
+// -------========-------    AbuseIPDB API Call Function    -------========-------
+async function callAbuseIPAPI(ipAddress) {
+  const resultDiv = document.getElementById("result");
+  
+  // Add loading indicator for IP reputation check
+  const ipLoadingHTML = `
+    <div id="ipLoading" class="alert alert-info mt-3" role="status">
+      <div class="d-flex align-items-center">
+        <div class="spinner-border spinner-border-sm me-2" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <span>Checking sender IP reputation...</span>
+      </div>
+    </div>
+  `;
+  
+  if (resultDiv) {
+    resultDiv.insertAdjacentHTML('beforeend', ipLoadingHTML);
+  }
+  
+  try {
+    const ipResponse = await fetch("/api/check-ip", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ ip_address: ipAddress })
+    });
+    
+    const ipData = await ipResponse.json();
+    
+    // Remove loading indicator
+    const ipLoadingDiv = document.getElementById("ipLoading");
+    if (ipLoadingDiv) ipLoadingDiv.remove();
+    
+    if (ipData.success) {
+      // Determine risk level and color
+      let riskLevel = "Low";
+      let riskClass = "success";
+      let riskIcon = "✓";
+      
+      if (ipData.abuse_score >= 75) {
+        riskLevel = "High";
+        riskClass = "danger";
+        riskIcon = "⚠";
+      } else if (ipData.abuse_score >= 50) {
+        riskLevel = "Medium";
+        riskClass = "warning";
+        riskIcon = "⚡";
+      }
+      
+      // Display IP reputation analysis
+      const ipAnalysisHTML = `
+        <div class="alert alert-${riskClass} mt-3" role="alert">
+          <h5>${riskIcon} Sender IP Reputation Analysis</h5>
+          <hr>
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>IP Address:</strong> ${ipData.ip_address}</p>
+              <p><strong>Risk Level:</strong> <span class="badge bg-${riskClass}">${riskLevel}</span></p>
+              <p><strong>Abuse Score:</strong> ${ipData.abuse_score}/100</p>
+              <p><strong>Total Reports:</strong> ${ipData.total_reports}</p>
+            </div>
+            <div class="col-md-6">
+              <p><strong>Country:</strong> ${ipData.country_code}</p>
+              <p><strong>ISP:</strong> ${ipData.isp}</p>
+              <p><strong>Usage Type:</strong> ${ipData.usage_type}</p>
+              <p><strong>Whitelisted:</strong> ${ipData.is_whitelisted ? 'Yes' : 'No'}</p>
+            </div>
+          </div>
+          ${ipData.is_malicious ? '<p class="mb-0 mt-2"><strong>⚠ Warning:</strong> This IP has been reported for malicious activity.</p>' : ''}
+        </div>
+      `;
+      if (resultDiv) {
+        resultDiv.insertAdjacentHTML('beforeend', ipAnalysisHTML);
+      }
+    } else {
+      // Display error or warning
+      const errorHTML = `
+        <div class="alert alert-warning mt-3" role="alert">
+          <strong>IP Check Notice:</strong> ${ipData.error || 'Unable to check IP reputation'}
+        </div>
+      `;
+      if (resultDiv) {
+        resultDiv.insertAdjacentHTML('beforeend', errorHTML);
+      }
+    }
+  } catch (error) {
+    // Remove loading indicator
+    const ipLoadingDiv = document.getElementById("ipLoading");
+    if (ipLoadingDiv) ipLoadingDiv.remove();
+    
+    // Display error
+    const errorHTML = `
+      <div class="alert alert-warning mt-3" role="alert">
+        <strong>IP Check Error:</strong> Failed to connect to IP reputation service
+      </div>
+    `;
+    if (resultDiv) {
+      resultDiv.insertAdjacentHTML('beforeend', errorHTML);
+    }
+  }
 }
 
 function toggleAnalysis() {

@@ -5,8 +5,9 @@ import sqlite3
 import hashlib
 import json
 from datetime import datetime
-from static.helper_eml import generate_llm_body, parse_eml_bytes, init_db, DB_PATH
+from static.Helper_eml import generate_llm_body, parse_eml_bytes, init_db, DB_PATH
 from api.llm import query_llm
+from api.AbuseIp import AbuseIPDB
 import dotenv
 dotenv.load_dotenv()
 
@@ -76,6 +77,63 @@ def llm_api():
             return jsonify(result), 200
         else:
             return jsonify(result), 500
+            
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Server error: {str(e)}"
+        }), 500
+
+# AbuseIPDB API endpoint
+@app.post('/api/check-ip')
+def check_ip_api():
+    try:
+        data = request.get_json()
+        
+        if not data or 'ip_address' not in data:
+            return jsonify({
+                "success": False,
+                "error": "No IP address provided"
+            }), 400
+        
+        ip_address = data['ip_address']
+        
+        # Skip checking if IP is None or empty
+        if not ip_address or ip_address == 'None':
+            return jsonify({
+                "success": False,
+                "error": "Invalid IP address"
+            }), 400
+        
+        # Initialize AbuseIPDB client
+        try:
+            abuse_checker = AbuseIPDB()
+        except ValueError as e:
+            return jsonify({
+                "success": False,
+                "error": "AbuseIPDB API key not configured. Please add ABUSEIPDB_API_KEY to .env file"
+            }), 500
+        
+        # Check IP for malicious activity
+        result = abuse_checker.is_malicious(ip_address)
+        
+        if result['error']:
+            return jsonify({
+                "success": False,
+                "error": result['error']
+            }), 500
+        
+        return jsonify({
+            "success": True,
+            "ip_address": ip_address,
+            "is_malicious": result['is_malicious'],
+            "abuse_score": result['abuse_score'],
+            "total_reports": result['total_reports'],
+            "country_code": result['country_code'],
+            "usage_type": result['usage_type'],
+            "isp": result['isp'],
+            "is_whitelisted": result['is_whitelisted']
+        }), 200
             
     except Exception as e:
         return jsonify({
@@ -254,12 +312,12 @@ def upload():
             "success": True,
             "email_id": email_id,
             "data": {
-                "sender_ip": parsed_data['sender_ip'],
-                "sender_email": parsed_data['sender_email'],
-                "body_text": parsed_data['body_text'],
-                "body_preview": parsed_data['body_text'][:200] + "..." if len(parsed_data['body_text']) > 200 else parsed_data['body_text'],
-                "urls_count": len(parsed_data['urls']),
-                "urls": parsed_data['urls']
+                "sender_ip": last_payload['data']['sender_ip'],
+                "sender_email": last_payload['data']['sender_email'],
+                "body_text": last_payload['data']['body_text'],
+                "body_preview": last_payload['data']['body_text'][:200] + "..." if len(last_payload['data']['body_text']) > 200 else last_payload['data']['body_text'],
+                "urls_count": last_payload['data']['urls_count'],
+                "urls": last_payload['data']['urls']
             }
         }), 200
     
