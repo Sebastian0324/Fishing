@@ -34,28 +34,27 @@ if (Sign && SignIn && SignUp) {
     SignUp.classList.toggle("hidden");
     Sign.classList.toggle("btn-dark");
     Sign.classList.toggle("btn-secondary");
-  });
+});
 
-  SignUp.onsubmit = async (e) => {
-    e.preventDefault();
+SignUp.onsubmit = async (e) => {
+  e.preventDefault();
 
-    let SignUpForm = new FormData(e.target);
-    let SignUpResponse = await fetch("/Signup", { method: "POST", body: SignUpForm });
-    let SignUpData = await SignUpResponse.json();
+  let SignUpForm = new FormData(e.target);
+  let SignUpResponse = await fetch("/Signup", { method: "POST", body: SignUpForm });
+  let SignUpData = await SignUpResponse.json();
 
-    window.open(window.location.href, "_self");
-  };
-  SignIn.onsubmit = async (e) => {
-    e.preventDefault();
+  window.open(window.location.href, "_self");
+};
+SignIn.onsubmit = async (e) => {
+  e.preventDefault();
 
-    let SignInForm = new FormData(e.target);
-    let SignInResponse = await fetch("/login", { method: "POST", body: SignInForm });
-    let SignInData = await SignInResponse.json();
+  let SignInForm = new FormData(e.target);
+  let SignInResponse = await fetch("/login", { method: "POST", body: SignInForm });
+  let SignInData = await SignInResponse.json();
 
-    window.open(window.location.href, "_self");
-  };
-}
-// -------========-------    Front Page    -------========-------
+  window.open(window.location.href, "_self");
+};
+
 // -------========-------    Upload Page    -------========-------  
 let UpForm = document.getElementById("uploadForm");
 let analysis = document.getElementById("analysis");
@@ -130,8 +129,8 @@ if (UpForm != null) {
   }
 
 
-UpForm.onsubmit = async (e) => {
-  e.preventDefault();
+  UpForm.onsubmit = async (e) => {
+    e.preventDefault();
 
   // -------========-------    ERROR HANDLING BEFORE SUBMIT    -------========-------
 
@@ -191,8 +190,8 @@ UpForm.onsubmit = async (e) => {
     if (downloadSection) downloadSection.classList.add("hidden");
 
     let formData = new FormData(e.target);
-    let respons = await fetch("/upload", { method: "POST", body: formData });
-    let data = await respons.json();
+    let response = await fetch("/upload", { method: "POST", body: formData });
+    let data = await response.json();
     
     // Hide loading spinner after response
     setTimeout(() => {
@@ -206,174 +205,210 @@ UpForm.onsubmit = async (e) => {
       return;
     }
     
-    // Handle success response with extracted data
+    // Handle success response
     if (data.success && data.data) {
-  const bodyText = data.data.body_text?.trim() || 'No content';
-  const downloadSection = document.getElementById("downloadSection");
-
-  // Insert the updated HTML with progress bars and sections
-  document.getElementById("result").innerHTML = `
-    <div class="row">
-      <div class="col-md-8">
+      document.getElementById("result").innerHTML = `
         <div class="alert alert-success" role="alert">
           <h5>✓ Email Analysis Complete - ID: ${data.email_id}</h5>
         </div>
-
-        <div id="virusSection" class="mt-4">
-          <div class="card">
-            <div class="card-body">
-              <h6 class="card-subtitle mb-2 text-muted">VirusTotal Analysis</h6>
-              <div class="text-center my-3">
-                <div class="spinner-border text-info" role="status">
-                  <span class="visually-hidden">Loading VirusTotal response...</span>
-                </div>
-                <p class="mt-2 text-muted">Checking with VirusTotal...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="ipSection" class="mt-4">
-          <div class="card">
-            <div class="card-body">
-              <h6 class="card-subtitle mb-2 text-muted">AbuseIPDb Analysis</h6>
-              <div class="text-center my-3">
-                <div class="spinner-border text-warning" role="status">
-                  <span class="visually-hidden">Loading AbuseIPDb response...</span>
-                </div>
-                <p class="mt-2 text-muted">Checking IPs against AbuseIPDb...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="llmSection" class="mt-4">
-          <div class="card">
-            <div class="card-body">
-              <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
-              <div class="text-center my-3">
-                <div class="spinner-border text-primary" role="status">
-                  <span class="visually-hidden">Loading LLM response...</span>
-                </div>
-                <p class="mt-2 text-muted">Analyzing with AI...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-4">
-        <div class="card h-100">
-          <div class="card-body">
-            <h6 class="card-subtitle mb-3 text-muted">Analysis Progress</h6>
-
-            ${["vt", "abuse", "llm"].map(id => `
-              <div id="${id}ProgressContainer" class="mb-4">
-                <div class="mb-2 text-muted small">${id === "vt" ? "VirusTotal" : id === "abuse" ? "AbuseIPDb" : "LLM"} analysis progress</div>
-                <div class="progress" style="height: 1.25rem;">
-                  <div id="${id}ProgressBar" class="progress-bar progress-bar-striped progress-bar-animated ${id === "vt" ? "bg-info" : id === "abuse" ? "bg-warning" : "bg-primary"}" 
-                       role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
-                </div>
-              </div>
-            `).join("")}
-
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-
-
-
-  // Show download button after successful analysis
-  if (downloadSection) downloadSection.classList.remove("hidden");
-  
-  
-  //CALL VirusTotal and AbuseIPDb functions
-  //callVirusTotalAPI(data);
-  //callAbuseIPDbAPI(data);
-
-  // Smooth animated progress helper
-  function animateProgress(barId, duration, onComplete) {
-    const bar = document.getElementById(barId);
-    if (!bar) return;
-    bar.style.width = "0%";
-    bar.setAttribute("aria-valuenow", 0);
-    bar.textContent = "0%";
-    // Ensure initial visual styles
-    bar.classList.add("progress-bar-animated", "progress-bar-striped");
-
-    let start = null;
-    function step(timestamp) {
-      if (!start) start = timestamp;
-      const elapsed = timestamp - start;
-      const pct = Math.min(100, Math.floor((elapsed / duration) * 100));
-      bar.style.width = pct + "%";
-      bar.setAttribute("aria-valuenow", pct);
-      bar.textContent = pct + "%";
-
-      if (pct < 100) {
-    requestAnimationFrame(step);
-      } else {
-    // When reaching 100%, mark completed and make green
-    bar.style.width = "100%";
-    bar.setAttribute("aria-valuenow", 100);
-    // remove animated/striped classes and set success color
-    bar.classList.remove("progress-bar-animated", "progress-bar-striped", "bg-info", "bg-warning", "bg-primary");
-    bar.classList.add("bg-success");
-    bar.textContent = "Completed";
-    if (typeof onComplete === "function") {
-      // small delay to let UI show 100%/Completed
-      setTimeout(onComplete, 300);
-    }
+      `;
+      
+      // Show download button after successful analysis
+      if (downloadSection) downloadSection.classList.remove("hidden");
+      
+      // Call both APIs in parallel
+      const bodyText = data.data.body_text || "";
+      const senderIp = data.data.sender_ip || "";
+      
+      if (bodyText) {
+        callLLMAPI(bodyText, data.email_id);
       }
-    }
-    requestAnimationFrame(step);
-  }
-
-  // Animate each progress bar and trigger respective checks when complete
-  animateProgress("vtProgressBar", 2000, () => {
-    const virusSection = document.getElementById("virusSection");
-    if (typeof callVirusTotalAPI === "function") {
-      callVirusTotalAPI(data.email_id);
-    } else if (virusSection) {
-      virusSection.innerHTML = `
-    <div class="card">
-      <div class="card-body">
-        <h6 class="card-subtitle mb-2 text-muted">VirusTotal Analysis</h6>
-        <div class="alert alert-info">VirusTotal check queued. <strong>We can show result here</strong></div>
-      </div>
-    </div>`;
-    }
-  });
-
-  animateProgress("abuseProgressBar", 2500, () => {
-    const ipSection = document.getElementById("ipSection");
-    if (typeof callAbuseIPDbAPI === "function") {
-      callAbuseIPDbAPI(data.email_id);
-    } else if (ipSection) {
-      ipSection.innerHTML = `
-    <div class="card">
-      <div class="card-body">
-        <h6 class="card-subtitle mb-2 text-muted">AbuseIPDb Analysis</h6>
-        <div class="alert alert-info">IP reputation check queued. <strong>We can show result here</strong></div>
-      </div>
-    </div>`;
-    }
-  });
-
-  animateProgress("llmProgressBar", 8000);
-
-  
-  callLLMAPI(bodyText);
+      
+      if (senderIp) {
+        callAbuseIPAPI(senderIp);
+      }
     }
   };
 }
 
+// -------========-------    LLM API Call Function    -------========-------
+async function callLLMAPI(bodyText, emailId) {
+  const resultDiv = document.getElementById("result");
+  
+  // Add loading indicator for LLM analysis
+  const llmLoadingHTML = `
+    <div id="llmLoading" class="alert alert-info mt-3" role="status">
+      <div class="d-flex align-items-center">
+        <div class="spinner-border spinner-border-sm me-2" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <span>Analyzing email for phishing indicators...</span>
+      </div>
+    </div>
+  `;
+  
+  if (resultDiv) {
+    resultDiv.insertAdjacentHTML('beforeend', llmLoadingHTML);
+  }
+  
+  try {
+    const llmResponse = await fetch("/api/llm", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message: bodyText })
+    });
+    
+    const llmData = await llmResponse.json();
+    
+    // Remove loading indicator
+    const llmLoadingDiv = document.getElementById("llmLoading");
+    if (llmLoadingDiv) llmLoadingDiv.remove();
+    
+    if (llmData.success && llmData.response) {
+      // Display LLM analysis
+      const analysisHTML = `
+        <div class="alert alert-primary mt-3" role="alert">
+          <h5>🔍 Phishing Analysis Results</h5>
+          <hr>
+          <div style="white-space: pre-wrap;">${llmData.response}</div>
+        </div>
+      `;
+      if (resultDiv) {
+        resultDiv.insertAdjacentHTML('beforeend', analysisHTML);
+      }
+    } else {
+      // Display error
+      const errorHTML = `
+        <div class="alert alert-warning mt-3" role="alert">
+          <strong>Analysis Error:</strong> ${llmData.error || 'Failed to analyze email'}
+        </div>
+      `;
+      if (resultDiv) {
+        resultDiv.insertAdjacentHTML('beforeend', errorHTML);
+      }
+    }
+  } catch (error) {
+    // Remove loading indicator
+    const llmLoadingDiv = document.getElementById("llmLoading");
+    if (llmLoadingDiv) llmLoadingDiv.remove();
+    
+    // Display error
+    const errorHTML = `
+      <div class="alert alert-danger mt-3" role="alert">
+        <strong>Network Error:</strong> Failed to connect to analysis service
+      </div>
+    `;
+    if (resultDiv) {
+      resultDiv.insertAdjacentHTML('beforeend', errorHTML);
+    }
+  }
+}
 
-
-
+// -------========-------    AbuseIPDB API Call Function    -------========-------
+async function callAbuseIPAPI(ipAddress) {
+  const resultDiv = document.getElementById("result");
+  
+  // Add loading indicator for IP reputation check
+  const ipLoadingHTML = `
+    <div id="ipLoading" class="alert alert-info mt-3" role="status">
+      <div class="d-flex align-items-center">
+        <div class="spinner-border spinner-border-sm me-2" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <span>Checking sender IP reputation...</span>
+      </div>
+    </div>
+  `;
+  
+  if (resultDiv) {
+    resultDiv.insertAdjacentHTML('beforeend', ipLoadingHTML);
+  }
+  
+  try {
+    const ipResponse = await fetch("/api/check-ip", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ ip_address: ipAddress })
+    });
+    
+    const ipData = await ipResponse.json();
+    
+    // Remove loading indicator
+    const ipLoadingDiv = document.getElementById("ipLoading");
+    if (ipLoadingDiv) ipLoadingDiv.remove();
+    
+    if (ipData.success) {
+      // Determine risk level and color
+      let riskLevel = "Low";
+      let riskClass = "success";
+      let riskIcon = "✓";
+      
+      if (ipData.abuse_score >= 75) {
+        riskLevel = "High";
+        riskClass = "danger";
+        riskIcon = "⚠";
+      } else if (ipData.abuse_score >= 50) {
+        riskLevel = "Medium";
+        riskClass = "warning";
+        riskIcon = "⚡";
+      }
+      
+      // Display IP reputation analysis
+      const ipAnalysisHTML = `
+        <div class="alert alert-${riskClass} mt-3" role="alert">
+          <h5>${riskIcon} Sender IP Reputation Analysis</h5>
+          <hr>
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>IP Address:</strong> ${ipData.ip_address}</p>
+              <p><strong>Risk Level:</strong> <span class="badge bg-${riskClass}">${riskLevel}</span></p>
+              <p><strong>Abuse Score:</strong> ${ipData.abuse_score}/100</p>
+              <p><strong>Total Reports:</strong> ${ipData.total_reports}</p>
+            </div>
+            <div class="col-md-6">
+              <p><strong>Country:</strong> ${ipData.country_code}</p>
+              <p><strong>ISP:</strong> ${ipData.isp}</p>
+              <p><strong>Usage Type:</strong> ${ipData.usage_type}</p>
+              <p><strong>Whitelisted:</strong> ${ipData.is_whitelisted ? 'Yes' : 'No'}</p>
+            </div>
+          </div>
+          ${ipData.is_malicious ? '<p class="mb-0 mt-2"><strong>⚠ Warning:</strong> This IP has been reported for malicious activity.</p>' : ''}
+        </div>
+      `;
+      if (resultDiv) {
+        resultDiv.insertAdjacentHTML('beforeend', ipAnalysisHTML);
+      }
+    } else {
+      // Display error or warning
+      const errorHTML = `
+        <div class="alert alert-warning mt-3" role="alert">
+          <strong>IP Check Notice:</strong> ${ipData.error || 'Unable to check IP reputation'}
+        </div>
+      `;
+      if (resultDiv) {
+        resultDiv.insertAdjacentHTML('beforeend', errorHTML);
+      }
+    }
+  } catch (error) {
+    // Remove loading indicator
+    const ipLoadingDiv = document.getElementById("ipLoading");
+    if (ipLoadingDiv) ipLoadingDiv.remove();
+    
+    // Display error
+    const errorHTML = `
+      <div class="alert alert-warning mt-3" role="alert">
+        <strong>IP Check Error:</strong> Failed to connect to IP reputation service
+      </div>
+    `;
+    if (resultDiv) {
+      resultDiv.insertAdjacentHTML('beforeend', errorHTML);
+    }
+  }
+}
 
 function toggleAnalysis() {
   UpForm.classList.toggle("hidden");
@@ -394,72 +429,9 @@ function toggleAnalysis() {
   }
 }
 
-// Get the Back button element
-const toUploadBtn = document.getElementById("ToUpload");
+document.getElementById("ToUpload").addEventListener("click", toggleAnalysis);
 
-if (toUploadBtn) {
-  toUploadBtn.addEventListener("click", toggleAnalysis);
-}
-
-// Function to call LLM API
-async function callLLMAPI(emailBody) {
-  try {
-    const response = await fetch("/api/llm", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: `Analyze this email for phishing threats and provide a detailed security assessment:\n\n${emailBody}`
-      })
-    });
-    
-    const data = await response.json();
-    
-    const llmSection = document.getElementById("llmSection");
-    if (llmSection) {
-      if (data.success) {
-        llmSection.innerHTML = `
-          <div class="card">
-            <div class="card-body">
-              <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
-              <div style="background-color: #000000; color: #ffffff; padding: 15px; border-radius: 5px; white-space: pre-wrap; border: 1px solid #333333;">
-${data.response}
-              </div>
-            </div>
-          </div>
-        `;
-      } else {
-        llmSection.innerHTML = `
-          <div class="card">
-            <div class="card-body">
-              <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
-              <div class="alert alert-danger" role="alert">
-                <strong>Error:</strong> ${data.error}
-              </div>
-            </div>
-          </div>
-        `;
-      }
-    }
-  } catch (error) {
-    const llmSection = document.getElementById("llmSection");
-    if (llmSection) {
-      llmSection.innerHTML = `
-        <div class="card">
-          <div class="card-body">
-            <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
-            <div class="alert alert-danger" role="alert">
-              <strong>Error:</strong> Failed to connect to LLM API - ${error.message}
-            </div>
-          </div>
-        </div>
-      `;
-    }
-  }
-}
-
-// ===== Account / Forum code (unchanged below this line) =====
+// -------========-------    End of Upload Page    -------========-------
 
 // -------========-------    Account Page Toggle    -------========-------
 document.addEventListener("DOMContentLoaded", function() {
@@ -513,3 +485,4 @@ topicItems.forEach((item) => {
     }
   });
 });
+}
