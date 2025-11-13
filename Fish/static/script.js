@@ -57,6 +57,7 @@ if (Sign && SignIn && SignUp) {
 }
 // -------========-------    Front Page    -------========-------
 // -------========-------    Upload Page    -------========-------  
+// -------========-------    Upload Page    -------========-------  
 let UpForm = document.getElementById("uploadForm");
 let analysis = document.getElementById("analysis");
 let submitError = document.getElementById("SubmitError");
@@ -87,52 +88,119 @@ if (UpForm != null) {
       const dataTransfer = new DataTransfer();
       files.forEach(f => dataTransfer.items.add(f));
       
-      const items = files.map((f, idx) => `
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <div class="d-flex align-items-center gap-2 flex-grow-1">
-            <span class="badge bg-primary rounded-pill">${idx + 1}</span>
-            <div class="d-flex flex-column">
-              <span class="text-truncate" style="max-width: 250px;" title="${f.name}">
-                <strong>${f.name}</strong>
-              </span>
-              <small class="text-muted">${formatFileSize(f.size)}</small>
+      const prevComments = fileInput._preservedComments ?? Array.from(selectedFilesBox.querySelectorAll('.comment-input')).map(t => t.value || '');
+      if (fileInput._preservedComments) delete fileInput._preservedComments;
+      const items = files.map((f, idx) => {
+        const fileNumber = idx + 1;
+        const isTooLarge = f.size > MAX_FILE_SIZE;
+        const isEmlext = f.name.toLowerCase().endsWith('.eml');
+        const errBadge = isTooLarge ? `<span class="badge bg-danger ms-2">Too large</span>` : (!isEmlext ? `<span class="badge bg-warning text-dark ms-2">Invalid type</span>` : '');
+        const collapseId = `commentCollapse-${Date.now()}-${idx}`;
+        const hasPrev = (prevComments[idx] || '').length > 0;
+
+        return `
+        <li class="list-group-item p-2 mb-3 file-item" data-index="${idx}">
+          <div class="d-flex">
+        <div class="me-3 d-flex align-items-center" style="width:48px;">
+          <i class="bi bi-file-earmark-earmark-fill text-primary" style="font-size:1.5rem;"></i>
+        </div>
+
+        <div class="flex-grow-1">
+          <div class="d-flex justify-content-between align-items-start">
+            <div style="min-width:0;">
+          <div class="d-flex align-items-center">
+            <span class="badge bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center me-2" style="width:34px; height:34px; font-weight:300; font-size:0.95rem;">${fileNumber}</span>
+            <div class="fw-semibold text-truncate" title="${f.name}">
+              ${f.name.trim().substring(0, 25)}${f.name.trim().length > 25 ? '...' : ''}
+            </div>
+            ${errBadge}
+          </div>
+          <div class="small text-muted mt-1">${formatFileSize(f.size)}</div>
+            </div>
+
+            <div class="text-end ms-3 d-flex flex-column align-items-end gap-2">
+          <div>
+            <button type="button" class="btn btn-sm btn-outline-secondary me-1 toggle-comment-btn" data-bs-toggle="collapse" data-bs-target="#${collapseId}" aria-expanded="${hasPrev}" aria-controls="${collapseId}">Comment</button>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-file-btn" data-index="${idx}" title="Remove file">
+              <i class="bi bi-x-lg"> X </i>
+            </button>
+          </div>
+          ${isTooLarge ? '<small class="text-danger">File exceeds max size</small>' : ''}
             </div>
           </div>
-          <button type="button" class="btn btn-sm btn-danger remove-file-btn" data-index="${idx}" title="Remove file">
-            <i class="bi bi-x-circle"></i> Remove
-          </button>
-        </li>
-      `).join("");
-      
-      selectedFilesBox.innerHTML = `
+
+          <div class="collapse ${hasPrev ? 'show' : ''} mt-2" id="${collapseId}">
+            <div class="card card-body p-2">
+          <textarea
+            name="comments[]"
+            data-index="${idx}"
+            class="form-control form-control-sm comment-input"
+            rows="2"
+            maxlength="500"
+            placeholder="Add a short comment for this file (optional)"
+            style="resize: vertical;"
+          >${(prevComments[idx] || '').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+          <div class="d-flex justify-content-between mt-1 align-items-center">
+            <small class="text-muted">Max 500 characters</small>
+            <span class="badge bg-light text-dark char-count" data-index="${idx}">${(prevComments[idx] || '').length}/500</span>
+          </div>
+            </div>
+          </div>
+        </div>
+          </div>
+        </li>`;
+      }).join('');
+
+            selectedFilesBox.innerHTML = `
         <div class="alert alert-info p-2 mb-2" role="status">
           Selected ${files.length} file${files.length > 1 ? 's' : ''}
         </div>
-        <ul class="list-group">${items}</ul>`;
-      
-      // Add event listeners to remove buttons
-      document.querySelectorAll('.remove-file-btn').forEach(btn => {
+        <ul class="list-group list-group-flush">${items}</ul>
+            `;
+
+            // Attach listeners: remove buttons
+            document.querySelectorAll('.remove-file-btn').forEach(btn => {
         btn.addEventListener('click', function() {
           const indexToRemove = parseInt(this.getAttribute('data-index'));
+
+          // Preserve current comments (so we can restore them after re-render)
+          const currentComments = Array.from(selectedFilesBox.querySelectorAll('.comment-input')).map(t => t.value || '');
+          const newComments = currentComments.filter((_, i) => i !== indexToRemove);
+
+          // Build new DataTransfer without the removed file
           const newDataTransfer = new DataTransfer();
-          
           Array.from(fileInput.files).forEach((file, idx) => {
             if (idx !== indexToRemove) {
               newDataTransfer.items.add(file);
             }
           });
-          
+
+          // Store preserved comments on the input so the change handler can restore them
+          fileInput._preservedComments = newComments;
+
           fileInput.files = newDataTransfer.files;
+          // Trigger change to rebuild list UI
           fileInput.dispatchEvent(new Event('change'));
         });
-      });
-    });
-  }
+            });
+
+            // Attach listeners: comment inputs -> update char count live
+            selectedFilesBox.querySelectorAll('.comment-input').forEach(inp => {
+        const idx = inp.getAttribute('data-index');
+        const countEl = selectedFilesBox.querySelector(`.char-count[data-index="${idx}"]`);
+        const updateCount = () => {
+          if (countEl) countEl.textContent = `${inp.value.length}/500`;
+        };
+        inp.addEventListener('input', updateCount);
+        // initialize
+        updateCount();
+            });
+            });
+        }
 
 
-UpForm.onsubmit = async (e) => {
-  e.preventDefault();
-
+  UpForm.onsubmit = async (e) => {
+    e.preventDefault();
   // -------========-------    ERROR HANDLING BEFORE SUBMIT    -------========-------
 
     // Clear previous errors
