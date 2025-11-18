@@ -669,6 +669,12 @@ def logout():
 def upload():
     files = request.files.getlist("file")
 
+    # Try to get comments from the form. 
+    comments = request.form.getlist('comments[]')
+    if not comments:
+        # Fallback if the key was sent without the brackets
+        comments = request.form.getlist('comments')
+
     if "file" not in request.files:
         return jsonify({
             "success": False,
@@ -688,7 +694,7 @@ def upload():
         uploaded_results = []
         last_payload = None
 
-        for file in files:
+        for idx, file in enumerate(files):
             if file.filename == '':
                 return jsonify({
                     "success": False,
@@ -718,17 +724,27 @@ def upload():
             llm_body_text = generate_llm_body(parsed)
             urls_json = json.dumps(parsed['urls'])
 
-            # Insert into DB
+            # Insert into DB (include optional user comment / description)
             uid = session.get("user_id") or 1
             conn = sqlite3.connect(DB_PATH)
             try:
                 conn.execute("PRAGMA foreign_keys = ON;")
                 cursor = conn.cursor()
+                # Determine the comment for this file (if provided)
+                comment_text = ''
+                try:
+                    comment_text = (comments[idx] if idx < len(comments) else '') or ''
+                except Exception:
+                    comment_text = ''
+                # Truncate to 500 chars to match front-end limit and DB expectations
+                if isinstance(comment_text, str) and len(comment_text) > 500:
+                    comment_text = comment_text[:500]
+
                 cursor.execute("""
                     INSERT INTO Email (
                         User_ID, Eml_file, SHA256, Size_Bytes, Received_At,
-                        From_Addr, Sender_IP, Body_Text, Extracted_URLs
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        From_Addr, Sender_IP, Body_Text, Extracted_URLs, Email_Description
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     uid,
                     file_content,
@@ -738,7 +754,8 @@ def upload():
                     parsed['sender']['email'],
                     parsed['sender']['ip'],
                     llm_body_text,
-                    urls_json
+                    urls_json,
+                    comment_text
                 ))
             
                 email_id = cursor.lastrowid
