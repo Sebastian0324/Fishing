@@ -6,27 +6,33 @@
 
         <div class="layout">
             <!-- Left sidebar with Description -->
-            <aside class="sidebar">
+            <aside class="sidebar" id="leftSidebar">
                 <div class="content-section" id="welcomeSection">
                     <div class="welcome-header">
                         <h3 class="section-header">Description</h3>
                     </div>
-                    <div class="placeholder-content">
+                    <div class="placeholder-content" id="descriptionContent">
                         <p>This site helps you learn how to spot phishing emails and safely analyze suspicious messages. Upload a .eml file to see an automated analysis, read community findings, and learn practical tips to protect yourself.</p>
                         <p>We believe learning from real examples is the best way to build strong habits. Your uploads stay private unless you choose to share, and the tools here are designed to teach, not to expose sensitive information.</p>
-                        <p>Ready to explore? Use the controls on the right to upload an email or view a short guide on how the process works.</p>
+                        <p>Ready to explore? Use the upload form to analyze an email and check the guide on the right for step-by-step instructions.</p>
                     </div>
                 </div>
             </aside>
 
-            <!-- Main content (upload form, analysis, toggles) -->
+            <!-- Main content (upload form, analysis) -->
             <main class="main-content">
-                <!-- Toggle Buttons: Upload <-> How It Works -->
-                <div class="page-toggle-buttons">
-                    <button id="showUploadBtn" class="toggle-btn active">Upload</button>
-                    <button id="showHowBtn" class="toggle-btn">How it works</button>
-                </div>
-                
+                <!-- Left Toggle Button -->
+                <button class="sidebar-toggle left-toggle" id="leftToggle" onclick="toggleSidebar('left')">
+                    <span id="leftToggleIcon">◀</span>
+                    <span class="toggle-text" id="leftToggleText">Description</span>
+                </button>
+
+                <!-- Right Toggle Button -->
+                <button class="sidebar-toggle right-toggle" id="rightToggle" onclick="toggleSidebar('right')">
+                    <span id="rightToggleIcon">▶</span>
+                    <span class="toggle-text" id="rightToggleText">How To</span>
+                </button>
+
                 <!-- Upload Form Section -->
                 <div class="content-section upload-section">
                     <div id="uploadForm"> <!-- Before Uploade -->
@@ -86,15 +92,26 @@
                         </div>
                     </div>
                 </div>
+            </main>
 
-                <!-- How It Works Section (moved from About Us) -->
-                <div class="content-section" id="howItWorksSection" style="display: none;">
-                    <h3 class="section-header">How It Works</h3>
-                    <div class="placeholder-content">
-                        <img src="{{ url_for('static', filename='how_to_temp.png') }}" alt="img of first page">
+            <!-- Right sidebar with How To -->
+            <aside class="sidebar" id="rightSidebar">
+                <div class="content-section" id="howItWorksSection">
+                    <div class="welcome-header">
+                        <h3 class="section-header">How To</h3>
+                    </div>
+                    <div class="placeholder-content" id="howItWorksContent">
+                        <h4 style="margin-bottom: 1rem;">Step-by-Step Guide:</h4>
+                        <ol style="line-height: 1.8; margin-top: 0.5rem; padding-left: 1.2rem;">
+                            <li style="margin-bottom: 0.8rem;"><strong>Choose Your File:</strong> Click the "Choose Files" button and select one or more .eml files from your computer.</li>
+                            <li style="margin-bottom: 0.8rem;"><strong>Optional AI Analysis:</strong> Check the "Check submitted file with AI" box for enhanced phishing detection.</li>
+                            <li style="margin-bottom: 0.8rem;"><strong>Submit for Analysis:</strong> Click the blue "Submit" button to upload your email(s).</li>
+                            <li style="margin-bottom: 0.8rem;"><strong>Review Results:</strong> View the detailed report showing phishing indicators, sender info, links, and threat scores.</li>
+                            <li style="margin-bottom: 0.8rem;"><strong>Download Report:</strong> Download a comprehensive PDF report of the findings.</li>
+                        </ol>
                     </div>
                 </div>
-            </main>
+            </aside>
         </div>
     </div>
 {% endblock %}
