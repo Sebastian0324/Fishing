@@ -13,7 +13,7 @@ from pathlib import Path
 import sqlite3
 
 # Single source of truth for paths
-DB_PATH = "./db/mail.db"
+DB_PATH = "./db/emails.db"
 SCHEMA_PATH = "./db/schema.sql"
 
 # ---------------------- DB init ----------------------

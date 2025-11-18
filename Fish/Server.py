@@ -8,6 +8,8 @@ from datetime import datetime
 from static.Helper_eml import generate_llm_body, parse_eml_bytes, init_db, DB_PATH
 from api.llm import query_llm
 from api.AbuseIp import AbuseIPDB
+from api.VirusTotal import VirusTotal
+from Analysis.analysis_db_store import AnalysisStore
 import dotenv
 dotenv.load_dotenv()
 
@@ -169,6 +171,365 @@ def check_ip_api():
             "error": f"Server error: {str(e)}",
             "status_code": 500,
             "message": "An unexpected error occurred while checking IP reputation"
+        }), 500
+
+# VirusTotal API endpoints
+@app.post('/api/scan-file')
+def scan_file_api():
+    try:
+        data = request.get_json()
+        
+        if not data or 'email_id' not in data:
+            return jsonify({
+                "success": False,
+                "error": "No email_id provided",
+                "status_code": 400,
+                "message": "Request must include an 'email_id' field"
+            }), 400
+        
+        email_id = data['email_id']
+        
+        # Retrieve the file from the database
+        conn = sqlite3.connect(DB_PATH)
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT Eml_file FROM Email WHERE Email_ID = ?", (email_id,))
+            result = cursor.fetchone()
+            
+            if not result:
+                return jsonify({
+                    "success": False,
+                    "error": "Email not found",
+                    "status_code": 404,
+                    "message": f"No email found with ID {email_id}"
+                }), 404
+            
+            file_content = result[0]
+        finally:
+            conn.close()
+        
+        # Initialize VirusTotal client
+        try:
+            vt = VirusTotal()
+        except ValueError as e:
+            return jsonify({
+                "success": False,
+                "error": "API key not configured",
+                "status_code": 500,
+                "message": "VirusTotal API key not configured. Please add VIRUSTOTAL_API_KEY to .env file"
+            }), 500
+        
+        # Scan the file
+        result = vt.is_malicious(file_content, f"email_{email_id}.eml")
+        
+        if result['error']:
+            # Determine appropriate status code based on error type
+            status_code = 500
+            if 'rate limit' in result['error'].lower():
+                status_code = 429
+            elif 'invalid api key' in result['error'].lower():
+                status_code = 401
+            
+            return jsonify({
+                "success": False,
+                "error": result['error'],
+                "status_code": status_code,
+                "message": "Failed to scan file with VirusTotal"
+            }), status_code
+        
+        return jsonify({
+            "success": True,
+            "status_code": 200,
+            "email_id": email_id,
+            "analysis_id": result['analysis_id'],
+            "type": result['type'],
+            "message": result.get('message', 'File submitted for analysis'),
+            "note": "Use the analysis_id to check results later via VirusTotal API"
+        }), 200
+            
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Server error: {str(e)}",
+            "status_code": 500,
+            "message": "An unexpected error occurred while scanning file"
+        }), 500
+
+@app.post('/api/file-report')
+def file_report_api():
+    try:
+        data = request.get_json()
+        
+        if not data or 'email_id' not in data:
+            return jsonify({
+                "success": False,
+                "error": "No email_id provided",
+                "status_code": 400,
+                "message": "Request must include an 'email_id' field"
+            }), 400
+        
+        email_id = data['email_id']
+        
+        # Retrieve the file hash from the database
+        conn = sqlite3.connect(DB_PATH)
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT SHA256 FROM Email WHERE Email_ID = ?", (email_id,))
+            result = cursor.fetchone()
+            
+            if not result:
+                return jsonify({
+                    "success": False,
+                    "error": "Email not found",
+                    "status_code": 404,
+                    "message": f"No email found with ID {email_id}"
+                }), 404
+            
+            file_hash = result[0]
+        finally:
+            conn.close()
+        
+        # Initialize VirusTotal client
+        try:
+            vt = VirusTotal()
+        except ValueError as e:
+            return jsonify({
+                "success": False,
+                "error": "API key not configured",
+                "status_code": 500,
+                "message": "VirusTotal API key not configured. Please add VIRUSTOTAL_API_KEY to .env file"
+            }), 500
+        
+        # Get file report
+        result = vt.get_file_report(file_hash)
+        
+        if result['error']:
+            # Determine appropriate status code based on error type
+            status_code = 500
+            if 'rate limit' in result['error'].lower():
+                status_code = 429
+            elif 'invalid api key' in result['error'].lower():
+                status_code = 401
+            elif 'not found' in result['error'].lower():
+                status_code = 404
+            
+            return jsonify({
+                "success": False,
+                "error": result['error'],
+                "status_code": status_code,
+                "message": "Failed to retrieve file report from VirusTotal"
+            }), status_code
+        
+        return jsonify({
+            "success": True,
+            "status_code": 200,
+            "email_id": email_id,
+            "file_hash": file_hash,
+            "is_malicious": result['is_malicious'],
+            "reputation": result['reputation'],
+            "file_type": result['file_type'],
+            "file_size": result['file_size'],
+            "scan_date": result['scan_date'],
+            "stats": result['stats'],
+            "message": "File report retrieved successfully"
+        }), 200
+            
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Server error: {str(e)}",
+            "status_code": 500,
+            "message": "An unexpected error occurred while retrieving file report"
+        }), 500
+
+# Comprehensive scan endpoint that runs all analyses and stores results
+@app.post('/api/scan-email')
+def scan_email_api():
+    """
+    Perform comprehensive analysis on an email including:
+    - VirusTotal file scan
+    - AbuseIPDB IP reputation check
+    - LLM phishing analysis
+    Store all results in Analysis table with proper relations
+    """
+    try:
+        data = request.get_json()
+        
+        if not data or 'email_id' not in data:
+            return jsonify({
+                "success": False,
+                "error": "No email_id provided",
+                "status_code": 400,
+                "message": "Request must include an 'email_id' field"
+            }), 400
+        
+        email_id = data['email_id']
+        
+        # Retrieve email data from database
+        conn = sqlite3.connect(DB_PATH)
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT Eml_file, Sender_IP, Body_Text, SHA256 
+                FROM Email 
+                WHERE Email_ID = ?
+            """, (email_id,))
+            result = cursor.fetchone()
+            
+            if not result:
+                return jsonify({
+                    "success": False,
+                    "error": "Email not found",
+                    "status_code": 404,
+                    "message": f"No email found with ID {email_id}"
+                }), 404
+            
+            file_content, sender_ip, body_text, file_hash = result
+        finally:
+            conn.close()
+        
+        # Initialize analysis storage
+        analysis_db_store = AnalysisStore(DB_PATH)
+        
+        # Collect all analysis results
+        vt_result = None
+        abuseip_result = None
+        llm_result = None
+        
+        # 1. VirusTotal scan
+        try:
+            vt = VirusTotal()
+            # Try to get existing report first
+            vt_report = vt.get_file_report(file_hash)
+            if vt_report and not vt_report.get('error'):
+                vt_result = vt_report
+            else:
+                # If no report exists, submit for scanning
+                vt_scan = vt.is_malicious(file_content, f"email_{email_id}.eml")
+                vt_result = vt_scan
+        except ValueError:
+            vt_result = {'error': 'VirusTotal API key not configured'}
+        except Exception as e:
+            vt_result = {'error': f'VirusTotal scan failed: {str(e)}'}
+        
+        # 2. AbuseIPDB check
+        if sender_ip and sender_ip != 'None':
+            try:
+                abuse_checker = AbuseIPDB()
+                abuseip_result = abuse_checker.is_malicious(sender_ip)
+            except ValueError:
+                abuseip_result = {'error': 'AbuseIPDB API key not configured'}
+            except Exception as e:
+                abuseip_result = {'error': f'AbuseIPDB check failed: {str(e)}'}
+        else:
+            abuseip_result = {'error': 'No sender IP available'}
+        
+        # 3. LLM analysis
+        if body_text:
+            try:
+                llm_result = query_llm(body_text)
+            except Exception as e:
+                llm_result = {'error': f'LLM analysis failed: {str(e)}'}
+        else:
+            llm_result = {'error': 'No body text available for analysis'}
+        
+        # Store all analysis results in the database
+        storage_success = analysis_db_store.store_analysis(
+            email_id=email_id,
+            vt_result=vt_result,
+            abuseip_result=abuseip_result,
+            llm_result=llm_result
+        )
+        
+        if not storage_success:
+            return jsonify({
+                "success": False,
+                "error": "Failed to store analysis results",
+                "status_code": 500,
+                "message": "Analysis completed but failed to save to database"
+            }), 500
+        
+        # Retrieve the stored analysis to return
+        stored_analysis = analysis_db_store.get_analysis(email_id)
+        
+        return jsonify({
+            "success": True,
+            "status_code": 200,
+            "email_id": email_id,
+            "score": stored_analysis['score'],
+            "verdict": stored_analysis['verdict'],
+            "analyzed_at": stored_analysis['analyzed_at'],
+            "details": stored_analysis['details'],
+            "message": "Comprehensive email analysis completed and stored successfully"
+        }), 200
+            
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Server error: {str(e)}",
+            "status_code": 500,
+            "message": "An unexpected error occurred during email analysis"
+        }), 500
+
+# Get analysis results endpoint
+@app.get('/api/analysis/<int:email_id>')
+def get_analysis_api(email_id):
+    """
+    Retrieve stored analysis results for a specific email
+    """
+    try:
+        analysis_db_store = AnalysisStore(DB_PATH)
+        analysis = analysis_db_store.get_analysis(email_id)
+        
+        if not analysis:
+            return jsonify({
+                "success": False,
+                "error": "Analysis not found",
+                "status_code": 404,
+                "message": f"No analysis found for email ID {email_id}"
+            }), 404
+        
+        return jsonify({
+            "success": True,
+            "status_code": 200,
+            "analysis": analysis,
+            "message": "Analysis retrieved successfully"
+        }), 200
+            
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Server error: {str(e)}",
+            "status_code": 500,
+            "message": "An unexpected error occurred while retrieving analysis"
+        }), 500
+
+# Get all analyses endpoint
+@app.get('/api/analyses')
+def get_all_analyses_api():
+    """
+    Retrieve all stored analyses, optionally filtered by user
+    """
+    try:
+        user_id = request.args.get('user_id', type=int)
+        
+        analysis_db_store = AnalysisStore(DB_PATH)
+        analyses = analysis_db_store.get_all_analyses(user_id=user_id)
+        
+        return jsonify({
+            "success": True,
+            "status_code": 200,
+            "count": len(analyses),
+            "analyses": analyses,
+            "message": f"Retrieved {len(analyses)} analysis record(s)"
+        }), 200
+            
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Server error: {str(e)}",
+            "status_code": 500,
+            "message": "An unexpected error occurred while retrieving analyses"
         }), 500
 
 @app.post('/Signup')
@@ -380,12 +741,32 @@ def upload():
                 conn.commit()
             finally:
                 conn.close()
+            
+            # Automatically scan file with VirusTotal
+            vt_result = None
+            try:
+                vt = VirusTotal()
+                vt_scan = vt.is_malicious(file_content, file.filename)
+                if vt_scan and not vt_scan.get('error'):
+                    vt_result = {
+                        'analysis_id': vt_scan.get('analysis_id'),
+                        'type': vt_scan.get('type'),
+                        'message': vt_scan.get('message')
+                    }
+            except ValueError:
+                # VirusTotal API key not configured - skip scanning
+                vt_result = None
+            except Exception as vt_error:
+                # Log error but don't fail the upload
+                print(f"VirusTotal scan failed: {str(vt_error)}")
+                vt_result = None
                 
             body_text = parsed['body']['text']
 
             payload = {
                 "email_id": email_id,
                 "filename": file.filename,
+                "vt_scan": vt_result,
                 "data": {
                     "sender_ip": parsed['sender']['ip'],
                     "sender_email": parsed['sender']['email'],
@@ -398,8 +779,8 @@ def upload():
             uploaded_results.append(payload)
             last_payload = payload
 
-        # Return response for last file
-        return jsonify({
+        # Build response data
+        response_data = {
             "success": True,
             "status_code": 200,
             "email_id": email_id,
@@ -412,7 +793,13 @@ def upload():
                 "urls_count": last_payload['data']['urls_count'],
                 "urls": last_payload['data']['urls']
             }
-        }), 200
+        }
+        
+        # Add VirusTotal scan results if available
+        if last_payload.get('vt_scan'):
+            response_data['virustotal'] = last_payload['vt_scan']
+        
+        return jsonify(response_data), 200
     
     except Exception as e:
         return jsonify({

@@ -5,7 +5,7 @@ node_modules/
 .env
 
 # Data directory
-/data/
+Fish/data/
 
 # Python bytecode
 __pycache__/
@@ -24,6 +24,7 @@ ENV/
 *.sqlite
 *.sqlite3
 db/*.db
+Fish/db/
 
 # IDE and editor files
 .vscode/
@@ -60,6 +61,7 @@ htmlcov/
 # Flask
 instance/
 .webassets-cache
+Fish/flask_session/
 
 # Logs
 *.log

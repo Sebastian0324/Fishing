@@ -77,8 +77,13 @@ pip install -r requirements.txt
 ```bash
 cp .env.example .env
 
+API_KEY
 From OpenRouter Create an Account and then a Key: 
-https://openrouter.ai/settings/keys <-- API_KEY
+https://openrouter.ai/settings/keys
+
+ABUSEIPDB_API_KEY
+From AbuseIPDB Create an Account and then a Key:
+https://www.abuseipdb.com/account/api#create-api-key <-- 
 
 ```
 

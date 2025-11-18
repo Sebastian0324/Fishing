@@ -342,120 +342,114 @@ if (UpForm != null) {
 
 
 
-  // Show download button after successful analysis
-  if (downloadSection) downloadSection.classList.remove("hidden");
-  
-  
-  //CALL VirusTotal and AbuseIPDb functions
-  //callVirusTotalAPI(data);
-  //callAbuseIPDbAPI(data);
-
-  // Smooth animated progress helper
-  function animateProgress(barId, duration, onComplete) {
+  // Helper function to update progress bar
+  function updateProgress(barId, status, percentage = null) {
     const bar = document.getElementById(barId);
     if (!bar) return;
-    bar.style.width = "0%";
-    bar.setAttribute("aria-valuenow", 0);
-    bar.textContent = "0%";
-    // Ensure initial visual styles
-    bar.classList.add("progress-bar-animated", "progress-bar-striped");
-
-    let start = null;
-    function step(timestamp) {
-      if (!start) start = timestamp;
-      const elapsed = timestamp - start;
-      const pct = Math.min(100, Math.floor((elapsed / duration) * 100));
-      bar.style.width = pct + "%";
-      bar.setAttribute("aria-valuenow", pct);
-      bar.textContent = pct + "%";
-
-      if (pct < 100) {
-    requestAnimationFrame(step);
-      } else {
-    // When reaching 100%, mark completed and make green
-    bar.style.width = "100%";
-    bar.setAttribute("aria-valuenow", 100);
-    // remove animated/striped classes and set success color
-    bar.classList.remove("progress-bar-animated", "progress-bar-striped", "bg-info", "bg-warning", "bg-primary");
-    bar.classList.add("bg-success");
-    bar.textContent = "Completed";
-    if (typeof onComplete === "function") {
-      // small delay to let UI show 100%/Completed
-      setTimeout(onComplete, 300);
+    
+    if (status === 'start') {
+      bar.style.width = "30%";
+      bar.setAttribute("aria-valuenow", 30);
+      bar.textContent = "In Progress...";
+      bar.classList.add("progress-bar-animated", "progress-bar-striped");
+    } else if (status === 'complete') {
+      bar.style.width = "100%";
+      bar.setAttribute("aria-valuenow", 100);
+      bar.classList.remove("progress-bar-animated", "progress-bar-striped", "bg-info", "bg-warning", "bg-primary");
+      bar.classList.add("bg-success");
+      bar.textContent = "Completed";
+    } else if (status === 'error') {
+      bar.style.width = "100%";
+      bar.setAttribute("aria-valuenow", 100);
+      bar.classList.remove("progress-bar-animated", "progress-bar-striped", "bg-info", "bg-warning", "bg-primary");
+      bar.classList.add("bg-danger");
+      bar.textContent = "Failed";
     }
-      }
-    }
-    requestAnimationFrame(step);
   }
 
-  // Animate each progress bar and trigger respective checks when complete
-  animateProgress("vtProgressBar", 2000, () => {
-    const virusSection = document.getElementById("virusSection");
-    if (typeof callVirusTotalAPI === "function") {
-      callVirusTotalAPI(data.email_id);
-    } else if (virusSection) {
-      virusSection.innerHTML = `
-    <div class="card">
-      <div class="card-body">
-        <h6 class="card-subtitle mb-2 text-muted">VirusTotal Analysis</h6>
-        <div class="alert alert-info">VirusTotal check queued. <strong>We can show result here</strong></div>
-      </div>
-    </div>`;
-    }
-  });
-
-  animateProgress("abuseProgressBar", 2500, () => {
-    const ipSection = document.getElementById("ipSection");
-    if (typeof callAbuseIPDbAPI === "function") {
-      callAbuseIPDbAPI(data.email_id);
-    } else if (ipSection) {
-      ipSection.innerHTML = `
-    <div class="card">
-      <div class="card-body">
-        <h6 class="card-subtitle mb-2 text-muted">AbuseIPDb Analysis</h6>
-        <div class="alert alert-info">IP reputation check queued. <strong>We can show result here</strong></div>
-      </div>
-    </div>`;
-    }
-  });
-
-  animateProgress("llmProgressBar", 8000);
-      // Show download button after successful analysis
+  // Launch all API calls in parallel and sync progress bars to actual completion
+  const senderIp = data.data.sender_ip || "";
+  
+  // Track completion of all analyses
+  let completedCount = 0;
+  const totalAnalyses = 3;
+  
+  function checkAllCompleted() {
+    completedCount++;
+    if (completedCount >= totalAnalyses) {
+      // Show download button after all analyses complete
       if (downloadSection) downloadSection.classList.remove("hidden");
-      
-      // Call both APIs in parallel
-      const senderIp = data.data.sender_ip || "";
-      
-      if (bodyText) {
-        callLLMAPI(bodyText, data.email_id);
-      }
-      
-      if (senderIp) {
-        callAbuseIPAPI(senderIp);
-      }
+    }
+  }
+  
+  // VirusTotal API call with progress tracking
+  if (data.email_id) {
+    updateProgress("vtProgressBar", "start");
+    callVirusTotalAPI(data.email_id).then(() => {
+      updateProgress("vtProgressBar", "complete");
+      checkAllCompleted();
+    }).catch(() => {
+      updateProgress("vtProgressBar", "error");
+      checkAllCompleted();
+    });
+  } else {
+    updateProgress("vtProgressBar", "error");
+    checkAllCompleted();
+  }
+  
+  // AbuseIPDB API call with progress tracking
+  if (senderIp) {
+    updateProgress("abuseProgressBar", "start");
+    callAbuseIPAPI(senderIp).then(() => {
+      updateProgress("abuseProgressBar", "complete");
+      checkAllCompleted();
+    }).catch(() => {
+      updateProgress("abuseProgressBar", "error");
+      checkAllCompleted();
+    });
+  } else {
+    updateProgress("abuseProgressBar", "error");
+    checkAllCompleted();
+  }
+  
+  // LLM API call with progress tracking
+  if (bodyText) {
+    updateProgress("llmProgressBar", "start");
+    callLLMAPI(bodyText, data.email_id).then(() => {
+      updateProgress("llmProgressBar", "complete");
+      checkAllCompleted();
+    }).catch(() => {
+      updateProgress("llmProgressBar", "error");
+      checkAllCompleted();
+    });
+  } else {
+    updateProgress("llmProgressBar", "error");
+    checkAllCompleted();
+  }
     }
   };
 }
 
 // -------========-------    LLM API Call Function    -------========-------
 async function callLLMAPI(bodyText, emailId) {
-  const resultDiv = document.getElementById("result");
+  const llmSection = document.getElementById("llmSection");
   
-  // Add loading indicator for LLM analysis
-  const llmLoadingHTML = `
-    <div id="llmLoading" class="alert alert-info mt-3" role="status">
-      <div class="d-flex align-items-center">
-        <div class="spinner-border spinner-border-sm me-2" role="status">
-          <span class="visually-hidden">Loading...</span>
+  if (!llmSection) return;
+  
+  // Show loading state
+  llmSection.innerHTML = `
+    <div class="card">
+      <div class="card-body">
+        <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
+        <div class="text-center my-3">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Analyzing...</span>
+          </div>
+          <p class="mt-2 text-muted">Analyzing email for phishing indicators...</p>
         </div>
-        <span>Analyzing email for phishing indicators...</span>
       </div>
     </div>
   `;
-  
-  if (resultDiv) {
-    resultDiv.insertAdjacentHTML('beforeend', llmLoadingHTML);
-  }
   
   try {
     const llmResponse = await fetch("/api/llm", {
@@ -466,71 +460,83 @@ async function callLLMAPI(bodyText, emailId) {
       body: JSON.stringify({ message: bodyText })
     });
     
-    const llmData = await llmResponse.json();
-    
-    // Remove loading indicator
-    const llmLoadingDiv = document.getElementById("llmLoading");
-    if (llmLoadingDiv) llmLoadingDiv.remove();
+    // Handle non-200 responses gracefully
+    let llmData;
+    try {
+      llmData = await llmResponse.json();
+    } catch (parseError) {
+      llmData = { 
+        success: false, 
+        error: `Server returned ${llmResponse.status}: Unable to parse response` 
+      };
+    }
     
     if (llmData.success && llmData.response) {
       // Display LLM analysis
-      const analysisHTML = `
-        <div class="alert alert-primary mt-3" role="alert">
-          <h5>🔍 Phishing Analysis Results</h5>
-          <hr>
-          <div style="white-space: pre-wrap;">${llmData.response}</div>
+      llmSection.innerHTML = `
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
+            <div class="alert alert-primary mb-0">
+              <h6>🔍 Phishing Analysis Results</h6>
+              <hr>
+              <div style="white-space: pre-wrap;">${llmData.response}</div>
+            </div>
+          </div>
         </div>
       `;
-      if (resultDiv) {
-        resultDiv.insertAdjacentHTML('beforeend', analysisHTML);
-      }
     } else {
-      // Display error
-      const errorHTML = `
-        <div class="alert alert-warning mt-3" role="alert">
-          <strong>Analysis Error:</strong> ${llmData.error || 'Failed to analyze email'}
+      // Display error with status code
+      const errorMsg = llmData.error || llmData.message || 'Failed to analyze email';
+      const statusCode = llmData.status_code || llmResponse.status;
+      llmSection.innerHTML = `
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
+            <div class="alert alert-warning mb-0">
+              <strong>Analysis Unavailable (${statusCode}):</strong> ${errorMsg}
+              <p class="mb-0 mt-2 small text-muted">The AI analysis service may be temporarily unavailable or rate-limited.</p>
+            </div>
+          </div>
         </div>
       `;
-      if (resultDiv) {
-        resultDiv.insertAdjacentHTML('beforeend', errorHTML);
-      }
     }
   } catch (error) {
-    // Remove loading indicator
-    const llmLoadingDiv = document.getElementById("llmLoading");
-    if (llmLoadingDiv) llmLoadingDiv.remove();
-    
-    // Display error
-    const errorHTML = `
-      <div class="alert alert-danger mt-3" role="alert">
-        <strong>Network Error:</strong> Failed to connect to analysis service
+    // Display network error
+    llmSection.innerHTML = `
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
+          <div class="alert alert-danger mb-0">
+            <strong>Network Error:</strong> Failed to connect to analysis service
+            <p class="mb-0 mt-2 small">${error.message}</p>
+          </div>
+        </div>
       </div>
     `;
-    if (resultDiv) {
-      resultDiv.insertAdjacentHTML('beforeend', errorHTML);
-    }
   }
 }
 
 // -------========-------    AbuseIPDB API Call Function    -------========-------
 async function callAbuseIPAPI(ipAddress) {
-  const resultDiv = document.getElementById("ipSection");
+  const ipSection = document.getElementById("ipSection");
   
-  // Add loading indicator for IP reputation check
-  const ipLoadingHTML = `
-    <div id="ipLoading" class="alert alert-info mt-3" role="status">
-      <div class="d-flex align-items-center">
-        <div class="spinner-border spinner-border-sm me-2" role="status">
-          <span class="visually-hidden">Loading...</span>
+  if (!ipSection) return;
+  
+  // Show loading state
+  ipSection.innerHTML = `
+    <div class="card">
+      <div class="card-body">
+        <h6 class="card-subtitle mb-2 text-muted">AbuseIPDB Analysis</h6>
+        <div class="text-center my-3">
+          <div class="spinner-border text-warning" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-2 text-muted">Checking sender IP reputation...</p>
         </div>
-        <span>Checking sender IP reputation...</span>
       </div>
     </div>
   `;
-  
-  if (resultDiv) {
-    resultDiv.insertAdjacentHTML('beforeend', ipLoadingHTML);
-  }
   
   try {
     const ipResponse = await fetch("/api/check-ip", {
@@ -541,11 +547,16 @@ async function callAbuseIPAPI(ipAddress) {
       body: JSON.stringify({ ip_address: ipAddress })
     });
     
-    const ipData = await ipResponse.json();
-    
-    // Remove loading indicator
-    const ipLoadingDiv = document.getElementById("ipLoading");
-    if (ipLoadingDiv) ipLoadingDiv.remove();
+    // Handle non-200 responses gracefully
+    let ipData;
+    try {
+      ipData = await ipResponse.json();
+    } catch (parseError) {
+      ipData = { 
+        success: false, 
+        error: `Server returned ${ipResponse.status}: Unable to parse response` 
+      };
+    }
     
     if (ipData.success) {
       // Determine risk level and color
@@ -564,55 +575,206 @@ async function callAbuseIPAPI(ipAddress) {
       }
       
       // Display IP reputation analysis
-      const ipAnalysisHTML = `
-        <div class="alert alert-${riskClass} mt-3" role="alert">
-          <h5>${riskIcon} Sender IP Reputation Analysis</h5>
-          <hr>
-          <div class="row">
-            <div class="col-md-6">
-              <p><strong>IP Address:</strong> ${ipData.ip_address}</p>
-              <p><strong>Risk Level:</strong> <span class="badge bg-${riskClass}">${riskLevel}</span></p>
-              <p><strong>Abuse Score:</strong> ${ipData.abuse_score}/100</p>
-              <p><strong>Total Reports:</strong> ${ipData.total_reports}</p>
-            </div>
-            <div class="col-md-6">
-              <p><strong>Country:</strong> ${ipData.country_code}</p>
-              <p><strong>ISP:</strong> ${ipData.isp}</p>
-              <p><strong>Usage Type:</strong> ${ipData.usage_type}</p>
-              <p><strong>Whitelisted:</strong> ${ipData.is_whitelisted ? 'Yes' : 'No'}</p>
+      ipSection.innerHTML = `
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">AbuseIPDB Analysis</h6>
+            <div class="alert alert-${riskClass} mb-0">
+              <h6>${riskIcon} Sender IP Reputation</h6>
+              <hr>
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>IP Address:</strong> ${ipData.ip_address}</p>
+                  <p><strong>Risk Level:</strong> <span class="badge bg-${riskClass}">${riskLevel}</span></p>
+                  <p><strong>Abuse Score:</strong> ${ipData.abuse_score}/100</p>
+                  <p><strong>Total Reports:</strong> ${ipData.total_reports}</p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>Country:</strong> ${ipData.country_code}</p>
+                  <p><strong>ISP:</strong> ${ipData.isp}</p>
+                  <p><strong>Usage Type:</strong> ${ipData.usage_type}</p>
+                  <p><strong>Whitelisted:</strong> ${ipData.is_whitelisted ? 'Yes' : 'No'}</p>
+                </div>
+              </div>
+              ${ipData.is_malicious ? '<p class="mb-0 mt-2"><strong>⚠ Warning:</strong> This IP has been reported for malicious activity.</p>' : ''}
             </div>
           </div>
-          ${ipData.is_malicious ? '<p class="mb-0 mt-2"><strong>⚠ Warning:</strong> This IP has been reported for malicious activity.</p>' : ''}
         </div>
       `;
-      if (resultDiv) {
-        resultDiv.insertAdjacentHTML('beforeend', ipAnalysisHTML);
-      }
     } else {
-      // Display error or warning
-      const errorHTML = `
-        <div class="alert alert-warning mt-3" role="alert">
-          <strong>IP Check Notice:</strong> ${ipData.error || 'Unable to check IP reputation'}
+      // Display error or warning with status code
+      const errorMsg = ipData.error || ipData.message || 'Unable to check IP reputation';
+      const statusCode = ipData.status_code || ipResponse.status;
+      ipSection.innerHTML = `
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">AbuseIPDB Analysis</h6>
+            <div class="alert alert-warning mb-0">
+              <strong>IP Check Unavailable (${statusCode}):</strong> ${errorMsg}
+              <p class="mb-0 mt-2 small text-muted">The IP reputation service may be temporarily unavailable or rate-limited.</p>
+            </div>
+          </div>
         </div>
       `;
-      if (resultDiv) {
-        resultDiv.insertAdjacentHTML('beforeend', errorHTML);
-      }
     }
   } catch (error) {
-    // Remove loading indicator
-    const ipLoadingDiv = document.getElementById("ipLoading");
-    if (ipLoadingDiv) ipLoadingDiv.remove();
-    
-    // Display error
-    const errorHTML = `
-      <div class="alert alert-warning mt-3" role="alert">
-        <strong>IP Check Error:</strong> Failed to connect to IP reputation service
+    // Display network error
+    ipSection.innerHTML = `
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-subtitle mb-2 text-muted">AbuseIPDB Analysis</h6>
+          <div class="alert alert-danger mb-0">
+            <strong>IP Check Error:</strong> Failed to connect to IP reputation service
+            <p class="mb-0 mt-2 small">${error.message}</p>
+          </div>
+        </div>
       </div>
     `;
-    if (resultDiv) {
-      resultDiv.insertAdjacentHTML('beforeend', errorHTML);
+  }
+}
+
+// -------========-------    VirusTotal API Call Function    -------========-------
+async function callVirusTotalAPI(emailId) {
+  const virusSection = document.getElementById("virusSection");
+  
+  if (!virusSection) return;
+  
+  // Show loading state
+  virusSection.innerHTML = `
+    <div class="card">
+      <div class="card-body">
+        <h6 class="card-subtitle mb-2 text-muted">VirusTotal Analysis</h6>
+        <div class="text-center my-3">
+          <div class="spinner-border text-info" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-2 text-muted">Scanning file with VirusTotal...</p>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  try {
+    // First, try to get the file report (if file was already scanned)
+    const reportResponse = await fetch("/api/file-report", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email_id: emailId })
+    });
+    
+    // Handle non-200 responses gracefully
+    let reportData;
+    try {
+      reportData = await reportResponse.json();
+    } catch (parseError) {
+      reportData = { 
+        success: false, 
+        error: `Server returned ${reportResponse.status}: Unable to parse response`,
+        status_code: reportResponse.status
+      };
     }
+    
+    if (reportData.success && reportData.stats) {
+      // File report available - display detailed results
+      const stats = reportData.stats;
+      const totalScans = stats.total_scans || 0;
+      const malicious = stats.malicious || 0;
+      const suspicious = stats.suspicious || 0;
+      const undetected = stats.undetected || 0;
+      const harmless = stats.harmless || 0;
+      
+      // Determine threat level
+      let threatLevel = "Clean";
+      let threatClass = "success";
+      let threatIcon = "🛡️";
+      
+      if (malicious > 0) {
+        threatLevel = "Malicious";
+        threatClass = "danger";
+        threatIcon = "🚨";
+      } else if (suspicious > 0) {
+        threatLevel = "Suspicious";
+        threatClass = "warning";
+        threatIcon = "⚠️";
+      }
+      
+      // Calculate detection percentage
+      const detectionRate = totalScans > 0 ? ((malicious + suspicious) / totalScans * 100).toFixed(1) : 0;
+      
+      // Display VirusTotal scan results
+      virusSection.innerHTML = `
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">VirusTotal Analysis</h6>
+            <div class="alert alert-${threatClass} mb-0">
+              <h6>${threatIcon} File Scan Results</h6>
+              <hr>
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>Threat Level:</strong> <span class="badge bg-${threatClass}">${threatLevel}</span></p>
+                  <p><strong>Detection Rate:</strong> ${detectionRate}% (${malicious + suspicious}/${totalScans})</p>
+                  <p><strong>File Type:</strong> ${reportData.file_type || 'Unknown'}</p>
+                  <p><strong>File Size:</strong> ${(reportData.file_size / 1024).toFixed(2)} KB</p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>Malicious:</strong> <span class="badge bg-danger">${malicious}</span></p>
+                  <p><strong>Suspicious:</strong> <span class="badge bg-warning">${suspicious}</span></p>
+                  <p><strong>Harmless:</strong> <span class="badge bg-success">${harmless}</span></p>
+                  <p><strong>Undetected:</strong> <span class="badge bg-secondary">${undetected}</span></p>
+                </div>
+              </div>
+              ${reportData.is_malicious ? '<p class="mb-0 mt-2"><strong>🚨 Warning:</strong> This file has been flagged as malicious by antivirus engines.</p>' : ''}
+              ${reportData.file_hash ? `<p class="mb-0 mt-2"><small><strong>File Hash:</strong> <code>${reportData.file_hash.substring(0, 16)}...</code></small></p>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (reportData.status_code === 404) {
+      // File not yet in VirusTotal database - show info message
+      virusSection.innerHTML = `
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">VirusTotal Analysis</h6>
+            <div class="alert alert-info mb-0">
+              <h6>🔍 VirusTotal Scan</h6>
+              <hr>
+              <p class="mb-0">File has been submitted to VirusTotal for analysis. Results will be available in a few minutes.</p>
+              <p class="mb-0 mt-2"><small>You can check the results later using the file report API.</small></p>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      // Display error or warning with status code
+      const errorMsg = reportData.error || reportData.message || 'Unable to retrieve scan results';
+      const statusCode = reportData.status_code || reportResponse.status;
+      virusSection.innerHTML = `
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">VirusTotal Analysis</h6>
+            <div class="alert alert-warning mb-0">
+              <strong>VirusTotal Unavailable (${statusCode}):</strong> ${errorMsg}
+              <p class="mb-0 mt-2 small text-muted">The file scanning service may be temporarily unavailable or rate-limited.</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  } catch (error) {
+    // Display network error
+    virusSection.innerHTML = `
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-subtitle mb-2 text-muted">VirusTotal Analysis</h6>
+          <div class="alert alert-danger mb-0">
+            <strong>VirusTotal Scan Error:</strong> Failed to connect to VirusTotal service
+            <p class="mb-0 mt-2 small">${error.message}</p>
+          </div>
+        </div>
+      </div>
+    `;
   }
 }
 
