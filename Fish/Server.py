@@ -763,31 +763,14 @@ def upload():
             finally:
                 conn.close()
             
-            # Automatically scan file with VirusTotal
-            vt_result = None
-            try:
-                vt = VirusTotal()
-                vt_scan = vt.is_malicious(file_content, file.filename)
-                if vt_scan and not vt_scan.get('error'):
-                    vt_result = {
-                        'analysis_id': vt_scan.get('analysis_id'),
-                        'type': vt_scan.get('type'),
-                        'message': vt_scan.get('message')
-                    }
-            except ValueError:
-                # VirusTotal API key not configured - skip scanning
-                vt_result = None
-            except Exception as vt_error:
-                # Log error but don't fail the upload
-                print(f"VirusTotal scan failed: {str(vt_error)}")
-                vt_result = None
-                
+            # Note: API analyses (VirusTotal, AbuseIPDB, LLM) are now handled
+            # by the frontend JavaScript after upload completes for better UX
+            
             body_text = parsed['body']['text']
 
             payload = {
                 "email_id": email_id,
                 "filename": file.filename,
-                "vt_scan": vt_result,
                 "data": {
                     "sender_ip": parsed['sender']['ip'],
                     "sender_email": parsed['sender']['email'],
@@ -801,12 +784,12 @@ def upload():
             uploaded_results.append(payload)
             last_payload = payload
 
-        # Build response data
+        # Build response data (API analyses will be performed by JavaScript)
         response_data = {
             "success": True,
             "status_code": 200,
             "email_id": email_id,
-            "message": f"Successfully uploaded and processed {len(uploaded_results)} file(s)",
+            "message": f"Successfully uploaded {len(uploaded_results)} file(s)",
             "data": {
                 "sender_ip": last_payload['data']['sender_ip'],
                 "sender_email": last_payload['data']['sender_email'],
@@ -816,10 +799,6 @@ def upload():
                 "urls": last_payload['data']['urls']
             }
         }
-        
-        # Add VirusTotal scan results if available
-        if last_payload.get('vt_scan'):
-            response_data['virustotal'] = last_payload['vt_scan']
         
         return jsonify(response_data), 200
     
