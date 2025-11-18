@@ -1,9 +1,15 @@
-# Node modules
-node_modules/
-
-# Environment variables
+__pycache__/*
+Analysis/*
+data/*
+db/emails.db
+flask*
+static/__pycache__/*
 .env
 
+# Node modules
+node_modules/
+# Environment variables
+.env
 # Data directory
 Fish/data/
 
@@ -12,13 +18,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
-
 # Virtual environments
 venv/
 env/
 ENV/
 .venv
-
 # Database files
 *.db
 *.sqlite
@@ -33,7 +37,6 @@ Fish/db/
 *.swo
 *~
 .DS_Store
-
 # Python distribution / packaging
 .Python
 build/
@@ -51,13 +54,11 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-
 # Testing
 .pytest_cache/
 .coverage
 htmlcov/
 .tox/
-
 # Flask
 instance/
 .webassets-cache
@@ -66,7 +67,6 @@ Fish/flask_session/
 # Logs
 *.log
 logs/
-
 # OS files
 Thumbs.db
 .DS_Store
