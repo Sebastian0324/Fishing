@@ -578,6 +578,8 @@ def CreateAccount():
                         username,
                         hash.hexdigest()
                     ))
+        
+        user_id = cursor.lastrowid
         session["name"] = username
             
         conn.commit()
@@ -610,7 +612,7 @@ def Login():
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
-        cursor.execute("""SELECT Password_Hash FROM USER WHERE Username = ?""",
+        cursor.execute("""SELECT User_ID, Password_Hash FROM USER WHERE Username = ?""",
                        (request.form.get("name"), ))
         
         pass_hash = cursor.fetchall()
@@ -621,6 +623,8 @@ def Login():
                 "status_code": 404,
                 "message": f"No account found with username '{request.form.get('name')}'"
             }), 404
+        
+        user_id, stored_hash = row
         
         hash = hashlib.sha3_512()
         hash.update(request.form.get("pass").encode())
@@ -634,8 +638,8 @@ def Login():
             }), 401
         
         session["name"] = request.form.get("name")
+        session["user_id"] = user_id
 
-        conn.commit()
         conn.close()
 
         return jsonify({
@@ -726,7 +730,7 @@ def upload():
                         From_Addr, Sender_IP, Body_Text, Extracted_URLs
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
-                    uid,  # Default user ID
+                    uid,
                     file_content,
                     hashlib.sha256(file_content).hexdigest(),
                     len(file_content),
@@ -771,6 +775,7 @@ def upload():
                     "sender_ip": parsed['sender']['ip'],
                     "sender_email": parsed['sender']['email'],
                     "body_text": body_text,
+                    "body_preview": body_text[:200] + "..." if len(body_text) > 200 else body_text,
                     "urls_count": len(parsed['urls']),
                     "urls": parsed['urls']
                 }

@@ -249,6 +249,8 @@ if (UpForm != null) {
     }
     // -------========-------    END OF ERROR HANDLING BEFORE SUBMIT    -------========-------
 
+
+
     // Show analysis section
     toggleAnalysis();
     
