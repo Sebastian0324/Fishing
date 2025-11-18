@@ -57,7 +57,8 @@ def query_llm(message):
                                 "content": message
                             }
                         ],
-                    })
+                    }),
+                    timeout=30
                 )
             
                 # Return immediately on success

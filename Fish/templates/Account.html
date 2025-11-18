@@ -2,7 +2,7 @@
 {% block content %}
     <div class="account-container">
         <!-- Account Name Title -->
-        <h1 class="account-title">Account Name</h1>
+        <h1 class="account-title">{% if session.name %} {{ session.name }} {% else %} Account Name {% endif %}</h1>
         
         <!-- Toggle Buttons -->
         <div class="account-toggle-buttons">
