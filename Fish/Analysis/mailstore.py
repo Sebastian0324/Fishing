@@ -6,8 +6,8 @@ from email import policy
 from email.parser import BytesParser
 
 
-DB_PATH = "Fish/db/mail.db" # placeholder path to the SQLite database file
-SCHEMA_PATH = "Fish/db/schema.sql"          # peka på din schemafil
+DB_PATH = "db/emails.db"  # Single source of truth for database
+SCHEMA_PATH = "db/schema.sql"
 
 
 # -------- init --------
