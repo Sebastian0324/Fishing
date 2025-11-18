@@ -251,8 +251,9 @@ if (UpForm != null) {
 
 
 
-    // Show analysis section
+    // Show analysis section and hide sidebars
     toggleAnalysis();
+    hideSidebars();
     
     // Show loading spinner
     const loadingSpinner = document.getElementById("loadingSpinner");
@@ -803,8 +804,67 @@ document.getElementById("ToUpload").addEventListener("click", toggleAnalysis);
 
 // -------========-------    End of Upload Page    -------========-------
 
-// -------========-------    Account Page Toggle    -------========-------
+// -------========-------    Sidebar Toggle Function    -------========-------
+function toggleSidebar(side) {
+  const layout = document.querySelector('.layout');
+  const leftSidebar = document.getElementById('leftSidebar');
+  const rightSidebar = document.getElementById('rightSidebar');
+  const leftToggle = document.getElementById('leftToggle');
+  const rightToggle = document.getElementById('rightToggle');
+  const leftIcon = document.getElementById('leftToggleIcon');
+  const rightIcon = document.getElementById('rightToggleIcon');
+  
+  if (side === 'left') {
+    if (leftSidebar.classList.contains('collapsed')) {
+      // Expand left sidebar
+      leftSidebar.classList.remove('collapsed');
+      layout.classList.remove('left-collapsed');
+      leftIcon.textContent = '◀';
+    } else {
+      // Collapse left sidebar
+      leftSidebar.classList.add('collapsed');
+      layout.classList.add('left-collapsed');
+      leftIcon.textContent = '▶';
+    }
+  } else if (side === 'right') {
+    if (rightSidebar.classList.contains('collapsed')) {
+      // Expand right sidebar
+      rightSidebar.classList.remove('collapsed');
+      layout.classList.remove('right-collapsed');
+      rightIcon.textContent = '▶';
+    } else {
+      // Collapse right sidebar
+      rightSidebar.classList.add('collapsed');
+      layout.classList.add('right-collapsed');
+      rightIcon.textContent = '◀';
+    }
+  }
+}
+
+// Function to hide both sidebars (used when starting analysis)
+function hideSidebars() {
+  const layout = document.querySelector('.layout');
+  const leftSidebar = document.getElementById('leftSidebar');
+  const rightSidebar = document.getElementById('rightSidebar');
+  const leftIcon = document.getElementById('leftToggleIcon');
+  const rightIcon = document.getElementById('rightToggleIcon');
+  
+  if (leftSidebar && !leftSidebar.classList.contains('collapsed')) {
+    leftSidebar.classList.add('collapsed');
+    layout.classList.add('left-collapsed');
+    leftIcon.textContent = '▶';
+  }
+  
+  if (rightSidebar && !rightSidebar.classList.contains('collapsed')) {
+    rightSidebar.classList.add('collapsed');
+    layout.classList.add('right-collapsed');
+    rightIcon.textContent = '◀';
+  }
+}
+
 document.addEventListener("DOMContentLoaded", function() {
+
+  // -------========-------    Account Page Toggle    -------========-------
   let showEmailsBtn = document.getElementById("showEmailsBtn");
   let showSettingsBtn = document.getElementById("showSettingsBtn");
   let emailsSection = document.getElementById("emailsSection");
