@@ -669,6 +669,12 @@ def logout():
 def upload():
     files = request.files.getlist("file")
 
+    # Try to get comments from the form. 
+    comments = request.form.getlist('comments[]')
+    if not comments:
+        # Fallback if the key was sent without the brackets
+        comments = request.form.getlist('comments')
+
     if "file" not in request.files:
         return jsonify({
             "success": False,
@@ -688,7 +694,7 @@ def upload():
         uploaded_results = []
         last_payload = None
 
-        for file in files:
+        for idx, file in enumerate(files):
             if file.filename == '':
                 return jsonify({
                     "success": False,
@@ -718,17 +724,27 @@ def upload():
             llm_body_text = generate_llm_body(parsed)
             urls_json = json.dumps(parsed['urls'])
 
-            # Insert into DB
+            # Insert into DB (include optional user comment / description)
             uid = session.get("user_id") or 1
             conn = sqlite3.connect(DB_PATH)
             try:
                 conn.execute("PRAGMA foreign_keys = ON;")
                 cursor = conn.cursor()
+                # Determine the comment for this file (if provided)
+                comment_text = ''
+                try:
+                    comment_text = (comments[idx] if idx < len(comments) else '') or ''
+                except Exception:
+                    comment_text = ''
+                # Truncate to 500 chars to match front-end limit and DB expectations
+                if isinstance(comment_text, str) and len(comment_text) > 500:
+                    comment_text = comment_text[:500]
+
                 cursor.execute("""
                     INSERT INTO Email (
                         User_ID, Eml_file, SHA256, Size_Bytes, Received_At,
-                        From_Addr, Sender_IP, Body_Text, Extracted_URLs
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        From_Addr, Sender_IP, Body_Text, Extracted_URLs, Email_Description
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     uid,
                     file_content,
@@ -738,7 +754,8 @@ def upload():
                     parsed['sender']['email'],
                     parsed['sender']['ip'],
                     llm_body_text,
-                    urls_json
+                    urls_json,
+                    comment_text
                 ))
             
                 email_id = cursor.lastrowid
@@ -746,31 +763,14 @@ def upload():
             finally:
                 conn.close()
             
-            # Automatically scan file with VirusTotal
-            vt_result = None
-            try:
-                vt = VirusTotal()
-                vt_scan = vt.is_malicious(file_content, file.filename)
-                if vt_scan and not vt_scan.get('error'):
-                    vt_result = {
-                        'analysis_id': vt_scan.get('analysis_id'),
-                        'type': vt_scan.get('type'),
-                        'message': vt_scan.get('message')
-                    }
-            except ValueError:
-                # VirusTotal API key not configured - skip scanning
-                vt_result = None
-            except Exception as vt_error:
-                # Log error but don't fail the upload
-                print(f"VirusTotal scan failed: {str(vt_error)}")
-                vt_result = None
-                
+            # Note: API analyses (VirusTotal, AbuseIPDB, LLM) are now handled
+            # by the frontend JavaScript after upload completes for better UX
+            
             body_text = parsed['body']['text']
 
             payload = {
                 "email_id": email_id,
                 "filename": file.filename,
-                "vt_scan": vt_result,
                 "data": {
                     "sender_ip": parsed['sender']['ip'],
                     "sender_email": parsed['sender']['email'],
@@ -784,12 +784,12 @@ def upload():
             uploaded_results.append(payload)
             last_payload = payload
 
-        # Build response data
+        # Build response data (API analyses will be performed by JavaScript)
         response_data = {
             "success": True,
             "status_code": 200,
             "email_id": email_id,
-            "message": f"Successfully uploaded and processed {len(uploaded_results)} file(s)",
+            "message": f"Successfully uploaded {len(uploaded_results)} file(s)",
             "data": {
                 "sender_ip": last_payload['data']['sender_ip'],
                 "sender_email": last_payload['data']['sender_email'],
@@ -799,10 +799,6 @@ def upload():
                 "urls": last_payload['data']['urls']
             }
         }
-        
-        # Add VirusTotal scan results if available
-        if last_payload.get('vt_scan'):
-            response_data['virustotal'] = last_payload['vt_scan']
         
         return jsonify(response_data), 200
     
