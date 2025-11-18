@@ -50,15 +50,14 @@ def query_llm(message):
                         "messages": [
                             {
                                 "role": "system",
-                                "content": "You are a phishing email detection assistant. The user will provide the body of a potential phishing email that needs analysis. Analyze the email content and identify phishing indicators."
+                                "content": "You are a phishing email detection assistant. The user will provide the body of a potential phishing email that needs analysis. Analyze the email content and identify phishing indicators.\n\nRespond with a concise summary of the phishing indicators found in the email. If no phishing indicators are found, respond with 'No phishing indicators detected.'\n\n"
                             },
                             {
                                 "role": "user",
                                 "content": message
                             }
-                        ],
-                    }),
-                    timeout=30
+                        ]
+                    })
                 )
             
                 # Return immediately on success
@@ -73,7 +72,7 @@ def query_llm(message):
                 if response.status_code != 429:
                     return {
                         "success": False,
-                        "error": f"API returned status code {response.status_code}: {response.text}"
+                        "error": f"API returned status code {response.status_code}: {response.reason}"
                     }
             
                 # Handle 429 - retry with exponential backoff

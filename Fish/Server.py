@@ -10,8 +10,6 @@ from api.llm import query_llm
 from api.AbuseIp import AbuseIPDB
 from api.VirusTotal import VirusTotal
 from Analysis.analysis_db_store import AnalysisStore
-import dotenv
-dotenv.load_dotenv()
 
 app = Flask(__name__)
 
@@ -68,18 +66,70 @@ def set_text():
 @app.post('/api/llm')
 def llm_api():
     try:
-        data = request.get_json()
-        
-        if not data or 'message' not in data:
+        data = request.get_json(silent=True) or {}
+
+        # Accept message, optional comment, and optional email_id so we can pull
+        # context from the DB when available.
+        message = (data.get('message') or '').strip()
+        if not message:
+            message = (request.form.get('message') or '').strip()
+
+        # Allow email_id to come from JSON or form-data
+        email_id = data.get('email_id')
+        if email_id is None:
+            email_id = request.form.get('email_id')
+        try:
+            email_id = int(email_id) if email_id not in (None, '') else None
+        except ValueError:
+            email_id = None
+
+        # Comments can be supplied in JSON or form-data
+        comments = request.form.getlist('comments[]')
+        if not comments:
+            # Fallback if the key was sent without the brackets
+            comments = request.form.getlist('comments')
+        user_comment = data.get('comment') or (comments[0] if comments else None)
+
+        db_body_text = None
+        db_comment = None
+
+        # If we have an email_id, pull the stored LLM-ready body and comment
+        if email_id is not None:
+            conn = sqlite3.connect(DB_PATH)
+            try:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "SELECT Body_Text, Email_Description FROM Email WHERE Email_ID = ?",
+                    (email_id,)
+                )
+                row = cursor.fetchone()
+            finally:
+                conn.close()
+
+            if row:
+                db_body_text, db_comment = row
+
+        # Prefer the parsed/stored LLM body from the DB when available
+        if db_body_text:
+            message = (db_body_text or '').strip() or message
+        # Use the stored comment if the caller didn't provide one
+        if not user_comment and db_comment:
+            user_comment = db_comment
+
+        if not message:
             return jsonify({
                 "success": False,
                 "error": "No message provided",
                 "status_code": 400,
                 "message": "Request must include a 'message' field"
             }), 400
+
+        # Merge the optional user comment into the LLM prompt
+        if user_comment:
+            message = f"=== USER COMMENT/CONTEXT ===\n{user_comment}\n\n{message}"
         
         # Call the LLM API
-        result = query_llm(data['message'])
+        result = query_llm(message)
         
         # Return the result with status code
         if result['success']:
@@ -370,7 +420,7 @@ def scan_email_api():
         try:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT Eml_file, Sender_IP, Body_Text, SHA256 
+                SELECT Eml_file, Sender_IP, Body_Text, SHA256, Email_Description
                 FROM Email 
                 WHERE Email_ID = ?
             """, (email_id,))
@@ -384,7 +434,7 @@ def scan_email_api():
                     "message": f"No email found with ID {email_id}"
                 }), 404
             
-            file_content, sender_ip, body_text, file_hash = result
+            file_content, sender_ip, body_text, file_hash, description = result
         finally:
             conn.close()
         
@@ -426,8 +476,12 @@ def scan_email_api():
         
         # 3. LLM analysis
         if body_text:
+            if description:
+                llm_prompt = f"Email Description/context: {description}\n\n{body_text}"
+            else:
+                llm_prompt = body_text
             try:
-                llm_result = query_llm(body_text)
+                llm_result = query_llm(llm_prompt)
             except Exception as e:
                 llm_result = {'error': f'LLM analysis failed: {str(e)}'}
         else:
@@ -776,6 +830,7 @@ def upload():
                     "sender_email": parsed['sender']['email'],
                     "body_text": body_text,
                     "body_preview": body_text[:200] + "..." if len(body_text) > 200 else body_text,
+                    "comment": comment_text,
                     "urls_count": len(parsed['urls']),
                     "urls": parsed['urls']
                 }
@@ -795,6 +850,7 @@ def upload():
                 "sender_email": last_payload['data']['sender_email'],
                 "body_text": last_payload['data']['body_text'],
                 "body_preview": last_payload['data']['body_text'][:200] + "..." if len(last_payload['data']['body_text']) > 200 else last_payload['data']['body_text'],
+                "comment": last_payload['data']['comment'],
                 "urls_count": last_payload['data']['urls_count'],
                 "urls": last_payload['data']['urls']
             }
@@ -814,4 +870,5 @@ if __name__ == '__main__':
     # Initialize database on startup
     init_db()
     print("Database initialized successfully")
-    app.run(debug=True)
+    app.run(debug=True, load_dotenv=True)
+    

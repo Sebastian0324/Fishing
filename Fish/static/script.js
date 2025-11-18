@@ -358,6 +358,7 @@ if (UpForm != null) {
     // Update the header to show success
     if (data.success && data.data) {
       const bodyText = data.data.body_text?.trim() || 'No content';
+      const userComment = data.data?.comment || '';
 
       // Helper function to update progress bar
       function updateProgress(barId, status, percentage = null) {
@@ -440,7 +441,7 @@ if (UpForm != null) {
       // LLM API call with progress tracking
       if (bodyText) {
         updateProgress("llmProgressBar", "start");
-        callLLMAPI(bodyText, data.email_id).then((success) => {
+        callLLMAPI(bodyText, data.email_id, userComment).then((success) => {
           if (success) {
             updateProgress("llmProgressBar", "complete");
           } else {
@@ -460,7 +461,7 @@ if (UpForm != null) {
 }
 
 // -------========-------    LLM API Call Function    -------========-------
-async function callLLMAPI(bodyText, emailId) {
+async function callLLMAPI(bodyText, emailId, userComment = '') {
   const llmSection = document.getElementById("llmSection");
   
   if (!llmSection) return false;
@@ -486,7 +487,11 @@ async function callLLMAPI(bodyText, emailId) {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ message: bodyText })
+      body: JSON.stringify({ 
+        // message: bodyText,
+        email_id: emailId,
+        // comment: userComment
+      })
     });
     
     // Handle non-200 responses gracefully
