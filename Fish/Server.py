@@ -670,6 +670,7 @@ def CreateAccount():
         
         user_id = cursor.lastrowid
         session["name"] = username
+        session["user_id"] = user_id
             
         conn.commit()
         conn.close()
@@ -689,7 +690,9 @@ def CreateAccount():
 
 @app.post('/login')
 def Login():
-    if (request.form.get("name") == None or request.form.get("pass") == None):
+    username = request.form.get("name") or ""
+    passw = request.form.get("pass") or ""
+    if (username == None or passw == None):
         return jsonify({
             "success": False,
             "error": "Missing credentials",
@@ -702,23 +705,24 @@ def Login():
         cursor = conn.cursor()
 
         cursor.execute("""SELECT User_ID, Password_Hash FROM USER WHERE Username = ?""",
-                       (request.form.get("name"), ))
+                       (username, ))
         
-        pass_hash = cursor.fetchall()
-        if( not pass_hash ):
+        row = cursor.fetchone()
+        if not row:
             return jsonify({
                 "success": False,
                 "error": "User not found",
                 "status_code": 404,
-                "message": f"No account found with username '{request.form.get('name')}'"
+                "message": f"No account found with username '{username}'"
             }), 404
         
-        user_id, stored_hash = pass_hash[0]
-        
-        hash = hashlib.sha3_512()
-        hash.update(request.form.get("pass").encode())
+        user_id, stored_hash = row
 
-        if (stored_hash != hash.hexdigest()):
+        hash_obj = hashlib.sha3_512()
+        hash_obj.update(passw.encode())
+        provided_hash = hash_obj.hexdigest()
+
+        if stored_hash != provided_hash:
             return jsonify({
                 "success": False,
                 "error": "Invalid password",
@@ -726,7 +730,7 @@ def Login():
                 "message": "The password you entered is incorrect"
             }), 401
         
-        session["name"] = request.form.get("name")
+        session["name"] = username
         session["user_id"] = user_id
 
         conn.close()
@@ -902,8 +906,11 @@ def upload():
             "message": "Failed to process email file due to server error"
         }), 500
 
+
+# Initialize database on startup
+init_db()
+print("Database initialized successfully")
+
 if __name__ == '__main__':
-    # Initialize database on startup
-    init_db()
-    print("Database initialized successfully")
+
     app.run(debug=True, load_dotenv=True)
