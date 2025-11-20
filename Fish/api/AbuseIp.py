@@ -107,25 +107,3 @@ class AbuseIPDB:
             'is_whitelisted': data.get('isWhitelisted', False),
             'error': None
         }
-
-
-# Example usage
-if __name__ == "__main__":
-    # Initialize the AbuseIPDB client
-    abuse_checker = AbuseIPDB()
-    
-    # Example IP address to check
-    test_ip = "8.8.8.8"
-    
-    # Check if IP is malicious
-    result = abuse_checker.is_malicious(test_ip)
-    
-    if result['error']:
-        print(f"Error: {result['error']}")
-    else:
-        print(f"IP Address: {test_ip}")
-        print(f"Is Malicious: {result['is_malicious']}")
-        print(f"Abuse Score: {result['abuse_score']}")
-        print(f"Total Reports: {result['total_reports']}")
-        print(f"Country: {result['country_code']}")
-        print(f"ISP: {result['isp']}")
