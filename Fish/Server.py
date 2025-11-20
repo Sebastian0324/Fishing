@@ -269,7 +269,7 @@ def scan_file_api():
                 "message": "VirusTotal API key not configured. Please add VIRUSTOTAL_API_KEY to .env file"
             }), 500
         
-        # Scan the file
+        # Scan the file (will check if already exists first)
         result = vt.is_malicious(file_content, f"email_{email_id}.eml")
         
         if result['error']:
@@ -287,13 +287,30 @@ def scan_file_api():
                 "message": "Failed to scan file with VirusTotal"
             }), status_code
         
+        # Check if file already exists in VT database with results
+        if result.get('already_exists'):
+            return jsonify({
+                "success": True,
+                "status_code": 200,
+                "email_id": email_id,
+                "analysis_id": result['analysis_id'],
+                "file_hash": result.get('file_hash'),
+                "type": result['type'],
+                "is_malicious": result.get('is_malicious'),
+                "stats": result.get('stats'),
+                "message": result.get('message', 'File already analyzed - results retrieved'),
+                "already_exists": True
+            }), 200
+        
         return jsonify({
             "success": True,
             "status_code": 200,
             "email_id": email_id,
             "analysis_id": result['analysis_id'],
+            "file_hash": result.get('file_hash'),
             "type": result['type'],
             "message": result.get('message', 'File submitted for analysis'),
+            "already_exists": False,
             "note": "Use the analysis_id to check results later via VirusTotal API"
         }), 200
             
@@ -320,11 +337,11 @@ def file_report_api():
         
         email_id = data['email_id']
         
-        # Retrieve the file hash from the database
+        # Retrieve the file hash and content from the database
         conn = sqlite3.connect(DB_PATH)
         try:
             cursor = conn.cursor()
-            cursor.execute("SELECT SHA256 FROM Email WHERE Email_ID = ?", (email_id,))
+            cursor.execute("SELECT SHA256, Eml_file FROM Email WHERE Email_ID = ?", (email_id,))
             result = cursor.fetchone()
             
             if not result:
@@ -335,7 +352,7 @@ def file_report_api():
                     "message": f"No email found with ID {email_id}"
                 }), 404
             
-            file_hash = result[0]
+            file_hash, file_content = result
         finally:
             conn.close()
         
@@ -354,14 +371,39 @@ def file_report_api():
         result = vt.get_file_report(file_hash)
         
         if result['error']:
-            # Determine appropriate status code based on error type
+            # If file not found in VirusTotal database, submit it for scanning
+            if 'not found' in result['error'].lower():
+                scan_result = vt.scan_file(file_content, f"email_{email_id}.eml")
+                
+                if scan_result['success']:
+                    # File submitted successfully - return pending status
+                    analysis_id = scan_result['data'].get('id', '')
+                    
+                    return jsonify({
+                        "success": True,
+                        "status_code": 200,
+                        "email_id": email_id,
+                        "file_hash": file_hash,
+                        "analysis_id": analysis_id,
+                        "is_malicious": None,
+                        "message": "File submitted for analysis. Results will be available shortly.",
+                        "pending": True
+                    }), 200
+                else:
+                    # Failed to submit file for scanning
+                    return jsonify({
+                        "success": False,
+                        "error": scan_result['error'],
+                        "status_code": 500,
+                        "message": "Failed to submit file to VirusTotal for scanning"
+                    }), 500
+            
+            # Other errors (rate limit, invalid API key, etc.)
             status_code = 500
             if 'rate limit' in result['error'].lower():
                 status_code = 429
             elif 'invalid api key' in result['error'].lower():
                 status_code = 401
-            elif 'not found' in result['error'].lower():
-                status_code = 404
             
             return jsonify({
                 "success": False,
@@ -446,17 +488,10 @@ def scan_email_api():
         abuseip_result = None
         llm_result = None
         
-        # 1. VirusTotal scan
+        # 1. VirusTotal scan (automatically checks for existing results)
         try:
             vt = VirusTotal()
-            # Try to get existing report first
-            vt_report = vt.get_file_report(file_hash)
-            if vt_report and not vt_report.get('error'):
-                vt_result = vt_report
-            else:
-                # If no report exists, submit for scanning
-                vt_scan = vt.is_malicious(file_content, f"email_{email_id}.eml")
-                vt_result = vt_scan
+            vt_result = vt.is_malicious(file_content, f"email_{email_id}.eml")
         except ValueError:
             vt_result = {'error': 'VirusTotal API key not configured'}
         except Exception as e:
@@ -678,12 +713,12 @@ def Login():
                 "message": f"No account found with username '{request.form.get('name')}'"
             }), 404
         
-        user_id, stored_hash = row
+        user_id, stored_hash = pass_hash[0]
         
         hash = hashlib.sha3_512()
         hash.update(request.form.get("pass").encode())
 
-        if (pass_hash[0][0] != hash.hexdigest()):
+        if (stored_hash != hash.hexdigest()):
             return jsonify({
                 "success": False,
                 "error": "Invalid password",
@@ -837,15 +872,16 @@ def upload():
             }
 
             uploaded_results.append(payload)
-            last_payload = payload
+            last_payload = payload  # Store the last payload for response data
 
-        # Build response data (API analyses will be performed by JavaScript)
+        # Build response data with ALL uploaded files (not just the last one)
         response_data = {
             "success": True,
             "status_code": 200,
-            "email_id": email_id,
             "message": f"Successfully uploaded {len(uploaded_results)} file(s)",
             "data": {
+                "files": uploaded_results,
+                "count": len(uploaded_results),
                 "sender_ip": last_payload['data']['sender_ip'],
                 "sender_email": last_payload['data']['sender_email'],
                 "body_text": last_payload['data']['body_text'],
@@ -871,4 +907,3 @@ if __name__ == '__main__':
     init_db()
     print("Database initialized successfully")
     app.run(debug=True, load_dotenv=True)
-    
