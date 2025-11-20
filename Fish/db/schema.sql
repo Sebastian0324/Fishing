@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS Email(
     Sender_IP TEXT,
     Body_Text TEXT,
     Extracted_URLs TEXT,
+    Email_Description TEXT,
     FOREIGN KEY(User_ID) REFERENCES User(User_ID)  
 );
 

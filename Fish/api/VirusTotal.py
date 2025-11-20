@@ -1,5 +1,6 @@
 import requests
 import os
+import time
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -18,7 +19,7 @@ class VirusTotal:
         if not self.api_key:
             raise ValueError("VIRUSTOTAL_API_KEY not found in environment variables")
     
-    def scan_file(self, file_content, filename="file.eml", password=None):
+    def scan_file(self, file_content, filename="file.eml", password=None, check_existing=True):
         """
         Upload and scan a file with VirusTotal
         
@@ -26,10 +27,31 @@ class VirusTotal:
             file_content (bytes): The file content to scan
             filename (str): The filename (default: "file.eml")
             password (str): Optional password for protected ZIP files
+            check_existing (bool): If True, check if file exists before uploading (default: True)
         
         Returns:
             dict: API response containing scan results
         """
+        # First check if file already exists in VT to avoid unnecessary uploads
+        if check_existing:
+            import hashlib
+            file_hash = hashlib.sha256(file_content).hexdigest()
+            existing_report = self.get_file_report(file_hash)
+            
+            if existing_report['success']:
+                # File already exists in VT, return existing analysis
+                return {
+                    'success': True,
+                    'data': {
+                        'id': existing_report.get('data', {}).get('id', file_hash),
+                        'type': 'analysis',
+                        'attributes': existing_report.get('data', {}).get('attributes', {})
+                    },
+                    'already_exists': True,
+                    'file_hash': file_hash,
+                    'error': None
+                }
+        
         endpoint = f'{self.base_url}/files'
         
         headers = {
@@ -60,6 +82,7 @@ class VirusTotal:
             return {
                 'success': True,
                 'data': result.get('data', {}),
+                'already_exists': False,
                 'error': None
             }
             
@@ -70,11 +93,12 @@ class VirusTotal:
             elif e.response.status_code == 401:
                 error_msg = "Invalid API key"
             elif e.response.status_code == 429:
-                error_msg = "Rate limit exceeded"
+                error_msg = "Rate limit exceeded - please wait before submitting new files"
             
             return {
                 'success': False,
                 'data': None,
+                'already_exists': False,
                 'error': error_msg
             }
             
@@ -82,6 +106,7 @@ class VirusTotal:
             return {
                 'success': False,
                 'data': None,
+                'already_exists': False,
                 'error': f"Request failed: {str(e)}"
             }
     
@@ -205,25 +230,53 @@ class VirusTotal:
                 'error': f"Request failed: {str(e)}"
             }
     
-    def is_malicious(self, file_content, filename="file.eml"):
+    def is_malicious(self, file_content, filename="file.eml", wait_for_analysis=True, max_wait_time=15):
         """
         Scan a file and determine if it's malicious based on detection results
         
         Args:
             file_content (bytes): The file content to scan
             filename (str): The filename (default: "file.eml")
+            wait_for_analysis (bool): If True, wait for analysis to complete (default: True)
+            max_wait_time (int): Maximum time in seconds to wait for analysis (default: 15)
         
         Returns:
             dict: Contains analysis information including malicious status
         """
-        # First, upload and scan the file
-        scan_result = self.scan_file(file_content, filename)
+        import hashlib
+        import time
+        
+        # Calculate file hash
+        file_hash = hashlib.sha256(file_content).hexdigest()
+        
+        # First, try to get existing report (doesn't consume quota)
+        existing_report = self.get_file_report(file_hash)
+        
+        if existing_report['success']:
+            # File already scanned, return existing results
+            stats = existing_report.get('stats', {})
+            return {
+                'is_malicious': existing_report.get('is_malicious'),
+                'analysis_id': file_hash,
+                'type': 'file',
+                'detections': stats,
+                'stats': stats,
+                'file_hash': file_hash,
+                'message': 'File already analyzed - using existing results',
+                'already_exists': True,
+                'error': None
+            }
+        
+        # File not in VT database, upload it
+        scan_result = self.scan_file(file_content, filename, check_existing=False)
         
         if not scan_result['success']:
             return {
                 'is_malicious': None,
                 'analysis_id': None,
                 'detections': None,
+                'file_hash': file_hash,
+                'already_exists': False,
                 'error': scan_result['error']
             }
         
@@ -232,31 +285,59 @@ class VirusTotal:
         analysis_id = data.get('id', '')
         file_type = data.get('type', '')
         
+        # If wait_for_analysis is True, poll for results
+        if wait_for_analysis and analysis_id:
+            start_time = time.time()
+            attempts = 0
+            
+            while (time.time() - start_time) < max_wait_time:
+                attempts += 1
+                # Wait before checking (exponential backoff: 2s, 3s, 4s, 5s...)
+                wait_time = min(2 + attempts, 5)
+                time.sleep(wait_time)
+                
+                # Try to get the file report using the hash
+                report = self.get_file_report(file_hash)
+                
+                if report['success']:
+                    # Analysis complete!
+                    stats = report.get('stats', {})
+                    return {
+                        'is_malicious': report.get('is_malicious'),
+                        'analysis_id': analysis_id,
+                        'type': 'file',
+                        'detections': stats,
+                        'stats': stats,
+                        'file_hash': file_hash,
+                        'message': f'File analyzed successfully (took {int(time.time() - start_time)}s)',
+                        'already_exists': False,
+                        'error': None
+                    }
+            
+            # Timeout - analysis still pending
+            return {
+                'is_malicious': None,
+                'analysis_id': analysis_id,
+                'type': file_type,
+                'file_hash': file_hash,
+                'detections': None,
+                'stats': None,
+                'message': f'File submitted for analysis but results not ready after {max_wait_time}s',
+                'already_exists': False,
+                'pending': True,
+                'error': None
+            }
+        
+        # Return immediately without waiting
         return {
-            'is_malicious': None,  # Requires polling the analysis endpoint
+            'is_malicious': None,
             'analysis_id': analysis_id,
             'type': file_type,
+            'file_hash': file_hash,
             'detections': None,
+            'stats': None,
             'message': 'File submitted for analysis',
+            'already_exists': False,
+            'pending': True,
             'error': None
         }
-
-
-# Example usage
-if __name__ == "__main__":
-    # Initialize the VirusTotal client
-    vt = VirusTotal()
-    
-    # Example: scan a test file
-    test_content = b"This is a test file content"
-    
-    # Scan the file
-    result = vt.is_malicious(test_content, "test.txt")
-    
-    if result['error']:
-        print(f"Error: {result['error']}")
-    else:
-        print(f"File submitted successfully")
-        print(f"Analysis ID: {result['analysis_id']}")
-        print(f"Type: {result['type']}")
-        print(f"Message: {result['message']}")

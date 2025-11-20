@@ -55,8 +55,6 @@ if (Sign && SignIn && SignUp) {
     window.open(window.location.href, "_self");
   };
 }
-// -------========-------    Front Page    -------========-------
-// -------========-------    Upload Page    -------========-------  
 // -------========-------    Upload Page    -------========-------  
 let UpForm = document.getElementById("uploadForm");
 let analysis = document.getElementById("analysis");
@@ -249,104 +247,690 @@ if (UpForm != null) {
     }
     // -------========-------    END OF ERROR HANDLING BEFORE SUBMIT    -------========-------
 
-
-
-    // Show analysis section and hide sidebars
+    // Show analysis section and hide sidebars IMMEDIATELY
     toggleAnalysis();
     hideSidebars();
     
-    // Show loading spinner
-    const loadingSpinner = document.getElementById("loadingSpinner");
     const downloadSection = document.getElementById("downloadSection");
-    if (loadingSpinner) loadingSpinner.style.display = "block";
     if (downloadSection) downloadSection.classList.add("hidden");
 
+    // Show progress page IMMEDIATELY (before upload completes)
+    document.getElementById("result").innerHTML = `
+      <div class="row">
+        <div class="col-md-8">
+          <div class="alert alert-info" role="alert">
+            <h5>Uploading and Analyzing Email...</h5>
+            <p class="mb-0">Please wait while we process your file.</p>
+          </div>
+
+          <div id="virusSection" class="mt-4">
+            <div class="card">
+              <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">VirusTotal Analysis</h6>
+                <div class="text-center my-3">
+                  <div class="spinner-border text-info" role="status">
+                    <span class="visually-hidden">Waiting...</span>
+                  </div>
+                  <p class="mt-2 text-muted">Waiting to start...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="ipSection" class="mt-4">
+            <div class="card">
+              <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">AbuseIPDB Analysis</h6>
+                <div class="text-center my-3">
+                  <div class="spinner-border text-warning" role="status">
+                    <span class="visually-hidden">Waiting...</span>
+                  </div>
+                  <p class="mt-2 text-muted">Waiting to start...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="llmSection" class="mt-4">
+            <div class="card">
+              <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
+                <div class="text-center my-3">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Waiting...</span>
+                  </div>
+                  <p class="mt-2 text-muted">Waiting to start...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h6 class="card-subtitle mb-3 text-muted">Analysis Progress</h6>
+
+              <div id="vtProgressContainer" class="mb-4">
+                <div class="mb-2 text-muted small">VirusTotal analysis progress</div>
+                <div class="progress" style="height: 1.25rem;">
+                  <div id="vtProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" 
+                       role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                </div>
+              </div>
+
+              <div id="abuseProgressContainer" class="mb-4">
+                <div class="mb-2 text-muted small">AbuseIPDb analysis progress</div>
+                <div class="progress" style="height: 1.25rem;">
+                  <div id="abuseProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-warning" 
+                       role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                </div>
+              </div>
+
+              <div id="llmProgressContainer" class="mb-4">
+                <div class="mb-2 text-muted small">LLM analysis progress</div>
+                <div class="progress" style="height: 1.25rem;">
+                  <div id="llmProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
+                       role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Capture the checkbox state before upload
+    const useAICheckbox = document.getElementById("useAI");
+    const useAI = useAICheckbox ? useAICheckbox.checked : false;
+    
+    // Store AI preference globally so it can be accessed by analysis functions
+    window.useAI = useAI;
+    
+    // Now initiate the upload
     let formData = new FormData(e.target);
     let respons = await fetch("/upload", { method: "POST", body: formData });
     let data = await respons.json();
     
-    // Hide loading spinner after response
-    setTimeout(() => {
-      if (loadingSpinner) loadingSpinner.style.display = "none";
-    }, 500);
-    
     // Handle error response
-    if (data.error) {
+    if (data.error || !data.success) {
       document.getElementById("result").innerHTML = 
-        `<div class="alert alert-danger" role="alert"><strong>Error:</strong> ${data.error}</div>`;
+        `<div class="alert alert-danger" role="alert"><strong>Upload Failed:</strong> ${data.error || data.message || 'Unknown error occurred'}</div>`;
       return;
     }
     
-    // Handle success response
-    if (data.success && data.data) {
-  const bodyText = data.data.body_text?.trim() || 'No content';
-  const downloadSection = document.getElementById("downloadSection");
+    // Store all files data globally for tab switching
+    // Fix: Server returns files at data.data.files, not data.files
+    window.uploadedFiles = (data.data && data.data.files) || [];
+    window.currentFileIndex = 0;
+    window.fileAnalysisResults = {}; // Store analysis results per file
+    
+    // Update the header to show success - render first file and start its analysis
+    if (data.success && window.uploadedFiles.length > 0) {
+      renderFileAnalysis(0);
+      runFileAnalyses(0);
+    }
+  };
+}
 
-  // Insert the updated HTML with progress bars and sections
-  document.getElementById("result").innerHTML = `
-    <div class="row">
-      <div class="col-md-8">
-        <div class="alert alert-success" role="alert">
-          <h5>✓ Email Analysis Complete - ID: ${data.email_id}</h5>
+// -------========-------    File Tab Switching Function    -------========-------
+async function switchFileTab(fileIndex) {
+  if (!window.uploadedFiles || fileIndex < 0 || fileIndex >= window.uploadedFiles.length) {
+    return;
+  }
+  
+  window.currentFileIndex = fileIndex;
+  
+  // Update tab button states
+  const tabButtons = document.querySelectorAll('.account-toggle-buttons .toggle-btn');
+  tabButtons.forEach((btn, idx) => {
+    if (idx === fileIndex) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+  
+  // Check if we have cached results for this file (in-memory)
+  if (window.fileAnalysisResults[fileIndex]) {
+    // Display cached results
+    displayCachedResults(fileIndex);
+    return;
+  }
+  
+  // Try to load from localStorage
+  const file = window.uploadedFiles[fileIndex];
+  const emailId = file.email_id;
+  
+  if (emailId) {
+    const localData = loadAnalysisFromLocalStorage(emailId);
+    if (localData && localData.virusTotal && localData.abuseIP && localData.llm) {
+      // Found in localStorage - cache and display
+      window.fileAnalysisResults[fileIndex] = localData;
+      displayCachedResults(fileIndex);
+      return;
+    }
+    
+    // Try to load from backend database
+    const backendData = await loadAnalysisFromBackend(emailId);
+    if (backendData && backendData.details) {
+      // Found in backend - reconstruct UI from backend data
+      reconstructAnalysisFromBackend(fileIndex, backendData);
+      return;
+    }
+  }
+  
+  // No cached data found - render loading state and run analyses
+  renderFileAnalysis(fileIndex);
+  runFileAnalyses(fileIndex);
+}
+
+// -------========-------    Update Progress Bars for File    -------========-------
+function updateProgressBarsForFile(fileIndex, isComplete) {
+  // Get or initialize progress state for this file
+  if (!window.fileProgressStates) {
+    window.fileProgressStates = {};
+  }
+  
+  const progressState = window.fileProgressStates[fileIndex] || {
+    virusTotal: 0,
+    abuseIP: 0,
+    llm: 0
+  };
+  
+  // Update VirusTotal progress bar
+  const vtBar = document.getElementById("vtProgressBar");
+  if (vtBar) {
+    if (isComplete || progressState.virusTotal === 100) {
+      vtBar.style.width = "100%";
+      vtBar.setAttribute("aria-valuenow", 100);
+      vtBar.classList.remove("progress-bar-animated", "progress-bar-striped", "bg-info");
+      vtBar.classList.add("bg-success");
+      vtBar.textContent = "Completed";
+    } else if (progressState.virusTotal === -1) {
+      vtBar.style.width = "100%";
+      vtBar.setAttribute("aria-valuenow", 100);
+      vtBar.classList.remove("progress-bar-animated", "progress-bar-striped", "bg-info");
+      vtBar.classList.add("bg-danger");
+      vtBar.textContent = "Failed";
+    } else {
+      vtBar.style.width = progressState.virusTotal + "%";
+      vtBar.setAttribute("aria-valuenow", progressState.virusTotal);
+      vtBar.textContent = progressState.virusTotal > 0 ? "In Progress..." : "0%";
+    }
+  }
+  
+  // Update AbuseIPDB progress bar
+  const abuseBar = document.getElementById("abuseProgressBar");
+  if (abuseBar) {
+    if (isComplete || progressState.abuseIP === 100) {
+      abuseBar.style.width = "100%";
+      abuseBar.setAttribute("aria-valuenow", 100);
+      abuseBar.classList.remove("progress-bar-animated", "progress-bar-striped", "bg-warning");
+      abuseBar.classList.add("bg-success");
+      abuseBar.textContent = "Completed";
+    } else if (progressState.abuseIP === -1) {
+      abuseBar.style.width = "100%";
+      abuseBar.setAttribute("aria-valuenow", 100);
+      abuseBar.classList.remove("progress-bar-animated", "progress-bar-striped", "bg-warning");
+      abuseBar.classList.add("bg-danger");
+      abuseBar.textContent = "Failed";
+    } else {
+      abuseBar.style.width = progressState.abuseIP + "%";
+      abuseBar.setAttribute("aria-valuenow", progressState.abuseIP);
+      abuseBar.textContent = progressState.abuseIP > 0 ? "In Progress..." : "0%";
+    }
+  }
+  
+  // Update LLM progress bar
+  const llmBar = document.getElementById("llmProgressBar");
+  if (llmBar) {
+    if (isComplete || progressState.llm === 100) {
+      llmBar.style.width = "100%";
+      llmBar.setAttribute("aria-valuenow", 100);
+      llmBar.classList.remove("progress-bar-animated", "progress-bar-striped", "bg-primary");
+      llmBar.classList.add("bg-success");
+      llmBar.textContent = "Completed";
+    } else if (progressState.llm === -1) {
+      llmBar.style.width = "100%";
+      llmBar.setAttribute("aria-valuenow", 100);
+      llmBar.classList.remove("progress-bar-animated", "progress-bar-striped", "bg-primary");
+      llmBar.classList.add("bg-danger");
+      llmBar.textContent = "Failed";
+    } else {
+      llmBar.style.width = progressState.llm + "%";
+      llmBar.setAttribute("aria-valuenow", progressState.llm);
+      llmBar.textContent = progressState.llm > 0 ? "In Progress..." : "0%";
+    }
+  }
+}
+
+// -------========-------    Display Cached Results    -------========-------
+function displayCachedResults(fileIndex) {
+  const file = window.uploadedFiles[fileIndex];
+  const cached = window.fileAnalysisResults[fileIndex];
+  const status = cached.status || { virusTotal: true, abuseIP: true, llm: true };
+  
+  // Determine progress bar states based on actual success/failure
+  const vtBarClass = status.virusTotal ? 'bg-success' : 'bg-danger';
+  const vtBarText = status.virusTotal ? 'Completed' : 'Failed';
+  
+  const abuseBarClass = status.abuseIP ? 'bg-success' : 'bg-danger';
+  const abuseBarText = status.abuseIP ? 'Completed' : 'Failed';
+  
+  const llmBarClass = status.llm ? 'bg-success' : 'bg-danger';
+  const llmBarText = status.llm ? 'Completed' : 'Failed';
+  
+  // Update the content area with cached results AND progress bars
+  const contentArea = document.getElementById("analysisContent");
+  if (contentArea) {
+    contentArea.innerHTML = `
+      <div class="row">
+        <div class="col-md-8">
+          ${cached.virusTotal || ''}
+          ${cached.abuseIP || ''}
+          ${cached.llm || ''}
         </div>
 
-        <div id="virusSection" class="mt-4">
-          <div class="card">
+        <div class="col-md-4">
+          <div class="card h-100">
             <div class="card-body">
-              <h6 class="card-subtitle mb-2 text-muted">VirusTotal Analysis</h6>
-              <div class="text-center my-3">
-                <div class="spinner-border text-info" role="status">
-                  <span class="visually-hidden">Loading VirusTotal response...</span>
-                </div>
-                <p class="mt-2 text-muted">Checking with VirusTotal...</p>
-              </div>
-            </div>
-          </div>
-        </div>
+              <h6 class="card-subtitle mb-3 text-muted">Analysis Progress</h6>
 
-       <div id="ipSection" class="mt-4"></div>
-
-        <div id="llmSection" class="mt-4">
-          <div class="card">
-            <div class="card-body">
-              <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
-              <div class="text-center my-3">
-                <div class="spinner-border text-primary" role="status">
-                  <span class="visually-hidden">Loading LLM response...</span>
+              <div id="vtProgressContainer" class="mb-4">
+                <div class="mb-2 text-muted small">VirusTotal analysis progress</div>
+                <div class="progress" style="height: 1.25rem;">
+                  <div id="vtProgressBar" class="progress-bar ${vtBarClass}" 
+                       role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">${vtBarText}</div>
                 </div>
-                <p class="mt-2 text-muted">Analyzing with AI...</p>
               </div>
+
+              <div id="abuseProgressContainer" class="mb-4">
+                <div class="mb-2 text-muted small">AbuseIPDb analysis progress</div>
+                <div class="progress" style="height: 1.25rem;">
+                  <div id="abuseProgressBar" class="progress-bar ${abuseBarClass}" 
+                       role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">${abuseBarText}</div>
+                </div>
+              </div>
+
+              <div id="llmProgressContainer" class="mb-4">
+                <div class="mb-2 text-muted small">LLM analysis progress</div>
+                <div class="progress" style="height: 1.25rem;">
+                  <div id="llmProgressBar" class="progress-bar ${llmBarClass}" 
+                       role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">${llmBarText}</div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
       </div>
+    `;
+  }
+}
 
-      <div class="col-md-4">
-        <div class="card h-100">
-          <div class="card-body">
-            <h6 class="card-subtitle mb-3 text-muted">Analysis Progress</h6>
+// -------========-------    Render File Analysis    -------========-------
+function renderFileAnalysis(fileIndex) {
+  const file = window.uploadedFiles[fileIndex];
+  const resultDiv = document.getElementById("result");
+  
+  // Check if tabs already exist
+  const existingTabs = resultDiv.querySelector('.account-toggle-buttons');
+  
+  if (!existingTabs) {
+    // First time - create tabs and content structure
+    let tabsHTML = '';
+    if (window.uploadedFiles.length > 1) {
+      tabsHTML = `
+        <div class="account-toggle-buttons" style="margin-bottom: 1rem;">
+          ${window.uploadedFiles.map((f, idx) => `
+            <button class="toggle-btn ${idx === fileIndex ? 'active' : ''}" onclick="switchFileTab(${idx})">
+              ${f.filename || `File ${idx + 1}`}
+            </button>
+          `).join('')}
+        </div>
+      `;
+    }
+    
+    resultDiv.innerHTML = tabsHTML + `<div id="analysisContent"></div>`;
+  }
+  
+  // Update only the content area
+  const contentArea = document.getElementById("analysisContent");
+  if (contentArea) {
+    contentArea.innerHTML = `
+      <div class="row">
+        <div class="col-md-8">
+          <div id="virusSection" class="mt-4">
+            <div class="card">
+              <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">VirusTotal Analysis</h6>
+                <div class="text-center my-3">
+                  <div class="spinner-border text-info" role="status">
+                    <span class="visually-hidden">Waiting...</span>
+                  </div>
+                  <p class="mt-2 text-muted">Waiting to start...</p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-            ${["vt", "abuse", "llm"].map(id => `
-              <div id="${id}ProgressContainer" class="mb-4">
-                <div class="mb-2 text-muted small">${id === "vt" ? "VirusTotal" : id === "abuse" ? "AbuseIPDb" : "LLM"} analysis progress</div>
+          <div id="ipSection" class="mt-4">
+            <div class="card">
+              <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">AbuseIPDB Analysis</h6>
+                <div class="text-center my-3">
+                  <div class="spinner-border text-warning" role="status">
+                    <span class="visually-hidden">Waiting...</span>
+                  </div>
+                  <p class="mt-2 text-muted">Waiting to start...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="llmSection" class="mt-4">
+            <div class="card">
+              <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
+                <div class="text-center my-3">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Waiting...</span>
+                  </div>
+                  <p class="mt-2 text-muted">Waiting to start...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h6 class="card-subtitle mb-3 text-muted">Analysis Progress</h6>
+
+              <div id="vtProgressContainer" class="mb-4">
+                <div class="mb-2 text-muted small">VirusTotal analysis progress</div>
                 <div class="progress" style="height: 1.25rem;">
-                  <div id="${id}ProgressBar" class="progress-bar progress-bar-striped progress-bar-animated ${id === "vt" ? "bg-info" : id === "abuse" ? "bg-warning" : "bg-primary"}" 
+                  <div id="vtProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" 
                        role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
                 </div>
               </div>
-            `).join("")}
 
+              <div id="abuseProgressContainer" class="mb-4">
+                <div class="mb-2 text-muted small">AbuseIPDb analysis progress</div>
+                <div class="progress" style="height: 1.25rem;">
+                  <div id="abuseProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-warning" 
+                       role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                </div>
+              </div>
+
+              <div id="llmProgressContainer" class="mb-4">
+                <div class="mb-2 text-muted small">LLM analysis progress</div>
+                <div class="progress" style="height: 1.25rem;">
+                  <div id="llmProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
+                       role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  `;
+    `;
+  }
+}
 
+// -------========-------    Persistence Helper Functions    -------========-------
+// Save analysis results to localStorage
+function saveAnalysisToLocalStorage(emailId, analysisData) {
+  try {
+    const storageKey = `analysis_${emailId}`;
+    localStorage.setItem(storageKey, JSON.stringify(analysisData));
+  } catch (e) {
+    console.warn('Failed to save to localStorage:', e);
+  }
+}
 
+// Load analysis results from localStorage
+function loadAnalysisFromLocalStorage(emailId) {
+  try {
+    const storageKey = `analysis_${emailId}`;
+    const data = localStorage.getItem(storageKey);
+    return data ? JSON.parse(data) : null;
+  } catch (e) {
+    console.warn('Failed to load from localStorage:', e);
+    return null;
+  }
+}
 
+// Save analysis results to backend database
+async function saveAnalysisToBackend(emailId) {
+  try {
+    const response = await fetch('/api/scan-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email_id: emailId })
+    });
+    
+    const data = await response.json();
+    return data.success;
+  } catch (e) {
+    console.warn('Failed to save analysis to backend:', e);
+    return false;
+  }
+}
+
+// Load analysis results from backend database
+async function loadAnalysisFromBackend(emailId) {
+  try {
+    const response = await fetch(`/api/analysis/${emailId}`);
+    const data = await response.json();
+    
+    if (data.success && data.analysis) {
+      return data.analysis;
+    }
+    return null;
+  } catch (e) {
+    console.warn('Failed to load analysis from backend:', e);
+    return null;
+  }
+}
+
+// Reconstruct analysis UI from backend data
+function reconstructAnalysisFromBackend(fileIndex, backendData) {
+  const details = backendData.details;
+  
+  // Build VirusTotal section
+  let vtHTML = '';
+  if (details.virustotal && !details.virustotal.error) {
+    const stats = details.virustotal.stats || {};
+    const malicious = stats.malicious || 0;
+    const suspicious = stats.suspicious || 0;
+    const harmless = stats.harmless || 0;
+    const undetected = stats.undetected || 0;
+    const totalScans = stats.total_scans || 0;
+    
+    let threatLevel = "Clean";
+    let threatClass = "success";
+    let threatIcon = "[SAFE]";
+    
+    if (malicious > 0) {
+      threatLevel = "Malicious";
+      threatClass = "danger";
+      threatIcon = "[ALERT]";
+    } else if (suspicious > 0) {
+      threatLevel = "Suspicious";
+      threatClass = "warning";
+      threatIcon = "[WARNING]";
+    }
+    
+    const detectionRate = totalScans > 0 ? ((malicious + suspicious) / totalScans * 100).toFixed(1) : 0;
+    
+    vtHTML = `
+      <div id="virusSection" class="mt-4">
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">VirusTotal Analysis</h6>
+            <div class="alert alert-${threatClass} mb-0">
+              <h6>${threatIcon} File Scan Results</h6>
+              <hr>
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>Threat Level:</strong> <span class="badge bg-${threatClass}">${threatLevel}</span></p>
+                  <p><strong>Detection Rate:</strong> ${detectionRate}% (${malicious + suspicious}/${totalScans})</p>
+                  <p><strong>File Type:</strong> ${details.virustotal.file_type || 'Unknown'}</p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>Malicious:</strong> <span class="badge bg-danger">${malicious}</span></p>
+                  <p><strong>Suspicious:</strong> <span class="badge bg-warning">${suspicious}</span></p>
+                  <p><strong>Harmless:</strong> <span class="badge bg-success">${harmless}</span></p>
+                  <p><strong>Undetected:</strong> <span class="badge bg-secondary">${undetected}</span></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  } else {
+    vtHTML = `
+      <div id="virusSection" class="mt-4">
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">VirusTotal Analysis</h6>
+            <div class="alert alert-warning mb-0">
+              <strong>VirusTotal Unavailable:</strong> ${details.virustotal?.error || 'No data available'}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  // Build AbuseIPDB section
+  let ipHTML = '';
+  if (details.abuseipdb && !details.abuseipdb.error) {
+    const abuseScore = details.abuseipdb.abuse_score || 0;
+    
+    let riskLevel = "Low";
+    let riskClass = "success";
+    let riskIcon = "[OK]";
+    
+    if (abuseScore >= 75) {
+      riskLevel = "High";
+      riskClass = "danger";
+      riskIcon = "[!]";
+    } else if (abuseScore >= 50) {
+      riskLevel = "Medium";
+      riskClass = "warning";
+      riskIcon = "[!]";
+    }
+    
+    ipHTML = `
+      <div id="ipSection" class="mt-4">
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">AbuseIPDB Analysis</h6>
+            <div class="alert alert-${riskClass} mb-0">
+              <h6>${riskIcon} Sender IP Reputation</h6>
+              <hr>
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>Risk Level:</strong> <span class="badge bg-${riskClass}">${riskLevel}</span></p>
+                  <p><strong>Abuse Score:</strong> ${abuseScore}/100</p>
+                  <p><strong>Total Reports:</strong> ${details.abuseipdb.total_reports || 0}</p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>Country:</strong> ${details.abuseipdb.country_code || 'N/A'}</p>
+                  <p><strong>ISP:</strong> ${details.abuseipdb.isp || 'N/A'}</p>
+                  <p><strong>Usage Type:</strong> ${details.abuseipdb.usage_type || 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  } else {
+    ipHTML = `
+      <div id="ipSection" class="mt-4">
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">AbuseIPDB Analysis</h6>
+            <div class="alert alert-warning mb-0">
+              <strong>IP Check Unavailable:</strong> ${details.abuseipdb?.error || 'No data available'}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  // Build LLM section
+  let llmHTML = '';
+  if (details.llm && !details.llm.error) {
+    llmHTML = `
+      <div id="llmSection" class="mt-4">
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
+            <div class="alert alert-primary mb-0">
+              <h6>[ANALYSIS] Phishing Analysis Results</h6>
+              <hr>
+              <div style="white-space: pre-wrap;">${details.llm.response || 'Analysis completed'}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  } else {
+    llmHTML = `
+      <div id="llmSection" class="mt-4">
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
+            <div class="alert alert-warning mb-0">
+              <strong>Analysis Unavailable:</strong> ${details.llm?.error || 'No data available'}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  // Cache the reconstructed data
+  window.fileAnalysisResults[fileIndex] = {
+    virusTotal: vtHTML,
+    abuseIP: ipHTML,
+    llm: llmHTML,
+    status: {
+      virusTotal: !!(details.virustotal && !details.virustotal.error),
+      abuseIP: !!(details.abuseipdb && !details.abuseipdb.error),
+      llm: !!(details.llm && !details.llm.error)
+    },
+    emailId: backendData.email_id
+  };
+  
+  // Save to localStorage for faster future access
+  saveAnalysisToLocalStorage(backendData.email_id, window.fileAnalysisResults[fileIndex]);
+  
+  // Display the reconstructed results
+  displayCachedResults(fileIndex);
+}
+
+// -------========-------    Run File Analyses    -------========-------
+function runFileAnalyses(fileIndex) {
+  const file = window.uploadedFiles[fileIndex];
+  const bodyText = file.data.body_text?.trim() || 'No content';
+  const senderIp = file.data.sender_ip || "";
+  const emailId = file.email_id;
 
   // Helper function to update progress bar
-  function updateProgress(barId, status, percentage = null) {
+  function updateProgress(barId, status) {
     const bar = document.getElementById(barId);
     if (!bar) return;
     
@@ -370,32 +954,63 @@ if (UpForm != null) {
     }
   }
 
-  // Launch all API calls in parallel and sync progress bars to actual completion
-  const senderIp = data.data.sender_ip || "";
-  
   // Track completion of all analyses
   let completedCount = 0;
   const totalAnalyses = 3;
   
+  // Track success/failure status for each API
+  const analysisStatus = {
+    virusTotal: false,
+    abuseIP: false,
+    llm: false
+  };
+  
+  // Store raw API results for backend storage
+  const apiResults = {
+    virusTotal: null,
+    abuseIP: null,
+    llm: null
+  };
+  
   function checkAllCompleted() {
     completedCount++;
     if (completedCount >= totalAnalyses) {
-      // Show download button after all analyses complete
-      if (downloadSection) downloadSection.classList.remove("hidden");
+      // Cache the results for this file with status (in-memory)
+      window.fileAnalysisResults[fileIndex] = {
+        virusTotal: document.getElementById("virusSection").outerHTML,
+        abuseIP: document.getElementById("ipSection").outerHTML,
+        llm: document.getElementById("llmSection").outerHTML,
+        status: analysisStatus,
+        emailId: emailId
+      };
+      
+      // Save to localStorage for quick client-side persistence
+      saveAnalysisToLocalStorage(emailId, window.fileAnalysisResults[fileIndex]);
+      
+      // Save to backend database for long-term persistence
+      // Note: The comprehensive scan endpoint will aggregate all results
+      saveAnalysisToBackend(emailId);
     }
   }
   
   // VirusTotal API call with progress tracking
-  if (data.email_id) {
+  if (emailId) {
     updateProgress("vtProgressBar", "start");
-    callVirusTotalAPI(data.email_id).then(() => {
-      updateProgress("vtProgressBar", "complete");
+    callVirusTotalAPI(emailId).then((success) => {
+      analysisStatus.virusTotal = success;
+      if (success) {
+        updateProgress("vtProgressBar", "complete");
+      } else {
+        updateProgress("vtProgressBar", "error");
+      }
       checkAllCompleted();
     }).catch(() => {
+      analysisStatus.virusTotal = false;
       updateProgress("vtProgressBar", "error");
       checkAllCompleted();
     });
   } else {
+    analysisStatus.virusTotal = false;
     updateProgress("vtProgressBar", "error");
     checkAllCompleted();
   }
@@ -403,41 +1018,74 @@ if (UpForm != null) {
   // AbuseIPDB API call with progress tracking
   if (senderIp) {
     updateProgress("abuseProgressBar", "start");
-    callAbuseIPAPI(senderIp).then(() => {
-      updateProgress("abuseProgressBar", "complete");
+    callAbuseIPAPI(senderIp).then((success) => {
+      analysisStatus.abuseIP = success;
+      if (success) {
+        updateProgress("abuseProgressBar", "complete");
+      } else {
+        updateProgress("abuseProgressBar", "error");
+      }
       checkAllCompleted();
     }).catch(() => {
+      analysisStatus.abuseIP = false;
       updateProgress("abuseProgressBar", "error");
       checkAllCompleted();
     });
   } else {
+    analysisStatus.abuseIP = false;
     updateProgress("abuseProgressBar", "error");
     checkAllCompleted();
   }
   
-  // LLM API call with progress tracking
-  if (bodyText) {
+  // LLM API call with progress tracking - only if user enabled AI analysis
+  if (window.useAI && bodyText) {
     updateProgress("llmProgressBar", "start");
-    callLLMAPI(bodyText, data.email_id).then(() => {
-      updateProgress("llmProgressBar", "complete");
+    callLLMAPI(bodyText, emailId).then((success) => {
+      analysisStatus.llm = success;
+      if (success) {
+        updateProgress("llmProgressBar", "complete");
+      } else {
+        updateProgress("llmProgressBar", "error");
+      }
       checkAllCompleted();
     }).catch(() => {
+      analysisStatus.llm = false;
       updateProgress("llmProgressBar", "error");
       checkAllCompleted();
     });
+  } else if (!window.useAI) {
+    // User did not enable AI analysis - skip it
+    const llmSection = document.getElementById("llmSection");
+    if (llmSection) {
+      llmSection.innerHTML = `
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
+            <div class="alert alert-info mb-0">
+              <h6>[SKIPPED] AI Analysis Not Enabled</h6>
+              <hr>
+              <p class="mb-0">AI analysis was not requested. To enable AI-powered phishing detection, check the "Check submitted file with AI" option before uploading.</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    analysisStatus.llm = true; // Mark as "success" since it was intentionally skipped
+    updateProgress("llmProgressBar", "complete");
+    checkAllCompleted();
   } else {
+    // No body text available
+    analysisStatus.llm = false;
     updateProgress("llmProgressBar", "error");
     checkAllCompleted();
   }
-    }
-  };
 }
 
 // -------========-------    LLM API Call Function    -------========-------
-async function callLLMAPI(bodyText, emailId) {
+async function callLLMAPI(bodyText, emailId, userComment = '') {
   const llmSection = document.getElementById("llmSection");
   
-  if (!llmSection) return;
+  if (!llmSection) return false;
   
   // Show loading state
   llmSection.innerHTML = `
@@ -460,7 +1108,11 @@ async function callLLMAPI(bodyText, emailId) {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ message: bodyText })
+      body: JSON.stringify({ 
+        // message: bodyText,
+        email_id: emailId,
+        // comment: userComment
+      })
     });
     
     // Handle non-200 responses gracefully
@@ -481,13 +1133,14 @@ async function callLLMAPI(bodyText, emailId) {
           <div class="card-body">
             <h6 class="card-subtitle mb-2 text-muted">LLM Analysis</h6>
             <div class="alert alert-primary mb-0">
-              <h6>🔍 Phishing Analysis Results</h6>
+              <h6>[ANALYSIS] Phishing Analysis Results</h6>
               <hr>
               <div style="white-space: pre-wrap;">${llmData.response}</div>
             </div>
           </div>
         </div>
       `;
+      return true; // Success
     } else {
       // Display error with status code
       const errorMsg = llmData.error || llmData.message || 'Failed to analyze email';
@@ -503,6 +1156,7 @@ async function callLLMAPI(bodyText, emailId) {
           </div>
         </div>
       `;
+      return false; // Failed
     }
   } catch (error) {
     // Display network error
@@ -517,6 +1171,7 @@ async function callLLMAPI(bodyText, emailId) {
         </div>
       </div>
     `;
+    return false; // Failed
   }
 }
 
@@ -524,7 +1179,7 @@ async function callLLMAPI(bodyText, emailId) {
 async function callAbuseIPAPI(ipAddress) {
   const ipSection = document.getElementById("ipSection");
   
-  if (!ipSection) return;
+  if (!ipSection) return false;
   
   // Show loading state
   ipSection.innerHTML = `
@@ -565,16 +1220,16 @@ async function callAbuseIPAPI(ipAddress) {
       // Determine risk level and color
       let riskLevel = "Low";
       let riskClass = "success";
-      let riskIcon = "✓";
+      let riskIcon = "[OK]";
       
       if (ipData.abuse_score >= 75) {
         riskLevel = "High";
         riskClass = "danger";
-        riskIcon = "⚠";
+        riskIcon = "[!]";
       } else if (ipData.abuse_score >= 50) {
         riskLevel = "Medium";
         riskClass = "warning";
-        riskIcon = "⚡";
+        riskIcon = "[!]";
       }
       
       // Display IP reputation analysis
@@ -599,11 +1254,12 @@ async function callAbuseIPAPI(ipAddress) {
                   <p><strong>Whitelisted:</strong> ${ipData.is_whitelisted ? 'Yes' : 'No'}</p>
                 </div>
               </div>
-              ${ipData.is_malicious ? '<p class="mb-0 mt-2"><strong>⚠ Warning:</strong> This IP has been reported for malicious activity.</p>' : ''}
+              ${ipData.is_malicious ? '<p class="mb-0 mt-2"><strong>[WARNING]</strong> This IP has been reported for malicious activity.</p>' : ''}
             </div>
           </div>
         </div>
       `;
+      return true; // Success
     } else {
       // Display error or warning with status code
       const errorMsg = ipData.error || ipData.message || 'Unable to check IP reputation';
@@ -619,6 +1275,7 @@ async function callAbuseIPAPI(ipAddress) {
           </div>
         </div>
       `;
+      return false; // Failed
     }
   } catch (error) {
     // Display network error
@@ -633,6 +1290,7 @@ async function callAbuseIPAPI(ipAddress) {
         </div>
       </div>
     `;
+    return false; // Failed
   }
 }
 
@@ -640,7 +1298,7 @@ async function callAbuseIPAPI(ipAddress) {
 async function callVirusTotalAPI(emailId) {
   const virusSection = document.getElementById("virusSection");
   
-  if (!virusSection) return;
+  if (!virusSection) return false;
   
   // Show loading state
   virusSection.innerHTML = `
@@ -691,16 +1349,16 @@ async function callVirusTotalAPI(emailId) {
       // Determine threat level
       let threatLevel = "Clean";
       let threatClass = "success";
-      let threatIcon = "🛡️";
+      let threatIcon = "[SAFE]";
       
       if (malicious > 0) {
         threatLevel = "Malicious";
         threatClass = "danger";
-        threatIcon = "🚨";
+        threatIcon = "[ALERT]";
       } else if (suspicious > 0) {
         threatLevel = "Suspicious";
         threatClass = "warning";
-        threatIcon = "⚠️";
+        threatIcon = "[WARNING]";
       }
       
       // Calculate detection percentage
@@ -728,27 +1386,13 @@ async function callVirusTotalAPI(emailId) {
                   <p><strong>Undetected:</strong> <span class="badge bg-secondary">${undetected}</span></p>
                 </div>
               </div>
-              ${reportData.is_malicious ? '<p class="mb-0 mt-2"><strong>🚨 Warning:</strong> This file has been flagged as malicious by antivirus engines.</p>' : ''}
+              ${reportData.is_malicious ? '<p class="mb-0 mt-2"><strong>[ALERT] Warning:</strong> This file has been flagged as malicious by antivirus engines.</p>' : ''}
               ${reportData.file_hash ? `<p class="mb-0 mt-2"><small><strong>File Hash:</strong> <code>${reportData.file_hash.substring(0, 16)}...</code></small></p>` : ''}
             </div>
           </div>
         </div>
       `;
-    } else if (reportData.status_code === 404) {
-      // File not yet in VirusTotal database - show info message
-      virusSection.innerHTML = `
-        <div class="card">
-          <div class="card-body">
-            <h6 class="card-subtitle mb-2 text-muted">VirusTotal Analysis</h6>
-            <div class="alert alert-info mb-0">
-              <h6>🔍 VirusTotal Scan</h6>
-              <hr>
-              <p class="mb-0">File has been submitted to VirusTotal for analysis. Results will be available in a few minutes.</p>
-              <p class="mb-0 mt-2"><small>You can check the results later using the file report API.</small></p>
-            </div>
-          </div>
-        </div>
-      `;
+      return true; // Success
     } else {
       // Display error or warning with status code
       const errorMsg = reportData.error || reportData.message || 'Unable to retrieve scan results';
@@ -764,6 +1408,7 @@ async function callVirusTotalAPI(emailId) {
           </div>
         </div>
       `;
+      return false; // Failed
     }
   } catch (error) {
     // Display network error
@@ -778,6 +1423,7 @@ async function callVirusTotalAPI(emailId) {
         </div>
       </div>
     `;
+    return false; // Failed
   }
 }
 
@@ -819,24 +1465,24 @@ function toggleSidebar(side) {
       // Expand left sidebar
       leftSidebar.classList.remove('collapsed');
       layout.classList.remove('left-collapsed');
-      leftIcon.textContent = '◀';
+      leftIcon.textContent = '<';
     } else {
       // Collapse left sidebar
       leftSidebar.classList.add('collapsed');
       layout.classList.add('left-collapsed');
-      leftIcon.textContent = '▶';
+      leftIcon.textContent = '>';
     }
   } else if (side === 'right') {
     if (rightSidebar.classList.contains('collapsed')) {
       // Expand right sidebar
       rightSidebar.classList.remove('collapsed');
       layout.classList.remove('right-collapsed');
-      rightIcon.textContent = '▶';
+      rightIcon.textContent = '>';
     } else {
       // Collapse right sidebar
       rightSidebar.classList.add('collapsed');
       layout.classList.add('right-collapsed');
-      rightIcon.textContent = '◀';
+      rightIcon.textContent = '<';
     }
   }
 }
@@ -852,13 +1498,13 @@ function hideSidebars() {
   if (leftSidebar && !leftSidebar.classList.contains('collapsed')) {
     leftSidebar.classList.add('collapsed');
     layout.classList.add('left-collapsed');
-    leftIcon.textContent = '▶';
+    leftIcon.textContent = '>';
   }
   
   if (rightSidebar && !rightSidebar.classList.contains('collapsed')) {
     rightSidebar.classList.add('collapsed');
     layout.classList.add('right-collapsed');
-    rightIcon.textContent = '◀';
+    rightIcon.textContent = '<';
   }
 }
 

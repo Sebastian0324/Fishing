@@ -10,8 +10,6 @@ from api.llm import query_llm
 from api.AbuseIp import AbuseIPDB
 from api.VirusTotal import VirusTotal
 from Analysis.analysis_db_store import AnalysisStore
-import dotenv
-dotenv.load_dotenv()
 
 app = Flask(__name__)
 
@@ -68,18 +66,70 @@ def set_text():
 @app.post('/api/llm')
 def llm_api():
     try:
-        data = request.get_json()
-        
-        if not data or 'message' not in data:
+        data = request.get_json(silent=True) or {}
+
+        # Accept message, optional comment, and optional email_id so we can pull
+        # context from the DB when available.
+        message = (data.get('message') or '').strip()
+        if not message:
+            message = (request.form.get('message') or '').strip()
+
+        # Allow email_id to come from JSON or form-data
+        email_id = data.get('email_id')
+        if email_id is None:
+            email_id = request.form.get('email_id')
+        try:
+            email_id = int(email_id) if email_id not in (None, '') else None
+        except ValueError:
+            email_id = None
+
+        # Comments can be supplied in JSON or form-data
+        comments = request.form.getlist('comments[]')
+        if not comments:
+            # Fallback if the key was sent without the brackets
+            comments = request.form.getlist('comments')
+        user_comment = data.get('comment') or (comments[0] if comments else None)
+
+        db_body_text = None
+        db_comment = None
+
+        # If we have an email_id, pull the stored LLM-ready body and comment
+        if email_id is not None:
+            conn = sqlite3.connect(DB_PATH)
+            try:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "SELECT Body_Text, Email_Description FROM Email WHERE Email_ID = ?",
+                    (email_id,)
+                )
+                row = cursor.fetchone()
+            finally:
+                conn.close()
+
+            if row:
+                db_body_text, db_comment = row
+
+        # Prefer the parsed/stored LLM body from the DB when available
+        if db_body_text:
+            message = (db_body_text or '').strip() or message
+        # Use the stored comment if the caller didn't provide one
+        if not user_comment and db_comment:
+            user_comment = db_comment
+
+        if not message:
             return jsonify({
                 "success": False,
                 "error": "No message provided",
                 "status_code": 400,
                 "message": "Request must include a 'message' field"
             }), 400
+
+        # Merge the optional user comment into the LLM prompt
+        if user_comment:
+            message = f"=== USER COMMENT/CONTEXT ===\n{user_comment}\n\n{message}"
         
         # Call the LLM API
-        result = query_llm(data['message'])
+        result = query_llm(message)
         
         # Return the result with status code
         if result['success']:
@@ -219,7 +269,7 @@ def scan_file_api():
                 "message": "VirusTotal API key not configured. Please add VIRUSTOTAL_API_KEY to .env file"
             }), 500
         
-        # Scan the file
+        # Scan the file (will check if already exists first)
         result = vt.is_malicious(file_content, f"email_{email_id}.eml")
         
         if result['error']:
@@ -237,13 +287,30 @@ def scan_file_api():
                 "message": "Failed to scan file with VirusTotal"
             }), status_code
         
+        # Check if file already exists in VT database with results
+        if result.get('already_exists'):
+            return jsonify({
+                "success": True,
+                "status_code": 200,
+                "email_id": email_id,
+                "analysis_id": result['analysis_id'],
+                "file_hash": result.get('file_hash'),
+                "type": result['type'],
+                "is_malicious": result.get('is_malicious'),
+                "stats": result.get('stats'),
+                "message": result.get('message', 'File already analyzed - results retrieved'),
+                "already_exists": True
+            }), 200
+        
         return jsonify({
             "success": True,
             "status_code": 200,
             "email_id": email_id,
             "analysis_id": result['analysis_id'],
+            "file_hash": result.get('file_hash'),
             "type": result['type'],
             "message": result.get('message', 'File submitted for analysis'),
+            "already_exists": False,
             "note": "Use the analysis_id to check results later via VirusTotal API"
         }), 200
             
@@ -270,11 +337,11 @@ def file_report_api():
         
         email_id = data['email_id']
         
-        # Retrieve the file hash from the database
+        # Retrieve the file hash and content from the database
         conn = sqlite3.connect(DB_PATH)
         try:
             cursor = conn.cursor()
-            cursor.execute("SELECT SHA256 FROM Email WHERE Email_ID = ?", (email_id,))
+            cursor.execute("SELECT SHA256, Eml_file FROM Email WHERE Email_ID = ?", (email_id,))
             result = cursor.fetchone()
             
             if not result:
@@ -285,7 +352,7 @@ def file_report_api():
                     "message": f"No email found with ID {email_id}"
                 }), 404
             
-            file_hash = result[0]
+            file_hash, file_content = result
         finally:
             conn.close()
         
@@ -304,14 +371,39 @@ def file_report_api():
         result = vt.get_file_report(file_hash)
         
         if result['error']:
-            # Determine appropriate status code based on error type
+            # If file not found in VirusTotal database, submit it for scanning
+            if 'not found' in result['error'].lower():
+                scan_result = vt.scan_file(file_content, f"email_{email_id}.eml")
+                
+                if scan_result['success']:
+                    # File submitted successfully - return pending status
+                    analysis_id = scan_result['data'].get('id', '')
+                    
+                    return jsonify({
+                        "success": True,
+                        "status_code": 200,
+                        "email_id": email_id,
+                        "file_hash": file_hash,
+                        "analysis_id": analysis_id,
+                        "is_malicious": None,
+                        "message": "File submitted for analysis. Results will be available shortly.",
+                        "pending": True
+                    }), 200
+                else:
+                    # Failed to submit file for scanning
+                    return jsonify({
+                        "success": False,
+                        "error": scan_result['error'],
+                        "status_code": 500,
+                        "message": "Failed to submit file to VirusTotal for scanning"
+                    }), 500
+            
+            # Other errors (rate limit, invalid API key, etc.)
             status_code = 500
             if 'rate limit' in result['error'].lower():
                 status_code = 429
             elif 'invalid api key' in result['error'].lower():
                 status_code = 401
-            elif 'not found' in result['error'].lower():
-                status_code = 404
             
             return jsonify({
                 "success": False,
@@ -370,7 +462,7 @@ def scan_email_api():
         try:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT Eml_file, Sender_IP, Body_Text, SHA256 
+                SELECT Eml_file, Sender_IP, Body_Text, SHA256, Email_Description
                 FROM Email 
                 WHERE Email_ID = ?
             """, (email_id,))
@@ -384,7 +476,7 @@ def scan_email_api():
                     "message": f"No email found with ID {email_id}"
                 }), 404
             
-            file_content, sender_ip, body_text, file_hash = result
+            file_content, sender_ip, body_text, file_hash, description = result
         finally:
             conn.close()
         
@@ -396,17 +488,10 @@ def scan_email_api():
         abuseip_result = None
         llm_result = None
         
-        # 1. VirusTotal scan
+        # 1. VirusTotal scan (automatically checks for existing results)
         try:
             vt = VirusTotal()
-            # Try to get existing report first
-            vt_report = vt.get_file_report(file_hash)
-            if vt_report and not vt_report.get('error'):
-                vt_result = vt_report
-            else:
-                # If no report exists, submit for scanning
-                vt_scan = vt.is_malicious(file_content, f"email_{email_id}.eml")
-                vt_result = vt_scan
+            vt_result = vt.is_malicious(file_content, f"email_{email_id}.eml")
         except ValueError:
             vt_result = {'error': 'VirusTotal API key not configured'}
         except Exception as e:
@@ -426,8 +511,12 @@ def scan_email_api():
         
         # 3. LLM analysis
         if body_text:
+            if description:
+                llm_prompt = f"Email Description/context: {description}\n\n{body_text}"
+            else:
+                llm_prompt = body_text
             try:
-                llm_result = query_llm(body_text)
+                llm_result = query_llm(llm_prompt)
             except Exception as e:
                 llm_result = {'error': f'LLM analysis failed: {str(e)}'}
         else:
@@ -624,12 +713,12 @@ def Login():
                 "message": f"No account found with username '{request.form.get('name')}'"
             }), 404
         
-        user_id, stored_hash = row
+        user_id, stored_hash = pass_hash[0]
         
         hash = hashlib.sha3_512()
         hash.update(request.form.get("pass").encode())
 
-        if (pass_hash[0][0] != hash.hexdigest()):
+        if (stored_hash != hash.hexdigest()):
             return jsonify({
                 "success": False,
                 "error": "Invalid password",
@@ -669,6 +758,12 @@ def logout():
 def upload():
     files = request.files.getlist("file")
 
+    # Try to get comments from the form. 
+    comments = request.form.getlist('comments[]')
+    if not comments:
+        # Fallback if the key was sent without the brackets
+        comments = request.form.getlist('comments')
+
     if "file" not in request.files:
         return jsonify({
             "success": False,
@@ -688,7 +783,7 @@ def upload():
         uploaded_results = []
         last_payload = None
 
-        for file in files:
+        for idx, file in enumerate(files):
             if file.filename == '':
                 return jsonify({
                     "success": False,
@@ -718,17 +813,27 @@ def upload():
             llm_body_text = generate_llm_body(parsed)
             urls_json = json.dumps(parsed['urls'])
 
-            # Insert into DB
+            # Insert into DB (include optional user comment / description)
             uid = session.get("user_id") or 1
             conn = sqlite3.connect(DB_PATH)
             try:
                 conn.execute("PRAGMA foreign_keys = ON;")
                 cursor = conn.cursor()
+                # Determine the comment for this file (if provided)
+                comment_text = ''
+                try:
+                    comment_text = (comments[idx] if idx < len(comments) else '') or ''
+                except Exception:
+                    comment_text = ''
+                # Truncate to 500 chars to match front-end limit and DB expectations
+                if isinstance(comment_text, str) and len(comment_text) > 500:
+                    comment_text = comment_text[:500]
+
                 cursor.execute("""
                     INSERT INTO Email (
                         User_ID, Eml_file, SHA256, Size_Bytes, Received_At,
-                        From_Addr, Sender_IP, Body_Text, Extracted_URLs
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        From_Addr, Sender_IP, Body_Text, Extracted_URLs, Email_Description
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     uid,
                     file_content,
@@ -738,7 +843,8 @@ def upload():
                     parsed['sender']['email'],
                     parsed['sender']['ip'],
                     llm_body_text,
-                    urls_json
+                    urls_json,
+                    comment_text
                 ))
             
                 email_id = cursor.lastrowid
@@ -746,63 +852,45 @@ def upload():
             finally:
                 conn.close()
             
-            # Automatically scan file with VirusTotal
-            vt_result = None
-            try:
-                vt = VirusTotal()
-                vt_scan = vt.is_malicious(file_content, file.filename)
-                if vt_scan and not vt_scan.get('error'):
-                    vt_result = {
-                        'analysis_id': vt_scan.get('analysis_id'),
-                        'type': vt_scan.get('type'),
-                        'message': vt_scan.get('message')
-                    }
-            except ValueError:
-                # VirusTotal API key not configured - skip scanning
-                vt_result = None
-            except Exception as vt_error:
-                # Log error but don't fail the upload
-                print(f"VirusTotal scan failed: {str(vt_error)}")
-                vt_result = None
-                
+            # Note: API analyses (VirusTotal, AbuseIPDB, LLM) are now handled
+            # by the frontend JavaScript after upload completes for better UX
+            
             body_text = parsed['body']['text']
 
             payload = {
                 "email_id": email_id,
                 "filename": file.filename,
-                "vt_scan": vt_result,
                 "data": {
                     "sender_ip": parsed['sender']['ip'],
                     "sender_email": parsed['sender']['email'],
                     "body_text": body_text,
                     "body_preview": body_text[:200] + "..." if len(body_text) > 200 else body_text,
+                    "comment": comment_text,
                     "urls_count": len(parsed['urls']),
                     "urls": parsed['urls']
                 }
             }
 
             uploaded_results.append(payload)
-            last_payload = payload
+            last_payload = payload  # Store the last payload for response data
 
-        # Build response data
+        # Build response data with ALL uploaded files (not just the last one)
         response_data = {
             "success": True,
             "status_code": 200,
-            "email_id": email_id,
-            "message": f"Successfully uploaded and processed {len(uploaded_results)} file(s)",
+            "message": f"Successfully uploaded {len(uploaded_results)} file(s)",
             "data": {
+                "files": uploaded_results,
+                "count": len(uploaded_results),
                 "sender_ip": last_payload['data']['sender_ip'],
                 "sender_email": last_payload['data']['sender_email'],
                 "body_text": last_payload['data']['body_text'],
                 "body_preview": last_payload['data']['body_text'][:200] + "..." if len(last_payload['data']['body_text']) > 200 else last_payload['data']['body_text'],
+                "comment": last_payload['data']['comment'],
                 "urls_count": last_payload['data']['urls_count'],
                 "urls": last_payload['data']['urls']
             }
         }
-        
-        # Add VirusTotal scan results if available
-        if last_payload.get('vt_scan'):
-            response_data['virustotal'] = last_payload['vt_scan']
         
         return jsonify(response_data), 200
     
@@ -818,4 +906,4 @@ if __name__ == '__main__':
     # Initialize database on startup
     init_db()
     print("Database initialized successfully")
-    app.run(debug=True)
+    app.run(debug=True, load_dotenv=True)
