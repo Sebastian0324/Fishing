@@ -34,41 +34,45 @@
                 </button>
 
                 <!-- Upload Form Section -->
-                <div class="content-section upload-section">
-                    <div id="uploadForm"> <!-- Before Uploade -->
-                        <h3 class="section-header">Upload .eml File</h3>
+                 <div class="content-section upload-section">
+                    <div id="uploadForm">
+                        <h3 class="section-header">Upload & Analyze</h3>
                         <div class="placeholder-content">
-                            <p class="placeholder-text">Select an email file to analyze for phishing threats</p>
+                            <p class="placeholder-text">Drag &amp; drop or click to select <code>.eml</code> files for analysis.</p>
                             <form method="post" enctype="multipart/form-data" action="/upload">
 
-                                <div id="uploadControls" class="mb-3 form-check">
-                                    <input type="file" class="form-control" name="file" accept=".eml" id="dropBox" multiple required/>
-                                    
+                                <div id="uploadControls" class="upload-area">
+                                    <label for="dropBox" class="file-label" tabindex="0" aria-label="Upload .eml files">
+                                        <svg width="44" height="44" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M.5 9.5v2A1.5 1.5 0 002 13h12a1.5 1.5 0 001.5-1.5v-2" stroke="rgba(238,238,238,0.7)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 1v8" stroke="rgba(238,238,238,0.9)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M5 4l3-3 3 3" stroke="rgba(238,238,238,0.9)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                                        <span class="file-label-text">Drop files here or click to choose</span>
+                                        <span class="file-label-info">Accepted: .eml · Max 1MB per file · Up to 5 files</span>
+                                        <input type="file" class="file-input" name="file" accept=".eml" id="dropBox" multiple required aria-label="Choose .eml files to upload"/>
+                                    </label>
+
                                     <!-- Selected files preview -->
-                                    <div id="selectedFiles" class="mt-2"></div>
+                                    <div id="selectedFiles" class="selected-files-container" aria-live="polite"></div>
+
+                                    <!-- Div for error messages before submit -->
+                                    <div id="SubmitError" class="error-container" role="alert" aria-atomic="true"></div>
+
+                                  
+
+                                    <div style="margin-top:1rem;display:flex;align-items:center;gap:1rem;justify-content:space-between;flex-wrap:wrap;">
+                                        <div style="display:flex;align-items:center;gap:0.5rem;">
+                                            <input type="checkbox" class="form-check-input" id="useAI" name="use_ai" value="1">
+                                            <label class="form-check-label" for="useAI">Use AI summary (optional)</label>
+                                        </div>
+
+                                        <div class="submit-container">
+                                            <button type="submit" id="submitButton" class="submit-btn" aria-label="Submit files for analysis">Start Analysis</button>
+                                        </div>
+                                    </div>
                                 </div>
-
-                         <!-- Div for error messages before submit -->
-                        <div id="SubmitError"></div>
-                        <div class="mb-3">
-
-                            <!-- AI Usage Information -->
-                            <div style="margin-bottom: 1rem; padding: 0.75rem; font-size: 0.9rem; background: linear-gradient(135deg, rgba(110, 93, 198, 0.9), rgba(160, 81, 130, 0.9)); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 0.5em; color: white; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
-                                <strong><i class="bi bi-info-circle"></i> About AI Analysis:</strong> When enabled, we use AI to help detect phishing patterns in your email. Your personal information is automatically anonymized before analysis. 
-                                <a href="/AboutUs#ai-usage" style="text-decoration: underline; color: white;">Learn more about our AI usage and data privacy</a>
-                            </div>
-
-                            <!-- AI Check Checkbox -->
-                            <div class="form-check" style="display: flex; justify-content: center; align-items: center;">
-                                <input type="checkbox" class="form-check-input" id="useAI" name="use_ai" value="1">
-                                <label class="form-check-label" for="useAI" style="margin-left: 0.5rem;"> <i class="bi bi-anthropic"></i> Enable AI-powered phishing detection</label>
-                            </div>
-                        </div>
-                        <button type="submit" id="submitButton" class="btn btn-primary">Submit</button>
 
                             </form>
                         </div>
                     </div>
+
                     <!-- Analysis Section - After Submit -->
                     <div id="analysis" class="hidden">
                         <div class="section-header">
