@@ -57,16 +57,20 @@
 
                                   
 
-                                    <div style="margin-top:1rem;display:flex;align-items:center;gap:1rem;justify-content:space-between;flex-wrap:wrap;">
-                                        <div style="display:flex;align-items:center;gap:0.5rem;">
-                                            <input type="checkbox" class="form-check-input" id="useAI" name="use_ai" value="1">
-                                            <label class="form-check-label" for="useAI">Use AI summary (optional)</label>
+                                    <div style="margin-top:1rem;display:flex;align-items:center;gap:1rem;justify-content:space-between;">
+                                        <div>
+                                            <div style="display:flex;align-items:center;gap:0.5rem;">
+                                                <input type="checkbox" class="form-check-input" id="useAI" name="use_ai" value="1">
+                                                <label class="form-check-label" for="useAI">Use AI summary (optional)</label>
+                                            </div>
+                                            <div style="margin-top:0.25rem;margin-left:1.5rem;font-size:0.85rem;color:rgba(238,238,238,0.7);">
+                                                Your data is anonymized before AI analysis. <a href="/AboutUs#ai-usage" style="color:rgba(100,150,255,0.9);text-decoration:underline;">Learn more about AI usage.</a>
+                                            </div>
                                         </div>
 
                                         <div class="submit-container">
                                             <button type="submit" id="submitButton" class="submit-btn" aria-label="Submit files for analysis">Start Analysis</button>
                                         </div>
-                                    </div>
                                 </div>
 
                             </form>

@@ -258,7 +258,8 @@ div#Login {
 /* Submit Container */
 .submit-container {
     text-align: center;
-    margin-top: 2em;
+    margin-top: 1em;
+    padding: 0.5em;
 }
 
 .submit-btn {
@@ -570,6 +571,15 @@ img {
 
 /* Ensure How it Works section header matches Upload section header spacing */
 #howItWorksSection .section-header {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 1em;
+    padding-bottom: 0.5em;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Ensure Description section header matches How To section header */
+#welcomeSection .section-header {
     font-size: 1.8rem;
     font-weight: bold;
     margin-bottom: 1em;
