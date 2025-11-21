@@ -13,5 +13,49 @@
                 <p>Whether you're a curious learner or a seasoned developer, this is your chance to contribute to a safer internet — one email at a time.</p>
             </div>
         </div>
+
+        <!-- How We Use Your Email Information -->
+        <div class="content-section">
+            <h3 class="section-header">How We Use Your Email Information</h3>
+            <div class="placeholder-content">
+                <p><strong>Transparency First:</strong> We believe in complete transparency about how your data is handled. When you upload an email file (.eml) to our platform, here's exactly what happens:</p>
+                
+                <p><strong>Local Analysis:</strong> Your email is analyzed locally on our server for phishing indicators including:</p>
+                <ul>
+                    <li>Suspicious links and URLs</li>
+                    <li>Sender verification and authentication checks</li>
+                    <li>Email header analysis</li>
+                    <li>Attachment scanning</li>
+                </ul>
+                
+                <p><strong>Data Storage:</strong> Email metadata and analysis results may be stored locally to improve our detection algorithms and provide you with historical analysis. We do not sell, share, or distribute your email content to third parties, except as described in the AI analysis section below.</p>
+                
+                <p><strong>Your Privacy Matters:</strong> Unless you explicitly choose to enable AI analysis (by checking the AI checkbox), your email stays on our server and is never sent to external services. You have full control over whether third-party AI services process your data.</p>
+            </div>
+        </div>
+
+        <!-- AI Analysis Section -->
+        <div class="content-section" id="ai-usage">
+            <h3 class="section-header">AI-Powered Analysis (Optional)</h3>
+            <div class="placeholder-content">
+                <p><strong>How It Works:</strong> When you opt in by checking the AI analysis box, our platform uses Google's Gemini 1.5 Pro AI model (via OpenRouter API) to analyze submitted emails and identify phishing indicators. The AI examines email content for suspicious patterns, deceptive language, and common phishing tactics.</p>
+                
+                <p><strong>Data Privacy & Anonymization:</strong> We take your privacy seriously. Before sending any email to the AI service, we automatically anonymize personal information including:</p>
+                <ul>
+                    <li>Email addresses (replaced with [EMAIL])</li>
+                    <li>Phone numbers (replaced with [PHONE])</li>
+                    <li>Personal names when identifiable (replaced with [NAME])</li>
+                    <li>IP addresses (replaced with [IP])</li>
+                    <li>Other personally identifiable information</li>
+                </ul>
+                <p>This ensures that the AI can analyze phishing patterns without processing your personal data. The anonymized content is sent to OpenRouter and Google Gemini for analysis only when you explicitly consent by checking the AI analysis option.</p>
+                
+                <p><strong>Third-Party Services:</strong> We use OpenRouter as an intermediary to access Google's Gemini AI model. By using the AI analysis feature, you acknowledge that anonymized email content will be processed by these third-party services in accordance with their privacy policies:</p>
+                <ul>
+                    <li><a href="https://openrouter.ai/privacy" target="_blank" rel="noopener noreferrer">OpenRouter Privacy Policy</a></li>
+                    <li><a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a></li>
+                </ul>
+            </div>
+        </div>
     </div>
 {% endblock %}
