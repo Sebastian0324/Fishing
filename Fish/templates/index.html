@@ -50,11 +50,19 @@
 
                          <!-- Div for error messages before submit -->
                         <div id="SubmitError"></div>
-                        <div class="mb-3 form-check">
+                        <div class="mb-3">
+
+                            <!-- AI Usage Information -->
+                            <div style="margin-bottom: 1rem; padding: 0.75rem; font-size: 0.9rem; background: linear-gradient(135deg, rgba(110, 93, 198, 0.9), rgba(160, 81, 130, 0.9)); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 0.5em; color: white; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
+                                <strong><i class="bi bi-info-circle"></i> About AI Analysis:</strong> When enabled, we use AI to help detect phishing patterns in your email. Your personal information is automatically anonymized before analysis. 
+                                <a href="/AboutUs#ai-usage" style="text-decoration: underline; color: white;">Learn more about our AI usage and data privacy</a>
+                            </div>
 
                             <!-- AI Check Checkbox -->
-                            <input type="checkbox" class="form-check-input" id="useAI" name="use_ai" value="1">
-                            <label class="form-check-label" for="useAI"> <i class="bi bi-anthropic"></i> Check submitted file with AI (Add read more ) ?</label>
+                            <div class="form-check" style="display: flex; justify-content: center; align-items: center;">
+                                <input type="checkbox" class="form-check-input" id="useAI" name="use_ai" value="1">
+                                <label class="form-check-label" for="useAI" style="margin-left: 0.5rem;"> <i class="bi bi-anthropic"></i> Enable AI-powered phishing detection</label>
+                            </div>
                         </div>
                         <button type="submit" id="submitButton" class="btn btn-primary">Submit</button>
 
