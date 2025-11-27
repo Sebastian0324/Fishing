@@ -3,6 +3,7 @@ from flask import Flask, request, session, jsonify, render_template
 from flask_session import Session
 import sqlite3
 import hashlib
+import hmac
 import json
 from datetime import datetime
 from static.Helper_eml import generate_llm_body, parse_eml_bytes, init_db, DB_PATH
@@ -906,6 +907,88 @@ def upload():
             "message": "Failed to process email file due to server error"
         }), 500
 
+@app.post('/change-password')
+def change_password():
+    """Change user password with validation"""
+    if not session.get("user_id"):
+        return jsonify({
+            "success": False,
+            "error": "Not authenticated",
+            "status_code": 401
+        }), 401
+    
+    current_password = request.form.get("current_password")
+    new_password = request.form.get("new_password")
+    
+    if not current_password or not new_password:
+        return jsonify({
+            "success": False,
+            "error": "All fields are required",
+            "status_code": 400
+        }), 400
+    
+    if current_password == new_password:
+        return jsonify({
+            "success": False,
+            "error": "New password must be different from current password",
+            "status_code": 400
+        }), 400
+    
+    try:
+        user_id = session.get("user_id")
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Get current password hash
+        cursor.execute("""SELECT Password_Hash FROM USER WHERE User_ID = ?""", (user_id,))
+        result = cursor.fetchone()
+        
+        if not result:
+            conn.close()
+            return jsonify({
+                "success": False,
+                "error": "User not found",
+                "status_code": 404
+            }), 404
+        
+        stored_hash = result[0]
+        
+        # Verify current password
+        hash_obj = hashlib.sha3_512()
+        hash_obj.update(current_password.encode())
+        provided_hash = hash_obj.hexdigest()
+        
+        if not hmac.compare_digest(stored_hash, provided_hash):
+            conn.close()
+            return jsonify({
+                "success": False,
+                "error": "Current password is incorrect",
+                "status_code": 401
+            }), 401
+        
+        # Hash new password
+        new_hash_obj = hashlib.sha3_512()
+        new_hash_obj.update(new_password.encode())
+        new_hash = new_hash_obj.hexdigest()
+        
+        # Update password in database
+        cursor.execute("""UPDATE USER SET Password_Hash = ? WHERE User_ID = ?""",
+                      (new_hash, user_id))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "message": "Password changed successfully",
+            "status_code": 200
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Database error: {str(e)}",
+            "status_code": 500
+        }), 500
 
 # Initialize database on startup
 init_db()

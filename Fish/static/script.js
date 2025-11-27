@@ -1531,7 +1531,122 @@ document.addEventListener("DOMContentLoaded", function() {
       showEmailsBtn.classList.remove("active");
     });
   }
+
+  // -------========-------    Password Focus/Blur Toggle    -------========-------
+  const passwordInputs = [
+    document.getElementById("currentPassword"),
+    document.getElementById("newPassword"),
+    document.getElementById("confirmPassword")
+  ];
+
+  passwordInputs.forEach(input => {
+    if (input) {
+      // Show password when focused
+      input.addEventListener("focus", function() {
+        this.type = "text";
+      });
+
+      // Hide password when blurred
+      input.addEventListener("blur", function() {
+        this.type = "password";
+      });
+    }
+  });
+
+  // -------========-------    Change Password Form    -------========-------
+  const changePasswordForm = document.getElementById("changePasswordForm");
+  if (changePasswordForm) {
+    changePasswordForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const currentPassword = document.getElementById("currentPassword").value;
+      const newPassword = document.getElementById("newPassword").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+      const errorDiv = document.getElementById("changePasswordError");
+      const successDiv = document.getElementById("changePasswordSuccess");
+
+      // Clear previous messages
+      errorDiv.style.display = "none";
+      successDiv.style.display = "none";
+      errorDiv.innerHTML = "";
+      successDiv.innerHTML = "";
+
+      // Validation: Check all fields are filled
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        errorDiv.innerHTML = "<strong>Error:</strong> All fields are required";
+        errorDiv.style.display = "block";
+        return;
+      }
+
+      // Validation: Check new passwords match
+      if (newPassword !== confirmPassword) {
+        errorDiv.innerHTML = "<strong>Error:</strong> New passwords do not match";
+        errorDiv.style.display = "block";
+        return;
+      }
+
+      // Validation: Check old and new passwords are different
+      if (currentPassword === newPassword) {
+        errorDiv.innerHTML = "<strong>Error:</strong> New password must be different from current password";
+        errorDiv.style.display = "block";
+        return;
+      }
+
+      try {
+        // Send change password request to server
+        const formData = new FormData();
+        formData.append("current_password", currentPassword);
+        formData.append("new_password", newPassword);
+
+        const response = await fetch("/change-password", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          successDiv.innerHTML = "<strong>Success:</strong> Your password has been changed successfully";
+          successDiv.style.display = "block";
+          changePasswordForm.reset();
+
+          // Optional: Show success message for a few seconds then hide
+          setTimeout(() => {
+            successDiv.style.display = "none";
+          }, 5000);
+        } else {
+          errorDiv.innerHTML = `<strong>Error:</strong> ${data.error || data.message || "Failed to change password"}`;
+          errorDiv.style.display = "block";
+        }
+      } catch (error) {
+        errorDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+        errorDiv.style.display = "block";
+      }
+    });
+  }
 });
+
+// -------========-------    Settings Panel Toggle Function    -------========-------
+function toggleSettings() {
+  const settingsPanel = document.getElementById('settingsPanel');
+  const emailsSection = document.getElementById('emailsSection');
+
+  if (!settingsPanel) return;
+
+  if (settingsPanel.style.display === 'none' || settingsPanel.style.display === '') {
+    // Show settings panel
+    settingsPanel.style.display = 'block';
+
+    // Hide uploaded emails
+    if (emailsSection) emailsSection.style.display = 'none';
+  } else {
+    // Hide settings panel
+    settingsPanel.style.display = 'none';
+
+    // Show uploaded emails again
+    if (emailsSection) emailsSection.style.display = 'block';
+  }
+}
 
 // Forum Page (placeholder data)
 const discussions = { /* ... unchanged ... */ };

@@ -34,33 +34,50 @@
                 </button>
 
                 <!-- Upload Form Section -->
-                <div class="content-section upload-section">
-                    <div id="uploadForm"> <!-- Before Uploade -->
-                        <h3 class="section-header">Upload .eml File</h3>
+                 <div class="content-section upload-section">
+                    <div id="uploadForm">
+                        <h3 class="section-header">Upload & Analyze</h3>
                         <div class="placeholder-content">
-                            <p class="placeholder-text">Select an email file to analyze for phishing threats</p>
+                            <p class="placeholder-text">Drag &amp; drop or click to select <code>.eml</code> files for analysis.</p>
                             <form method="post" enctype="multipart/form-data" action="/upload">
 
-                                <div id="uploadControls" class="mb-3 form-check">
-                                    <input type="file" class="form-control" name="file" accept=".eml" id="dropBox" multiple required/>
-                                    
+                                <div id="uploadControls" class="upload-area">
+                                    <label for="dropBox" class="file-label" tabindex="0" aria-label="Upload .eml files">
+                                        <svg width="44" height="44" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M.5 9.5v2A1.5 1.5 0 002 13h12a1.5 1.5 0 001.5-1.5v-2" stroke="rgba(238,238,238,0.7)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 1v8" stroke="rgba(238,238,238,0.9)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M5 4l3-3 3 3" stroke="rgba(238,238,238,0.9)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                                        <span class="file-label-text">Drop files here or click to choose</span>
+                                        <span class="file-label-info">Accepted: .eml · Max 1MB per file · Up to 5 files</span>
+                                        <input type="file" class="file-input" name="file" accept=".eml" id="dropBox" multiple required aria-label="Choose .eml files to upload"/>
+                                    </label>
+
                                     <!-- Selected files preview -->
-                                    <div id="selectedFiles" class="mt-2"></div>
+                                    <div id="selectedFiles" class="selected-files-container" aria-live="polite"></div>
+
+                                    <!-- Div for error messages before submit -->
+                                    <div id="SubmitError" class="error-container" role="alert" aria-atomic="true"></div>
+
+                                  
+
+                                    <div style="margin-top:1rem;display:flex;align-items:center;gap:1rem;justify-content:space-between;">
+                                        <div>
+                                            <div style="display:flex;align-items:center;gap:0.5rem;">
+                                                <input type="checkbox" class="form-check-input" id="useAI" name="use_ai" value="1">
+                                                <label class="form-check-label" for="useAI">Use AI summary (optional)</label>
+                                            </div>
+                                            <div style="margin-top:0.25rem;margin-left:1.5rem;font-size:0.85rem;color:rgba(238,238,238,0.7);">
+                                                Your data is anonymized before AI analysis. <a href="/AboutUs#ai-usage" style="color:rgba(100,150,255,0.9);text-decoration:underline;">Learn more about AI usage.</a>
+                                            </div>
+                                        </div>
+
+                                    
+                                            <button type="submit" id="submitButton" class="submit-btn" aria-label="Submit files for analysis">Start Analysis</button>
+                                        
                                 </div>
-
-                         <!-- Div for error messages before submit -->
-                        <div id="SubmitError"></div>
-                        <div class="mb-3 form-check">
-
-                            <!-- AI Check Checkbox -->
-                            <input type="checkbox" class="form-check-input" id="useAI" name="use_ai" value="1">
-                            <label class="form-check-label" for="useAI"> <i class="bi bi-anthropic"></i> Check submitted file with AI (Add read more ) ?</label>
-                        </div>
-                        <button type="submit" id="submitButton" class="btn btn-primary">Submit</button>
+ </div>
 
                             </form>
                         </div>
                     </div>
+
                     <!-- Analysis Section - After Submit -->
                     <div id="analysis" class="hidden">
                         <div class="section-header">
