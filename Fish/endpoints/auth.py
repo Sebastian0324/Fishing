@@ -2,7 +2,7 @@ from flask import Blueprint, request, session, jsonify
 import sqlite3
 import hashlib
 import hmac
-from Analysis.mailstore import DB_PATH
+from static.Helper_eml import DB_PATH
 
 bp_auth = Blueprint('auth', __name__)
 
@@ -117,6 +117,7 @@ def Login():
 @bp_auth.route("/logout")
 def logout():
     session["name"] = None
+    session["user_id"] = None
     return jsonify({
         "success": True,
         "status_code": 200,

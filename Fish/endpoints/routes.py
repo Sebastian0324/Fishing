@@ -1,7 +1,7 @@
 import sqlite3
 from flask import Blueprint, jsonify, render_template, session
 
-from Analysis.mailstore import DB_PATH
+from static.Helper_eml import DB_PATH
 
 bp_ui = Blueprint('ui', __name__)
 
@@ -20,7 +20,7 @@ def admin():
 @bp_ui.route('/Account')
 def account():
     emails = ''
-    if (session['name'] != None):
+    if ("user_id" in session and session["user_id"] != None):
         try:
             # Connect to database
             conn = sqlite3.connect(DB_PATH)

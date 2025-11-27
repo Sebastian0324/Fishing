@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 import sqlite3
-from Analysis.mailstore import DB_PATH
+from static.Helper_eml import DB_PATH
 from api.AbuseIp import AbuseIPDB
 from api.VirusTotal import VirusTotal
 

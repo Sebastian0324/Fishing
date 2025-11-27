@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 import sqlite3
-from Analysis.mailstore import DB_PATH
+from static.Helper_eml import DB_PATH
 from api.llm import query_llm
 
 bp_llm = Blueprint('api_llm', __name__)
