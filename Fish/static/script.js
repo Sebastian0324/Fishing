@@ -1446,10 +1446,7 @@ function toggleAnalysis() {
   }
 }
 
-const toUploadBtn = document.getElementById("ToUpload");
-if (toUploadBtn) {
-  toUploadBtn.addEventListener("click", toggleAnalysis);
-}
+document.getElementById("ToUpload").addEventListener("click", toggleAnalysis);
 
 // -------========-------    End of Upload Page    -------========-------
 
@@ -1628,6 +1625,28 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 });
+
+// -------========-------    Settings Panel Toggle Function    -------========-------
+function toggleSettings() {
+  const settingsPanel = document.getElementById('settingsPanel');
+  const emailsSection = document.getElementById('emailsSection');
+
+  if (!settingsPanel) return;
+
+  if (settingsPanel.style.display === 'none' || settingsPanel.style.display === '') {
+    // Show settings panel
+    settingsPanel.style.display = 'block';
+
+    // Hide uploaded emails
+    if (emailsSection) emailsSection.style.display = 'none';
+  } else {
+    // Hide settings panel
+    settingsPanel.style.display = 'none';
+
+    // Show uploaded emails again
+    if (emailsSection) emailsSection.style.display = 'block';
+  }
+}
 
 // Forum Page (placeholder data)
 const discussions = { /* ... unchanged ... */ };

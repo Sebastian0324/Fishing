@@ -71,6 +71,19 @@ div#Login {
 /* ###########    main    ########### */
 /* ################################## */
 
+.section-header {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 1em;
+    padding-bottom: 0.5em;
+    color: var(--Text_Color);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 #uploadForm, #analysis {
     overflow: hidden;
     margin-top: 1em;
@@ -97,13 +110,6 @@ div#Login {
     border-radius: 50%;
     margin-bottom: 1em;
     color: white;
-}
-
-.upload-header .section-header {
-    font-size: 2rem;
-    margin-bottom: 0.5em;
-    padding-bottom: 0;
-    border-bottom: none;
 }
 
 .upload-subtitle {
@@ -138,15 +144,6 @@ div#Login {
 
 .main-content .upload-section .placeholder-text {
     text-align: center;
-}
-
-.main-content .upload-section .section-header {
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin-bottom: 1em;
-    padding-bottom: 0.5em;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-    color: var(--Text_Color);
 }
 
 .main-content .upload-section .placeholder-content {
@@ -285,17 +282,6 @@ div#Login {
 }
 
 /* Analysis Section Styles */
-#analysis .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-#analysis .section-header h3 {
-    margin: 0;
-}
-
-/* Analysis Section Styles */
 .analysis-section {
     padding: 2em 1em;
 }
@@ -399,6 +385,17 @@ img {
     transform: translateY(-50%) scale(1.05);
 }
 
+.settings-panel .content-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.settings-panel {
+    padding-bottom: 1rem;
+}
+
+
 .sidebar-toggle:active {
     transform: translateY(-50%) scale(0.95);
 }
@@ -446,16 +443,6 @@ img {
 
 .sidebar .welcome-header {
     margin-bottom: 0.5em;
-}
-
-.sidebar .welcome-header .section-header {
-    font-size: 1.3rem;
-    margin-bottom: 0;
-    padding-bottom: 0;
-    border-bottom: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
 .sidebar .placeholder-content {
@@ -540,16 +527,109 @@ img {
     }
 }
 
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 1em;
+}
+
 .page-title {
     font-size: 3rem;
     font-weight: bold;
     text-align: center;
+    margin: 0;
     margin-bottom: 1em;
     color: var(--Text_Color);
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Content Section - Styled container for page sections */
+.header-container {
+    display: flex;
+    align-items: center;     
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.settings-cogwheel {
+    background: none;
+    border: none;
+    display: flex;
+    width: 56px;
+    height: 56px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 2.5em;
+}
+
+.settings-cogwheel svg {
+    width: 47px;
+    height: 47px;
+}
+
+.settings-panel .account-section {
+    background-color: color-mix(in srgb, var(--BC), #000000aa);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1em;
+    padding: 2em;
+    margin-bottom: 2em;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+.header-with-close {
+    position: relative;          
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1em;          
+}
+
+.header-with-close::after {
+    content: "";
+    position: absolute;
+    bottom: 0;                   
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: rgba(255, 255, 255, 0.3);
+    z-index: 0;
+}
+
+.header-with-close .section-header {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--Text_Color);
+    margin: 0;
+    padding-bottom: 0.5em;
+    z-index: 1;
+    background-color: transparent;
+}
+.close-login {
+    border: none;
+    background: none;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    z-index: 1;
+}
+
+.close-login svg {
+    width: 24px;
+    height: 24px;
+    color: var(--Text_Color);
+    opacity: 0.9;
+}
+
+
 .content-section {
     background-color: color-mix(in srgb, var(--BC), #000000aa);
     border: 2px solid rgba(255, 255, 255, 0.2);
@@ -557,34 +637,6 @@ img {
     padding: 2em;
     margin-bottom: 2em;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-}
-
-/* Section Header - Header for content sections */
-.section-header {
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin-bottom: 1em;
-    padding-bottom: 0.5em;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-    color: var(--Text_Color);
-}
-
-/* Ensure How it Works section header matches Upload section header spacing */
-#howItWorksSection .section-header {
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin-bottom: 1em;
-    padding-bottom: 0.5em;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-/* Ensure Description section header matches How To section header */
-#welcomeSection .section-header {
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin-bottom: 1em;
-    padding-bottom: 0.5em;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 /* Placeholder Content - Container for placeholder content */
@@ -603,13 +655,6 @@ img {
 /* #########    Account    ########## */
 /* ################################## */
 
-/* Backward compatibility - Account classes map to general classes */
-.account-container {
-    max-width: 1200px;
-    margin: 2em auto;
-    padding: 2em;
-}
-
 .account-title {
     font-size: 3rem;
     font-weight: bold;
@@ -624,14 +669,6 @@ img {
     justify-content: center;
     gap: 1em;
     margin-bottom: 2em;
-}
-
-/* Page-level toggle buttons (used on Home page) */
-.page-toggle-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 1em; /* same spacing as account toggle */
-    margin-bottom: 2em; /* same spacing from other elements as account page */
 }
 
 /* Welcome collapsible card */
