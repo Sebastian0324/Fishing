@@ -45,9 +45,39 @@
                 <i data-lucide="x"></i>
             </button>
         </div>
-        <div class="settings-content">
-            <p>Change your account preferences here.</p>
-        </div>
+                <div class="settings-content">
+                        <p>Change your account preferences here.</p>
+
+                        <!-- Change Password Form -->
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Change Password</h5>
+                                <form id="changePasswordForm">
+                                    <div id="changePasswordError" class="mb-3" style="display:none"></div>
+                                    <div id="changePasswordSuccess" class="mb-3" style="display:none"></div>
+
+                                    <div class="mb-3">
+                                        <label for="currentPassword" class="form-label">Current password</label>
+                                        <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="newPassword" class="form-label">New password</label>
+                                        <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+                                    </div>
+                                  
+                                    <div class="mb-3">
+                                        <label for="confirmPassword" class="form-label">Confirm new password</label>
+                                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                                    </div>
+
+                                    <div id="acc-password-match" class="mb-3 small text-muted" style="display:none">❌ Passwords do not match</div>
+
+                                    <button type="submit" class="btn btn-primary">Change password</button>
+                                </form>
+                            </div>
+                        </div>
+
     </div>
 </div>
 
