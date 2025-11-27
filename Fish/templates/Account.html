@@ -35,28 +35,31 @@
             </tbody>
         </table>
     </div>
-
-  <!-- Settings Panel -->
-<div class="settings-panel" id="settingsPanel" style="display: none;">
-    <div class="account-section">
-        <div class="header-with-close">
-            <h3 class="section-header">Account Settings</h3>
-            <button class="close-login" onclick="toggleSettings()" aria-label="Close Settings">
-                <i data-lucide="x"></i>
-            </button>
-        </div>
-        <div class="settings-content">
-            <p>Change your account preferences here.</p>
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel" style="display: none;">
+        <div class="account-section">
+            <div class="header-with-close">
+                <h3 class="section-header">Account Settings</h3>
+                <button class="close-login" onclick="toggleSettings()" aria-label="Close Settings">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="settings-content">
+                <p>Change your account preferences here.</p>
+            </div>
         </div>
     </div>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
 </div>
 
-
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-  <script>
-    lucide.createIcons();
-  </script>
-
+{% else %}
+<div class="page-container">    
+    <div class="header-container">
+        <h1 class="page-title">Access to this page requires you to be logged on.</h1>
+    </div>
 </div>
 {% else %}
     <div>
