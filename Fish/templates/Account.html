@@ -1,28 +1,47 @@
 {% extends "form.html" %}
+
 {% block content %}
-    <div class="account-container">
-        <!-- Account Name Title -->
-        <h1 class="account-title">{% if session.name %} {{ session.name }} {% else %} Account Name {% endif %}</h1>
-        
-        <!-- Toggle Buttons -->
-        <div class="account-toggle-buttons">
-            <button id="showEmailsBtn" class="toggle-btn active">Uploaded Emails</button>
-            <button id="showSettingsBtn" class="toggle-btn">Account Settings</button>
-        </div>
-        
-        <!-- Uploaded Emails Section -->
-        <div class="account-section uploaded-emails-section" id="emailsSection">
-            <h3 class="section-header">Uploaded Emails</h3>
-            <div class="placeholder-content">
-                <p class="placeholder-text">Uploaded emails will be displayed here</p>
-            </div>
-        </div>
-        <!-- Account Settings Section -->
-        <div class="account-section settings-section" id="settingsSection" style="display: none;">
+<div class="page-container">
+
+  <!-- Account Name Title -->
+  <div class="header-container">
+    <h1 class="page-title">
+      {% if session.name %}
+        {{ session.name }}
+      {% else %}
+        Account Name
+      {% endif %}
+    </h1>
+    <button class="settings-cogwheel" onclick="toggleSettings()" aria-label="Open Settings">
+      <i data-lucide="settings"></i>
+    </button>
+  </div>
+
+  <!-- Uploaded Emails Section -->
+  <div class="account-section uploaded-emails-section" id="emailsSection">
+    <h3 class="section-header">Uploaded Emails</h3>
+  </div>
+
+  <!-- Settings Panel -->
+<div class="settings-panel" id="settingsPanel" style="display: none;">
+    <div class="account-section">
+        <div class="header-with-close">
             <h3 class="section-header">Account Settings</h3>
-            <div class="placeholder-content">
-                <p class="placeholder-text">Account settings will be displayed here</p>
-            </div>
+            <button class="close-login" onclick="toggleSettings()" aria-label="Close Settings">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+        <div class="settings-content">
+            <p>Change your account preferences here.</p>
         </div>
     </div>
+</div>
+
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+
+</div>
 {% endblock %}
