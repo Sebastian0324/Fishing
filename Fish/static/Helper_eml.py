@@ -255,7 +255,7 @@ def parse_eml_bytes(
 
     sender = extract_sender_info(msg)
     sender_ip = extract_sender_ip(msg)
-    subject = (msg.get("Subject") or "").strip()
+    subject = (msg.get("Subject") or "").strip('" ').strip() or "UnTitled"
     received_at = extract_received_at_iso(msg)
 
     body = _extract_body(msg, prefer_plain=True)
@@ -288,6 +288,7 @@ def parse_eml_bytes(
         "received_at": received_at,
         "sender_ip": sender_ip,
         "sender_email": sender["email"],
+        "subject": subject,
         "body_text": cleaned_body,
         "urls": all_urls,
         "valid": True,
