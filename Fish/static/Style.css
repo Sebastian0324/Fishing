@@ -671,19 +671,21 @@ img {
     margin-bottom: 2em;
 }
 
-/* Welcome collapsible card */
-#welcomeSection {
-    position: relative;
-}
-
-.welcome-header {
+/* Page-level toggle buttons (used on Home page) */
+.page-toggle-buttons {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1em;
+    justify-content: center;
+    gap: 1em; /* same spacing as account toggle */
+    margin-bottom: 2em; /* same spacing from other elements as account page */
 }
 
-/* The welcome/description is always visible; collapse functionality removed */
+table {
+    width: -webkit-fill-available;
+    font-size: 1.2em;
+}
+tbody tr:nth-child(odd) {
+    background-color: var(--BC_Compliment);
+}
 
 .toggle-btn {
     padding: 0.8em 2em;
@@ -716,21 +718,6 @@ img {
     padding: 2em;
     margin-bottom: 2em;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-}
-
-.email-list {
-    list-style: none;
-    padding: 0;
-    margin: 1em 0;
-}
-
-.email-item {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 1em;
-    margin-bottom: 0.5em;
-    border-radius: 0.5em;
-    border-left: 4px solid #6E5DC6;
-    transition: all 0.3s ease;
 }
 
 /* ################################## */

@@ -3,7 +3,6 @@ from flask import Flask, request, session, jsonify, render_template
 from flask_session import Session
 import sqlite3
 import hashlib
-import hmac
 import json
 from datetime import datetime
 from static.Helper_eml import generate_llm_body, parse_eml_bytes, init_db, DB_PATH
@@ -51,17 +50,36 @@ def admin():
 # Routes
 @app.route('/Account')
 def account():
-    return render_template('Account.html')
+    emails = ''
+    if (session['name'] != None):
+        try:
+            # Connect to database
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+
+            cursor.execute("""SELECT Email.Email_ID, Analysis.Analyzed_At, Email.Title FROM Email 
+                           LEFT JOIN Analysis ON Email.Email_ID = Analysis.Email_ID WHERE User_ID = ?""",
+                       (session["user_id"], ))
+            
+            q = cursor.fetchall()
+            emails = [(id, str(title).strip('"'), str(time).split('T')[0]) for id, time, title in q]
+            print(q)
+            print(session["user_id"])
+
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "error": f"Database error: {str(e)}",
+                "status_code": 500,
+                "message": "Failed to load emails due to server error"
+            }), 500
+
+    return render_template('Account.html', emails = emails)
 
 # Routes
 @app.route('/AboutUs')
 def info():
     return render_template('AboutUs.html')
-
-# test function
-@app.post('/test')
-def set_text():
-    return "AAA"
 
 # LLM API endpoint
 @app.post('/api/llm')
@@ -759,7 +777,7 @@ def logout():
     }), 200
 
 # Get Emails
-@app.route('/upload', methods=['POST'])
+@app.post('/upload')
 def upload():
     files = request.files.getlist("file")
 
@@ -817,6 +835,7 @@ def upload():
 
             llm_body_text = generate_llm_body(parsed)
             urls_json = json.dumps(parsed['urls'])
+            title = json.dumps(parsed["subject"])
 
             # Insert into DB (include optional user comment / description)
             uid = session.get("user_id") or 1
@@ -837,8 +856,8 @@ def upload():
                 cursor.execute("""
                     INSERT INTO Email (
                         User_ID, Eml_file, SHA256, Size_Bytes, Received_At,
-                        From_Addr, Sender_IP, Body_Text, Extracted_URLs, Email_Description
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        From_Addr, Sender_IP, Title, Body_Text, Extracted_URLs, Email_Description
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     uid,
                     file_content,
@@ -847,6 +866,7 @@ def upload():
                     parsed['received_at'],
                     parsed['sender']['email'],
                     parsed['sender']['ip'],
+                    title,
                     llm_body_text,
                     urls_json,
                     comment_text
@@ -907,88 +927,6 @@ def upload():
             "message": "Failed to process email file due to server error"
         }), 500
 
-@app.post('/change-password')
-def change_password():
-    """Change user password with validation"""
-    if not session.get("user_id"):
-        return jsonify({
-            "success": False,
-            "error": "Not authenticated",
-            "status_code": 401
-        }), 401
-    
-    current_password = request.form.get("current_password")
-    new_password = request.form.get("new_password")
-    
-    if not current_password or not new_password:
-        return jsonify({
-            "success": False,
-            "error": "All fields are required",
-            "status_code": 400
-        }), 400
-    
-    if current_password == new_password:
-        return jsonify({
-            "success": False,
-            "error": "New password must be different from current password",
-            "status_code": 400
-        }), 400
-    
-    try:
-        user_id = session.get("user_id")
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        # Get current password hash
-        cursor.execute("""SELECT Password_Hash FROM USER WHERE User_ID = ?""", (user_id,))
-        result = cursor.fetchone()
-        
-        if not result:
-            conn.close()
-            return jsonify({
-                "success": False,
-                "error": "User not found",
-                "status_code": 404
-            }), 404
-        
-        stored_hash = result[0]
-        
-        # Verify current password
-        hash_obj = hashlib.sha3_512()
-        hash_obj.update(current_password.encode())
-        provided_hash = hash_obj.hexdigest()
-        
-        if not hmac.compare_digest(stored_hash, provided_hash):
-            conn.close()
-            return jsonify({
-                "success": False,
-                "error": "Current password is incorrect",
-                "status_code": 401
-            }), 401
-        
-        # Hash new password
-        new_hash_obj = hashlib.sha3_512()
-        new_hash_obj.update(new_password.encode())
-        new_hash = new_hash_obj.hexdigest()
-        
-        # Update password in database
-        cursor.execute("""UPDATE USER SET Password_Hash = ? WHERE User_ID = ?""",
-                      (new_hash, user_id))
-        conn.commit()
-        conn.close()
-        
-        return jsonify({
-            "success": True,
-            "message": "Password changed successfully",
-            "status_code": 200
-        }), 200
-        
-    except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": f"Database error: {str(e)}",
-            "status_code": 500
-        }), 500
 
 # Initialize database on startup
 init_db()

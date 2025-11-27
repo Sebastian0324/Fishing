@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS Email(
     From_Addr TEXT,  
     Tag TEXT,
     Sender_IP TEXT,
+    Title TEXT,
     Body_Text TEXT,
     Extracted_URLs TEXT,
     Email_Description TEXT,
