@@ -1,21 +1,15 @@
 {% extends "form.html" %}
 
-{% block content %}
+{% block content %}{% if session.name %}
 <div class="page-container">
 
-  <!-- Account Name Title -->
-  <div class="header-container">
-    <h1 class="page-title">
-      {% if session.name %}
-        {{ session.name }}
-      {% else %}
-        Account Name
-      {% endif %}
-    </h1>
-    <button class="settings-cogwheel" onclick="toggleSettings()" aria-label="Open Settings">
-      <i data-lucide="settings"></i>
-    </button>
-  </div>
+    <!-- Account Name Title -->
+    <div class="header-container">
+        <h1 class="page-title">{{ session.name }}</h1>
+        <button class="settings-cogwheel" onclick="toggleSettings()" aria-label="Open Settings">
+            <i data-lucide="settings"></i>
+        </button>
+    </div>
 
     <!-- Uploaded Emails Section -->
     <div class="account-section uploaded-emails-section" id="emailsSection">
@@ -67,4 +61,8 @@
         <h1 class="page-title">Access to this page requires you to be logged on.</h1>
     </div>
 </div>
+{% else %}
+    <div>
+        <h1>You need to logg in in order to use this page</h1>
+    </div>
 {% endif %}{% endblock %}
