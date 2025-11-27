@@ -17,31 +17,54 @@
     </button>
   </div>
 
-  <!-- Uploaded Emails Section -->
-  <div class="account-section uploaded-emails-section" id="emailsSection">
-    <h3 class="section-header">Uploaded Emails</h3>
-  </div>
-
-  <!-- Settings Panel -->
-<div class="settings-panel" id="settingsPanel" style="display: none;">
-    <div class="account-section">
-        <div class="header-with-close">
-            <h3 class="section-header">Account Settings</h3>
-            <button class="close-login" onclick="toggleSettings()" aria-label="Close Settings">
-                <i data-lucide="x"></i>
-            </button>
-        </div>
-        <div class="settings-content">
-            <p>Change your account preferences here.</p>
+    <!-- Uploaded Emails Section -->
+    <div class="account-section uploaded-emails-section" id="emailsSection">
+        <h3 class="section-header">Uploaded Emails</h3>
+        <table>
+            <thead>
+                <th>Title</th>
+                <th>Last Updated</th>
+                <th>Options</th>
+                <th>ReAnalys</th>
+            </thead>
+            <tbody>
+            {% for eml_id, title, last_update in emails %}
+                <tr>
+                    <td>{{title}}</td>
+                    <td>{{last_update}}</td>
+                    <td><form id="eml-{{eml_id}}">
+                        <input type="checkbox"><label>.eml</label> <input type="checkbox"><label>Analysis</label><button type="submit">Download</button>
+                    </form></td>
+                    <td>Re</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel" style="display: none;">
+        <div class="account-section">
+            <div class="header-with-close">
+                <h3 class="section-header">Account Settings</h3>
+                <button class="close-login" onclick="toggleSettings()" aria-label="Close Settings">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="settings-content">
+                <p>Change your account preferences here.</p>
+            </div>
         </div>
     </div>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
 </div>
 
-
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-  <script>
-    lucide.createIcons();
-  </script>
-
+{% else %}
+<div class="page-container">    
+    <div class="header-container">
+        <h1 class="page-title">Access to this page requires you to be logged on.</h1>
+    </div>
 </div>
-{% endblock %}
+{% endif %}{% endblock %}
