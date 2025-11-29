@@ -77,7 +77,30 @@
                                 </form>
                             </div>
                         </div>
+                        <!-- Delete Account Section -->
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <h5 class="card-title text-danger">Delete Account</h5>
+                                <p class="small text-muted">
+                                    Choose what should happen to your data when deleting your account.
+                                </p>
 
+                                <form id="deleteAccountForm">
+                                    <div class="mb-3">
+                                        <div>
+                                            <input type="radio" id="keepData" name="deleteOption" value="anonymize" checked>
+                                            <label for="keepData">Keep my comments and emails (anonymize)</label>
+                                        </div>
+                                        <div>
+                                            <input type="radio" id="deleteData" name="deleteOption" value="delete">
+                                            <label for="deleteData">Delete all my comments and emails</label>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-danger">Delete Account</button>
+                                </form>
+                            </div>
+                        </div>
     </div>
 </div>
 
@@ -90,6 +113,6 @@
 </div>
 {% else %}
     <div>
-        <h1>You need to logg in in order to use this page</h1>
+        <h1>You need to log in in order to use this page</h1>
     </div>
 {% endif %}{% endblock %}

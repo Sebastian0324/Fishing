@@ -1794,6 +1794,41 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 });
 
+// -------========------- Delete Account Form -------========-------
+const deleteAccountForm = document.getElementById("deleteAccountForm");
+if (deleteAccountForm) {
+  deleteAccountForm.addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const option = document.querySelector('input[name="deleteOption"]:checked').value;
+
+    if (!confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/delete-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ option: option })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert("Your account has been deleted.");
+        window.location.href = "/"; // redirect to homepage or login
+      } else {
+        alert("Failed to delete account: " + (data.message || "Unknown error"));
+      }
+      
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred while deleting your account.");
+    }
+  });
+}
+
 // -------========-------    Settings Panel Toggle Function    -------========-------
 function toggleSettings() {
   const settingsPanel = document.getElementById('settingsPanel');
