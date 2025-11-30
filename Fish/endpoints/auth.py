@@ -78,7 +78,7 @@ def Login():
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        cursor.execute("""SELECT User_ID, Password_Hash, Is_Active FROM USER WHERE Username = ?""",(username, ))
+        cursor.execute("""SELECT User_ID, Password_Hash FROM USER WHERE Username = ?""",(username, ))
         row = cursor.fetchone()
         if not row:
             return jsonify({
@@ -87,14 +87,7 @@ def Login():
                 "status_code": 404,
                 "message": f"No account found with username '{username}'"
             }), 404
-        user_id, stored_hash, is_active = row # la till check för is_active, man ska inte kunna logga in på deleted account
-        if is_active == 0:
-            return jsonify({
-                "success": False,
-                "error": "Account inactive",
-                "status_code": 403,
-                "message": "This account is inactive and cannot be used to log in"
-            }), 403
+        user_id, stored_hash = row
         hash_obj = hashlib.sha3_512()
         hash_obj.update(passw.encode())
         provided_hash = hash_obj.hexdigest()
@@ -209,7 +202,7 @@ def delete_account():
         return jsonify({"success": False, "error": "Not authenticated", "status_code": 401}), 401
     user_id = session["user_id"]
 
-    # Accept JSON body (sent by front-end). Be defensive in parsing.
+    # get option from request
     data = request.get_json(silent=True) or {}
     option = (data.get("option") if isinstance(data, dict) else None) or "anonymize"
 
@@ -219,8 +212,8 @@ def delete_account():
 
         # reasign comments to the deleted user acc
         if option == "anonymize":
-            cursor.execute("""UPDATE Comment SET User_ID = 1 WHERE User_ID = ?""", (user_id,))
-            cursor.execute("""UPDATE Email SET User_ID = 1 WHERE User_ID = ?""", (user_id,))
+            cursor.execute("""UPDATE Comment SET User_ID = 0 WHERE User_ID = ?""", (user_id,))
+            cursor.execute("""UPDATE Email SET User_ID = 0 WHERE User_ID = ?""", (user_id,))
 
         # handle option2
         elif option == "delete":

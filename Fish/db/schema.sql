@@ -1,8 +1,7 @@
 CREATE TABLE IF NOT EXISTS User(
     User_ID INTEGER PRIMARY KEY AUTOINCREMENT,
     Username TEXT NOT NULL,
-    Password_Hash TEXT NOT NULL,
-    Is_Active INTEGER DEFAULT 1 -- 0 (For accounts you cant log into) or 1 (all active accounts)
+    Password_Hash TEXT NOT NULL
 );
 
 
@@ -88,5 +87,8 @@ CREATE INDEX IF NOT EXISTS idx_comment_discussion ON "Comment"(Discussion_ID);
 CREATE INDEX IF NOT EXISTS idx_comment_user       ON "Comment"(User_ID);
 CREATE INDEX IF NOT EXISTS idx_comment_created    ON "Comment"(Created_At);
 
-INSERT OR IGNORE INTO User (User_ID, Username, Password_Hash, Is_Active)
-VALUES (1, 'deleted user', '!!SYSTEM!!', 0);
+INSERT OR IGNORE INTO User (User_ID, Username, Password_Hash)
+VALUES (1, 'anonymous', '!!SYSTEM!!');
+
+INSERT OR IGNORE INTO User (User_ID, Username, Password_Hash)
+VALUES (0, 'deleted user', '!!SYSTEM!!');
