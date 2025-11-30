@@ -1800,9 +1800,19 @@ if (deleteAccountForm) {
   deleteAccountForm.addEventListener("submit", async function(e) {
     e.preventDefault();
 
-    const option = document.querySelector('input[name="deleteOption"]:checked').value;
+    const option = document.querySelector('input[name="deleteOption"]:checked')?.value;
 
-    if (!confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+    if (!option){alert("Please select an option to proceed."); return;}
+
+    // Different popup based on option chosen
+    if (option === 'anonymize') {
+      message = "This action deletes your account and anonymizes all information associated with your account, including uploaded emails and comments.\n\nAre you sure you want to proceed? This action cannot be undone.";
+    } else if (option === "delete") {
+      message = "This deletes your account AND all information associated with it, including comments and uploaded emails.\n\nDeleting this removes information that could help other users identify phishing emails.\n\nAre you sure you want to proceed? This action cannot be undone.";
+    }
+
+    // Show right popup
+    if (!confirm(message)) {
       return;
     }
 
