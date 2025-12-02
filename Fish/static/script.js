@@ -1,7 +1,7 @@
 
 // -------========-------    Sign Up    -------========-------
 
-let login = document.getElementById("Login");
+let login = document.getElementById("LoginContainer");
 let loginBtn = document.getElementById("Login_btn");
 let closeLogin = document.getElementById("Close_Login");
 
@@ -20,7 +20,7 @@ if(document.getElementById("Login_btn")) {
 }
 
 document.getElementById("Close_Login").children[1].addEventListener("click", function() {
-  document.getElementById("Login").style.display = "None";
+  login.style.display = "None";
 });
 
 // --- Sign in/up toggle  ---
