@@ -102,6 +102,8 @@ if (Sign && SignIn && SignUp) {
   // Signup submit handler with client-side validation
   SignUp.onsubmit = async (e) => {
     e.preventDefault();
+    const errorDiv = document.getElementById("SignUpError");
+    errorDiv.style.display = "none";
 
     const signupErrorDiv = document.getElementById('signupError');
     if (signupErrorDiv) {
@@ -147,16 +149,28 @@ if (Sign && SignIn && SignUp) {
       console.error("Signup response parsing error:", err);
     }
 
-    window.open(window.location.href, "_self");
+    if (SignUpData.success) {
+      window.open(window.location.href, "_self");
+    } else {
+      errorDiv.innerHTML = `<strong>Error:</strong> ${SignUpData.error || SignUpData.message || "Failed to create account"}`;
+      errorDiv.style.display = "block";
+    }
   };
   SignIn.onsubmit = async (e) => {
     e.preventDefault();
+    const errorDiv = document.getElementById("SignInError");
+    errorDiv.style.display = "none";
 
     let SignInForm = new FormData(e.target);
     let SignInResponse = await fetch("/login", { method: "POST", body: SignInForm });
     let SignInData = await SignInResponse.json();
 
-    window.open(window.location.href, "_self");
+    if (SignInData.success) {
+      window.open(window.location.href, "_self");
+    } else {
+      errorDiv.innerHTML = `<strong>Error:</strong> ${SignInData.error || SignInData.message || "Incorect username or password"}`;
+      errorDiv.style.display = "block";
+    }
   };
 }
 

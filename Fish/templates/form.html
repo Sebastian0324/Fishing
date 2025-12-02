@@ -40,6 +40,7 @@
             </button>
         {% else %}
             <!-- Login -->
+        <div id="SignInError" class="alert alert-danger" role="alert" style="display: none;"></div>
         <form action="/login" method="post" id="SignIn">
             <div class="mb-3">
                 <label for="name" class="form-label">Enter your Username</label>
@@ -52,6 +53,7 @@
             <button type="submit" class="btn btn-primary">Sign in</button>
         </form>
             <!-- Signup -->
+        <div id="SignUpError" class="alert alert-danger" role="alert" style="display: none;"></div>
         <form action="/Signup" method="post" id="SignUp" class="hidden">
             <div class="mb-3">
                 <label for="Username" class="form-label">Enter your Username</label>
