@@ -14,22 +14,48 @@
     <!-- Uploaded Emails Section -->
     <div class="account-section uploaded-emails-section" id="emailsSection">
         <h3 class="section-header">Uploaded Emails</h3>
-        <table>
+        <table class="uploads-table">
             <thead>
                 <th>Title</th>
                 <th>Last Updated</th>
                 <th>Options</th>
-                <th>ReAnalys</th>
+                <th>Re-Analyze</th>
             </thead>
             <tbody>
             {% for eml_id, title, last_update in emails %}
                 <tr>
-                    <td>{{title}}</td>
-                    <td>{{last_update}}</td>
-                    <td><form id="eml-{{eml_id}}">
-                        <input type="checkbox"><label>.eml</label> <input type="checkbox"><label>Analysis</label><button type="submit">Download</button>
-                    </form></td>
-                    <td>Re</td>
+                    <td>{{ title }}</td>
+                    <td>{{ last_update }}</td>
+                    <td>
+                        <form id="eml-{{eml_id}}">
+                            <div class="options-row">
+                                <div class="options-group">
+                                    <div class="options-group-inner">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="emlSwitch-{{eml_id}}" name="eml" value="1" role="switch" aria-checked="false">
+                                            <label class="form-check-label" for="emlSwitch-{{eml_id}}">.eml</label>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="analysisSwitch-{{eml_id}}" name="analysis" value="1" role="switch" aria-checked="false">
+                                            <label class="form-check-label" for="analysisSwitch-{{eml_id}}">Analysis</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="download-wrap">
+                                    <button type="submit" class="download-btn btn btn-sm btn-outline-secondary" title="Download">
+                                        <i data-lucide="download-cloud" aria-hidden="true"></i>
+                                        <span class="download-label">Download</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </td>
+                    <td>
+                        <button type="button" class="reanalyze-btn btn btn-sm btn-outline-primary" data-id="{{eml_id}}" title="Re-analyze" aria-label="Re-analyze">
+                            <i data-lucide="refresh-cw" aria-hidden="true"></i>
+                            <span style="margin-left:8px">Re-analyze</span>
+                        </button>
+                    </td>
                 </tr>
             {% endfor %}
             </tbody>

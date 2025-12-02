@@ -2,8 +2,7 @@ from flask import Blueprint, request, session, jsonify
 import sqlite3
 import hashlib
 import json
-from static.Helper_eml import parse_eml_bytes, generate_llm_body
-from Analysis.mailstore import DB_PATH
+from static.Helper_eml import parse_eml_bytes, generate_llm_body, DB_PATH
 
 bp_upload = Blueprint('upload', __name__)
 

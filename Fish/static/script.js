@@ -23,10 +23,57 @@ document.getElementById("Close_Login").children[1].addEventListener("click", fun
   document.getElementById("Login").style.display = "None";
 });
 
-// --- Sign in/up toggle (unchanged) ---
+// --- Sign in/up toggle  ---
 let Sign = document.getElementById("SignIn/Up");
 let SignIn = document.getElementById("SignIn");
 let SignUp = document.getElementById("SignUp");
+
+ 
+// Global password validation helpers (Uses signup and change password)
+function validatePasswordRules(pw) {
+  return {
+    length: typeof pw === 'string' && pw.length >= 8,
+    lower: /[a-z]/.test(pw),
+    upper: /[A-Z]/.test(pw),
+    number: /[0-9]/.test(pw),
+    symbol: /[^A-Za-z0-9]/.test(pw)
+  };
+}
+
+// Update the password requirements UI
+function updateRequirementsUI(pw, prefix = '') {
+  const rules = validatePasswordRules(pw);
+  const id = (name) => prefix ? `${prefix}-${name}` : name;
+  const set = (idName, ok, text) => {
+    const el = document.getElementById(id(idName));
+    if (!el) return;
+    el.textContent = (ok ? '✅ ' : '❌ ') + text;
+    el.style.color = ok ? '#198754' : '';
+  };
+  set('req-length', rules.length, 'At least 8 characters (recommended 16+)');
+  set('req-lower', rules.lower, 'Contains a lowercase letter');
+  set('req-upper', rules.upper, 'Contains an uppercase letter');
+  set('req-number', rules.number, 'Contains a number');
+  set('req-symbol', rules.symbol, 'Contains a symbol');
+}
+
+function updateMatchUI(pw, confirm, prefix = '') {
+  const matchEl = document.getElementById(prefix ? `${prefix}-password-match` : 'password-match');
+  if (!matchEl) return;
+  if ((pw || '').length === 0 && (confirm || '').length === 0) {
+    matchEl.style.display = 'none';
+    return;
+  }
+  if (pw === confirm) {
+    matchEl.textContent = '✅ Passwords match';
+    matchEl.style.color = '#198754';
+    matchEl.style.display = 'block';
+  } else {
+    matchEl.textContent = '❌ Passwords do not match';
+    matchEl.style.color = '';
+    matchEl.style.display = 'block';
+  }
+}
 
 if (Sign && SignIn && SignUp) {
   Sign.addEventListener("click", function() {
@@ -35,15 +82,72 @@ if (Sign && SignIn && SignUp) {
     Sign.classList.toggle("btn-dark");
     Sign.classList.toggle("btn-secondary");
   });
+  
 
+  // Wire realtime updates if inputs exist
+  const pwInput = document.getElementById('pass-req');
+  const pwConfirm = document.getElementById('pass-ver');
+  if (pwInput) {
+    pwInput.addEventListener('input', (e) => {
+      updateRequirementsUI(e.target.value || '');
+      updateMatchUI(e.target.value || '', pwConfirm ? pwConfirm.value || '' : '');
+    });
+  }
+  if (pwConfirm) {
+    pwConfirm.addEventListener('input', (e) => {
+      updateMatchUI(pwInput ? pwInput.value || '' : '', e.target.value || '');
+    });
+  }
+
+  // Signup submit handler with client-side validation
   SignUp.onsubmit = async (e) => {
     e.preventDefault();
     const errorDiv = document.getElementById("SignUpError");
     errorDiv.style.display = "none";
 
+    const signupErrorDiv = document.getElementById('signupError');
+    if (signupErrorDiv) {
+      signupErrorDiv.style.display = 'none';
+      signupErrorDiv.innerHTML = '';
+    }
+
+    const password = pwInput ? pwInput.value || '' : '';
+    const confirm = pwConfirm ? pwConfirm.value || '' : '';
+    const rules = validatePasswordRules(password);
+
+    const allRules = rules.length && rules.lower && rules.upper && rules.number && rules.symbol;
+    const passwordsMatch = password === confirm && password.length > 0;
+
+    if (!allRules || !passwordsMatch) {
+      // Show friendly error message and do not submit
+      let msgs = [];
+      if (!rules.length) msgs.push('Password must be at least 8 characters (16+ recommended).');
+      if (!rules.lower) msgs.push('Include at least one lowercase letter.');
+      if (!rules.upper) msgs.push('Include at least one uppercase letter.');
+      if (!rules.number) msgs.push('Include at least one number.');
+      if (!rules.symbol) msgs.push('Include at least one symbol (e.g. !@#$%).');
+      if (!passwordsMatch) msgs.push('Passwords do not match.');
+
+      if (signupErrorDiv) {
+        signupErrorDiv.innerHTML = `<div class="alert alert-danger" role="alert"><strong>Cannot create account:</strong><ul style=\"margin:0;padding-left:1rem;\">${msgs.map(m=>`<li>${m}</li>`).join('')}</ul></div>`;
+        signupErrorDiv.style.display = 'block';
+      } else {
+        alert('Signup validation failed: ' + msgs.join(' '));
+      }
+      // update UI checklist
+      updateRequirementsUI(password);
+      updateMatchUI(password, confirm);
+      return;
+    }
+
+    // If valid, proceed with previous submit behaviour
     let SignUpForm = new FormData(e.target);
     let SignUpResponse = await fetch("/Signup", { method: "POST", body: SignUpForm });
-    let SignUpData = await SignUpResponse.json();
+    try {
+      let SignUpData = await SignUpResponse.json();
+    } catch (err) {
+      console.error("Signup response parsing error:", err);
+    }
 
     if (SignUpData.success) {
       window.open(window.location.href, "_self");
@@ -69,6 +173,7 @@ if (Sign && SignIn && SignUp) {
     }
   };
 }
+
 // -------========-------    Upload Page    -------========-------  
 let UpForm = document.getElementById("uploadForm");
 let analysis = document.getElementById("analysis");
@@ -1460,7 +1565,10 @@ function toggleAnalysis() {
   }
 }
 
-document.getElementById("ToUpload").addEventListener("click", toggleAnalysis);
+const toUploadBtn = document.getElementById("ToUpload");
+if (toUploadBtn) {
+  toUploadBtn.addEventListener("click", toggleAnalysis);
+}
 
 // -------========-------    End of Upload Page    -------========-------
 
@@ -1570,6 +1678,21 @@ document.addEventListener("DOMContentLoaded", function() {
   // -------========-------    Change Password Form    -------========-------
   const changePasswordForm = document.getElementById("changePasswordForm");
   if (changePasswordForm) {
+    // Add realtime validation for change-password inputs
+    const cpNew = document.getElementById('newPassword');
+    const cpConfirm = document.getElementById('confirmPassword');
+    if (cpNew) {
+      cpNew.addEventListener('input', (ev) => {
+        updateRequirementsUI(ev.target.value || '', 'acc');
+        updateMatchUI(ev.target.value || '', cpConfirm ? cpConfirm.value || '' : '', 'acc');
+      });
+    }
+    if (cpConfirm) {
+      cpConfirm.addEventListener('input', (ev) => {
+        updateMatchUI(cpNew ? cpNew.value || '' : '', ev.target.value || '', 'acc');
+      });
+    }
+
     changePasswordForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -1586,22 +1709,49 @@ document.addEventListener("DOMContentLoaded", function() {
       successDiv.innerHTML = "";
 
       // Validation: Check all fields are filled
-      if (!currentPassword || !newPassword || !confirmPassword) {
-        errorDiv.innerHTML = "<strong>Error:</strong> All fields are required";
+        if (!currentPassword || !newPassword || !confirmPassword) {
+        errorDiv.innerHTML = `<div class="alert alert-danger alert-dismissible" role="alert">
+            <strong>Error:</strong> All fields are required
+            <button type="button" class="btn-close" aria-label="Close" onclick="this.parentElement.style.display='none'"></button>
+          </div>`;
         errorDiv.style.display = "block";
         return;
       }
 
       // Validation: Check new passwords match
       if (newPassword !== confirmPassword) {
-        errorDiv.innerHTML = "<strong>Error:</strong> New passwords do not match";
+        errorDiv.innerHTML = `<div class="alert alert-danger alert-dismissible" role="alert">
+            <strong>Error:</strong> New passwords do not match
+            <button type="button" class="btn-close" aria-label="Close" onclick="this.parentElement.style.display='none'"></button>
+          </div>`;
         errorDiv.style.display = "block";
+        return;
+      }
+
+      // Validate strength rules
+      const rules = validatePasswordRules(newPassword);
+      const allRules = rules.length && rules.lower && rules.upper && rules.number && rules.symbol;
+      if (!allRules) {
+        let msgs = [];
+        if (!rules.length) msgs.push('Password must be at least 8 characters (16+ recommended).');
+        if (!rules.lower) msgs.push('Include at least one lowercase letter.');
+        if (!rules.upper) msgs.push('Include at least one uppercase letter.');
+        if (!rules.number) msgs.push('Include at least one number.');
+        if (!rules.symbol) msgs.push('Include at least one symbol.');
+        errorDiv.innerHTML = `<div class="alert alert-danger" role="alert"><strong>Cannot change password:</strong><ul style=\"margin:0;padding-left:1rem;\">${msgs.map(m=>`<li>${m}</li>`).join('')}</ul></div>`;
+        errorDiv.style.display = 'block';
+        // update UI checklist (account prefix)
+        updateRequirementsUI(newPassword, 'acc');
+        updateMatchUI(newPassword, confirmPassword, 'acc');
         return;
       }
 
       // Validation: Check old and new passwords are different
       if (currentPassword === newPassword) {
-        errorDiv.innerHTML = "<strong>Error:</strong> New password must be different from current password";
+        errorDiv.innerHTML = `<div class="alert alert-danger alert-dismissible" role="alert">
+            <strong>Error:</strong> New password must be different from current password
+            <button type="button" class="btn-close" aria-label="Close" onclick="this.parentElement.style.display='none'"></button>
+          </div>`;
         errorDiv.style.display = "block";
         return;
       }
@@ -1620,16 +1770,34 @@ document.addEventListener("DOMContentLoaded", function() {
         const data = await response.json();
 
         if (data.success) {
-          successDiv.innerHTML = "<strong>Success:</strong> Your password has been changed successfully";
+          successDiv.innerHTML = `<div class="alert alert-success alert-dismissible fade show" role="alert">
+              <strong>Success:</strong> Your password has been changed successfully.
+              <button type="button" class="btn-close" aria-label="Close"></button>
+            </div>`;
           successDiv.style.display = "block";
+          // attach close handler
+          const closeBtn = successDiv.querySelector('.btn-close');
+          if (closeBtn) closeBtn.addEventListener('click', () => { successDiv.style.display = 'none'; });
+          // scroll into view and reset form
+          successDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
           changePasswordForm.reset();
 
-          // Optional: Show success message for a few seconds then hide
+          // Auto-hide after a short delay
           setTimeout(() => {
-            successDiv.style.display = "none";
-          }, 5000);
+            const alertEl = successDiv.querySelector('.alert');
+            if (alertEl) {
+              alertEl.classList.remove('show');
+              // hide container after fade
+              setTimeout(() => { successDiv.style.display = 'none'; }, 300);
+            } else {
+              successDiv.style.display = 'none';
+            }
+          }, 4000);
         } else {
-          errorDiv.innerHTML = `<strong>Error:</strong> ${data.error || data.message || "Failed to change password"}`;
+          errorDiv.innerHTML = `<div class="alert alert-danger alert-dismissible" role="alert">
+              <strong>Error:</strong> ${data.error || data.message || "Failed to change password"}
+              <button type="button" class="btn-close" aria-label="Close" onclick="this.parentElement.style.display='none'"></button>
+            </div>`;
           errorDiv.style.display = "block";
         }
       } catch (error) {
@@ -1639,6 +1807,51 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 });
+
+// -------========------- Delete Account Form -------========-------
+const deleteAccountForm = document.getElementById("deleteAccountForm");
+if (deleteAccountForm) {
+  deleteAccountForm.addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const option = document.querySelector('input[name="deleteOption"]:checked')?.value;
+
+    if (!option){alert("Please select an option to proceed."); return;}
+
+    // Different popup based on option chosen
+    if (option === 'anonymize') {
+      message = "This action deletes your account and anonymizes all information associated with your account, including uploaded emails and comments.\n\nAre you sure you want to proceed? This action cannot be undone.";
+    } else if (option === "delete") {
+      message = "This deletes your account AND all information associated with it, including comments and uploaded emails.\n\nDeleting this removes information that could help other users identify phishing emails.\n\nAre you sure you want to proceed? This action cannot be undone.";
+    }
+
+    // Show right popup
+    if (!confirm(message)) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/delete-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ option: option })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert("Your account has been deleted.");
+        window.location.href = "/"; // redirect to homepage or login
+      } else {
+        alert("Failed to delete account: " + (data.message || "Unknown error"));
+      }
+      
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred while deleting your account.");
+    }
+  });
+}
 
 // -------========-------    Settings Panel Toggle Function    -------========-------
 function toggleSettings() {

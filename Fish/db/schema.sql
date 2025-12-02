@@ -89,3 +89,6 @@ CREATE INDEX IF NOT EXISTS idx_comment_created    ON "Comment"(Created_At);
 
 INSERT OR IGNORE INTO User (User_ID, Username, Password_Hash)
 VALUES (1, 'anonymous', '!!SYSTEM!!');
+
+INSERT OR IGNORE INTO User (User_ID, Username, Password_Hash)
+VALUES (0, 'deleted user', '!!SYSTEM!!');
