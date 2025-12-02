@@ -1642,9 +1642,15 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // -------========-------    Password Press-and-Hold Toggle    -------========-------
   const passwordInputs = [
+    // Account settings
     { inputId: "currentPassword", buttonId: "toggleCurrentPassword" },
     { inputId: "newPassword", buttonId: "toggleNewPassword" },
-    { inputId: "confirmPassword", buttonId: "toggleConfirmPassword" }
+    { inputId: "confirmPassword", buttonId: "toggleConfirmPassword" },
+    // Login form
+    { inputId: "pass", buttonId: "toggleLoginPassword" },
+    // Signup form
+    { inputId: "pass-req", buttonId: "toggleSignupPassword" },
+    { inputId: "pass-ver", buttonId: "toggleSignupVerifyPassword" }
   ];
 
   passwordInputs.forEach(({ inputId, buttonId }) => {

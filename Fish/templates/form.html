@@ -48,7 +48,12 @@
             </div>
             <div class="mb-3">
                 <label for="pass" class="form-label">Enter your password:</label>
-                <input type="password" class="form-control" id="pass" name="pass" placeholder="Password" required>
+                <div class="input-group">
+                    <input type="password" class="form-control" id="pass" name="pass" placeholder="Password" required>
+                    <button type="button" class="btn btn-outline-secondary" id="toggleLoginPassword" title="Press and hold to show password">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
             </div>
             <button type="submit" class="btn btn-primary">Sign in</button>
         </form>
@@ -61,7 +66,12 @@
             </div>
             <div class="mb-3">
                 <label for="pass-req" class="form-label">Enter your password:</label>
-                <input type="password" class="form-control" id="pass-req" name="Password" placeholder="Password" required>
+                <div class="input-group">
+                    <input type="password" class="form-control" id="pass-req" name="Password" placeholder="Password" required>
+                    <button type="button" class="btn btn-outline-secondary" id="toggleSignupPassword" title="Press and hold to show password">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
             </div>
             <!-- Password requirements checklist -->
             <div id="password-requirements" class="mb-3 small text-muted">
@@ -76,7 +86,12 @@
             </div>
             <div class="mb-3">
                 <label for="pass-ver" class="form-label">Verify your password:</label>
-                <input type="password" class="form-control" id="pass-ver" name="pass-ver" placeholder="Password" required>
+                <div class="input-group">
+                    <input type="password" class="form-control" id="pass-ver" name="pass-ver" placeholder="Password" required>
+                    <button type="button" class="btn btn-outline-secondary" id="toggleSignupVerifyPassword" title="Press and hold to show password">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
             </div>
             <div id="password-match" class="mb-3 small text-muted">❌ Passwords do not match</div>
             <div id="signupError" class="mb-3" style="display:none"></div>
