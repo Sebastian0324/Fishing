@@ -1,4 +1,3 @@
-
 // -------========-------    Sign Up    -------========-------
 
 let login = document.getElementById("LoginContainer");
@@ -1570,8 +1569,6 @@ if (toUploadBtn) {
   toUploadBtn.addEventListener("click", toggleAnalysis);
 }
 
-// -------========-------    End of Upload Page    -------========-------
-
 // -------========-------    Sidebar Toggle Function    -------========-------
 function toggleSidebar(side) {
   const layout = document.querySelector('.layout');
@@ -1901,5 +1898,48 @@ topicItems.forEach((item) => {
         </div>`;
       document.getElementById("discussion-content").innerHTML = discussionHTML;
     }
+  });
+});
+
+// -------========-------    Reanalyze Modal Functions    -------========-------
+let pendingReanalyzeId = null;
+
+function openReanalyzeModal(emailId) {
+  const modal = document.getElementById("ReanalyzeModal");
+  pendingReanalyzeId = emailId;
+  modal.style.display = "flex";
+}
+
+function closeReanalyzeModal() {
+  const modal = document.getElementById("ReanalyzeModal");
+  modal.style.display = "none";
+  pendingReanalyzeId = null;
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+
+  const reanalyzeModal = document.getElementById("ReanalyzeModal");
+  if (reanalyzeModal) {
+    reanalyzeModal.addEventListener("click", function(event) {
+      if (event.target === reanalyzeModal) {
+        closeReanalyzeModal();
+      }
+    });
+
+    const confirmReanalyzeBtn = document.getElementById("confirmReanalyzeBtn");
+    if (confirmReanalyzeBtn) {
+      confirmReanalyzeBtn.addEventListener("click", function() {
+        // Placeholder
+      });
+    }
+  }
+
+  const reanalyzeButtons = document.querySelectorAll(".reanalyze-btn");
+  reanalyzeButtons.forEach(btn => {
+    btn.addEventListener("click", function(e) {
+      e.preventDefault();
+      const emailId = this.getAttribute("data-id");
+      openReanalyzeModal(emailId);
+    });
   });
 });
