@@ -84,17 +84,32 @@
 
                                     <div class="mb-3">
                                         <label for="currentPassword" class="form-label">Current password</label>
-                                        <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                                            <button type="button" class="btn btn-outline-secondary" id="toggleCurrentPassword" title="Hold to show password">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div class="mb-3">
                                         <label for="newPassword" class="form-label">New password</label>
-                                        <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+                                            <button type="button" class="btn btn-outline-secondary" id="toggleNewPassword" title="Hold to show password">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                   
                                     <div class="mb-3">
                                         <label for="confirmPassword" class="form-label">Confirm new password</label>
-                                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                                            <button type="button" class="btn btn-outline-secondary" id="toggleConfirmPassword" title="Hold to show password">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div id="acc-password-match" class="mb-3 small text-muted" style="display:none">❌ Passwords do not match</div>

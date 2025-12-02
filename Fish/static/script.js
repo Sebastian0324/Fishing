@@ -1640,23 +1640,44 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // -------========-------    Password Focus/Blur Toggle    -------========-------
+  // -------========-------    Password Press-and-Hold Toggle    -------========-------
   const passwordInputs = [
-    document.getElementById("currentPassword"),
-    document.getElementById("newPassword"),
-    document.getElementById("confirmPassword")
+    { inputId: "currentPassword", buttonId: "toggleCurrentPassword" },
+    { inputId: "newPassword", buttonId: "toggleNewPassword" },
+    { inputId: "confirmPassword", buttonId: "toggleConfirmPassword" }
   ];
 
-  passwordInputs.forEach(input => {
-    if (input) {
-      // Show password when focused
-      input.addEventListener("focus", function() {
-        this.type = "text";
+  passwordInputs.forEach(({ inputId, buttonId }) => {
+    const input = document.getElementById(inputId);
+    const button = document.getElementById(buttonId);
+    
+    if (input && button) {
+      // Show password on mouse down
+      button.addEventListener("mousedown", function(e) {
+        e.preventDefault();
+        input.type = "text";
       });
 
-      // Hide password when blurred
-      input.addEventListener("blur", function() {
-        this.type = "password";
+      // Hide password on mouse up
+      button.addEventListener("mouseup", function(e) {
+        e.preventDefault();
+        input.type = "password";
+      });
+
+      // Also hide if mouse leaves the button while holding
+      button.addEventListener("mouseleave", function(e) {
+        input.type = "password";
+      });
+
+      // Touch support for mobile
+      button.addEventListener("touchstart", function(e) {
+        e.preventDefault();
+        input.type = "text";
+      });
+
+      button.addEventListener("touchend", function(e) {
+        e.preventDefault();
+        input.type = "password";
       });
     }
   });
