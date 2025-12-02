@@ -2,7 +2,7 @@ from flask import Blueprint, request, session, jsonify
 import sqlite3
 import hashlib
 import hmac
-from Analysis.mailstore import DB_PATH
+from static.Helper_eml import DB_PATH
 
 bp_auth = Blueprint('auth', __name__)
 
@@ -117,6 +117,7 @@ def Login():
 @bp_auth.route("/logout")
 def logout():
     session["name"] = None
+    session["user_id"] = None
     return jsonify({
         "success": True,
         "status_code": 200,
@@ -192,3 +193,43 @@ def change_password():
             "error": f"Database error: {str(e)}",
             "status_code": 500
         }), 500
+    
+@bp_auth.post('/delete-account')
+def delete_account():
+    """Deactivate user account"""
+    # check if is logged in
+    if "user_id" not in session:
+        return jsonify({"success": False, "error": "Not authenticated", "status_code": 401}), 401
+    user_id = session["user_id"]
+
+    # get option from request
+    data = request.get_json(silent=True) or {}
+    option = (data.get("option") if isinstance(data, dict) else None) or "anonymize"
+
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        # reasign comments to the deleted user acc
+        if option == "anonymize":
+            cursor.execute("""UPDATE Comment SET User_ID = 0 WHERE User_ID = ?""", (user_id,))
+            cursor.execute("""UPDATE Email SET User_ID = 0 WHERE User_ID = ?""", (user_id,))
+
+        # handle option2
+        elif option == "delete":
+            cursor.execute("""DELETE FROM Comment WHERE User_ID = ?""", (user_id,))
+            cursor.execute("""DELETE FROM Email WHERE User_ID = ?""", (user_id,))
+            # ska vi ta bort analysis också? om inte ta bort följande del
+            cursor.execute("""DELETE FROM Analysis WHERE Email_ID NOT IN (SELECT Email_ID FROM Email)""")
+        
+        # remove the user entirely
+        cursor.execute("""DELETE FROM User WHERE User_ID = ?""", (user_id,))
+
+        conn.commit()
+        conn.close()
+        session.clear()
+        return jsonify({"success": True, "message": "Account deleted successfully", "status_code": 200}), 200
+
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Database error: {str(e)}", "status_code": 500, 
+                        "message": "Failed to delete account due to server error"}), 500
