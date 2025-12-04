@@ -1892,6 +1892,33 @@ function toggleSettings() {
   }
 }
 
+// -------========-------    Forum Page    -------========-------
+
+const newForum = document.getElementById("new-forum");
+if (newForum) {
+  newForum.addEventListener("click", async function(e) {
+    try {
+      e.preventDefault();
+      const response = await fetch("/Forum_Cration", {
+        method: "POST"
+      });
+      const data = await response.json();
+      const page = document.body;
+
+      page.insertAdjacentHTML("afterbegin", data.obj);
+      document.getElementById("Close").addEventListener("click", DeletForumCreator);
+      
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred while conecting to the back end.");
+    }
+  });
+
+  function DeletForumCreator() {
+    document.getElementById("CreateForumBackdrop").remove();
+  }
+}
+
 // Forum Page (placeholder data)
 const discussions = { /* ... unchanged ... */ };
 const topicItems = document.querySelectorAll(".topic-item");

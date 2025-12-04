@@ -4,6 +4,7 @@ from .upload import bp_upload
 from .api_llm import bp_llm
 from .api_security import bp_security
 from .analysis import bp_analysis
+from .forum import bp_forum
 
 def register_blueprints(app):
     """
@@ -15,3 +16,4 @@ def register_blueprints(app):
     app.register_blueprint(bp_llm)
     app.register_blueprint(bp_security)
     app.register_blueprint(bp_analysis)
+    app.register_blueprint(bp_forum)
