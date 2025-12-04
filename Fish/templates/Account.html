@@ -185,6 +185,44 @@
                 .catch(() => { btn.disabled = false; btn.setAttribute('title', originalTitle); alert('Network error'); });
         });
     </script>
+</div>
+    
+<!-- Reanalyze Modal -->
+<div id="ReanalyzeModal" style="display: none;">
+    <div id="ReanalyzeContainer">
+        <div id="Close_Reanalyze">
+            <h3 class="modal-title">Re-analyze Email</h3>
+            <button type="button" class="btn btn-secondary" onclick="closeReanalyzeModal()">X</button>
+        </div>
+        <div class="modal-content">
+            <p><strong>What happens when you re-analyze?</strong></p>
+            <ul style="line-height: 1.8; margin-top: 0.5rem; padding-left: 1.2rem;">
+                <li>VirusTotal will check for new malware signatures and threats</li>
+                <li>AbuseIPDB will verify the sender IP reputation with updated reports</li>
+                <li>Your analysis results will be updated with the latest findings</li>
+            </ul>
+            <p style="margin-top: 1rem; font-style: italic; color: rgba(238, 238, 238, 0.7);">
+                This process may take a few moments. Your previous analysis will be replaced with the new results.
+            </p>
+
+            <!-- AI Analysis Checkbox -->
+            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.2);">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" class="form-check-input" id="reanalyzeUseAI" name="use_ai" value="1">
+                    <label class="form-check-label" for="reanalyzeUseAI">Use AI summary (optional)</label>
+                </div>
+                <div style="margin-top: 0.25rem; margin-left: 1.5rem; font-size: 0.85rem; color: rgba(238, 238, 238, 0.7);">
+                    Your data is anonymized before AI analysis. <a href="/AboutUs#ai-usage" style="color: rgba(100, 150, 255, 0.9); text-decoration: underline;">Learn more about AI usage.</a>
+                </div>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="closeReanalyzeModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmReanalyzeBtn">Proceed with Re-analysis</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 </div>
 {% else %}

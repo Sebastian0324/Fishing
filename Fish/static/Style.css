@@ -1088,3 +1088,87 @@ main h1 {
 /* Re-analyze button: ensure icon + label align nicely */
 .reanalyze-btn { display: inline-flex; align-items: center; gap: 8px; }
 .reanalyze-btn span { margin-left: 0; }
+
+/* Reanalyze Modal Styles */
+#ReanalyzeModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000000cc;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+#ReanalyzeContainer {
+    position: relative;
+    width: 44em;
+    max-width: 90vw;
+    background: linear-gradient(color-mix(in srgb, var(--BC), #000000cc), color-mix(in srgb, var(--BC), #000000cc)) padding-box,
+                var(--BG_IMG) border-box;
+
+    border-radius: 2em;
+    border: 3px solid transparent;
+    padding: 3em;
+
+    z-index: 10001;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+#Close_Reanalyze {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5em;
+    padding-bottom: 1em;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+#Close_Reanalyze .modal-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--Text_Color);
+}
+
+#Close_Reanalyze .btn-secondary {
+    padding: 0.25rem 0.75rem;
+    font-size: 1.2rem;
+}
+
+.modal-content {
+    color: var(--Text_Color);
+    line-height: 1.6;
+}
+
+.modal-content p {
+    margin-bottom: 0.8rem;
+}
+
+.modal-content strong {
+    color: #a05182;
+}
+
+.modal-content ul {
+    margin: 0;
+}
+
+.modal-actions .btn {
+    padding: 0.6em 1.5em;
+    font-weight: 600;
+}
+
+.modal-actions .btn-secondary {
+    border-color: rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--Text_Color);
+}
+
+.modal-actions .btn-primary {
+    background: linear-gradient(135deg, #6E5DC6, #a05182);
+    border-color: #6E5DC6;
+}
