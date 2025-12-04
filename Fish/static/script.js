@@ -683,16 +683,33 @@ function displayCachedResults(fileIndex) {
 
 // -------========-------    Render File Analysis    -------========-------
 function renderFileAnalysis(fileIndex) {
-  const file = window.uploadedFiles[fileIndex];
-  const resultDiv = document.getElementById("result");
-  
-  // Check if tabs already exist
+  const file = window.uploadedFiles && window.uploadedFiles[fileIndex];
+  if (!file) {
+    console.warn('renderFileAnalysis: file not found for index', fileIndex);
+    return;
+  }
+
+  // Ensure we have a result container. Create one inside #analysis if missing.
+  let resultDiv = document.getElementById("result");
+  const analysisEl = (typeof analysis !== 'undefined' && analysis) ? analysis : document.getElementById("analysis");
+
+  if (!resultDiv) {
+    if (analysisEl) {
+      resultDiv = document.createElement('div');
+      resultDiv.id = 'result';
+      analysisEl.appendChild(resultDiv);
+    } else {
+      console.warn('renderFileAnalysis: no #result and no #analysis element found; aborting render');
+      return;
+    }
+  }
+
+  // Check for existing tabs inside the (now guaranteed) resultDiv
   const existingTabs = resultDiv.querySelector('.account-toggle-buttons');
-  
+
   if (!existingTabs) {
-    // First time - create tabs and content structure
     let tabsHTML = '';
-    if (window.uploadedFiles.length > 1) {
+    if (window.uploadedFiles && window.uploadedFiles.length > 1) {
       tabsHTML = `
         <div class="account-toggle-buttons" style="margin-bottom: 1rem;">
           ${window.uploadedFiles.map((f, idx) => `
@@ -703,10 +720,10 @@ function renderFileAnalysis(fileIndex) {
         </div>
       `;
     }
-    
+
     resultDiv.innerHTML = tabsHTML + `<div id="analysisContent"></div>`;
   }
-  
+
   // Update only the content area
   const contentArea = document.getElementById("analysisContent");
   if (contentArea) {
@@ -1539,21 +1556,49 @@ async function callVirusTotalAPI(emailId) {
 }
 
 function toggleAnalysis() {
-  UpForm.classList.toggle("hidden");
-  analysis.classList.toggle("hidden");
-  
-  // Reset analysis section when going back
-  if (UpForm.classList.contains("hidden")) {
-    // Going to analysis view - do nothing special
+  // Resolve elements at call time (page may not include the upload form)
+  const UpFormLocal = UpForm || document.getElementById("uploadForm");
+  const analysisLocal = analysis || document.getElementById("analysis");
+
+  if (!analysisLocal) {
+    console.warn("toggleAnalysis: analysis element not found - nothing to toggle");
+    return;
+  }
+
+  // If upload form exists, toggle both states (original behaviour)
+  if (UpFormLocal) {
+    UpFormLocal.classList.toggle("hidden");
+    analysisLocal.classList.toggle("hidden");
+
+    // If upload form is visible now, we are returning to the upload view -> reset analysis UI
+    if (!UpFormLocal.classList.contains("hidden")) {
+      const loadingSpinner = document.getElementById("loadingSpinner");
+      const downloadSection = document.getElementById("downloadSection");
+      const resultDiv = document.getElementById("result");
+
+      if (loadingSpinner) loadingSpinner.style.display = "none";
+      if (downloadSection) downloadSection.classList.add("hidden");
+      if (resultDiv) resultDiv.innerHTML = "";
+    }
+    // If upload form is hidden, we're in analysis view — nothing special to do
+    return;
+  }
+
+  // No upload form on this page: just toggle the analysis panel visibility
+  const isHidden = analysisLocal.classList.contains("hidden");
+  if (isHidden) {
+    analysisLocal.classList.remove("hidden");
   } else {
-    // Going back to upload form - reset everything
-    const loadingSpinner = document.getElementById("loadingSpinner");
-    const downloadSection = document.getElementById("downloadSection");
+    // Hide analysis and try to reset internal analysis state if present
     const resultDiv = document.getElementById("result");
-    
-    if (loadingSpinner) loadingSpinner.style.display = "none";
-    if (downloadSection) downloadSection.classList.add("hidden");
+    const downloadSection = document.getElementById("downloadSection");
+    const loadingSpinner = document.getElementById("loadingSpinner");
+
     if (resultDiv) resultDiv.innerHTML = "";
+    if (downloadSection) downloadSection.classList.add("hidden");
+    if (loadingSpinner) loadingSpinner.style.display = "none";
+
+    analysisLocal.classList.add("hidden");
   }
 }
 
@@ -1975,8 +2020,64 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const confirmReanalyzeBtn = document.getElementById("confirmReanalyzeBtn");
     if (confirmReanalyzeBtn) {
-      confirmReanalyzeBtn.addEventListener("click", function() {
-        // Placeholder
+      confirmReanalyzeBtn.addEventListener("click", async function() {
+        if (!pendingReanalyzeId) return;
+
+        confirmReanalyzeBtn.disabled = true;
+
+        const useAICheckbox = document.getElementById("reanalyzeUseAI");
+        const useAI = useAICheckbox ? !!useAICheckbox.checked : false;
+
+        try {
+          // Fetch email payload from API (keeps auth/ownership checks server-side)
+          const id = encodeURIComponent(pendingReanalyzeId);
+          const resp = await fetch(`/api/email/${id}`, { method: 'GET', credentials: 'same-origin' });
+
+          // Handle HTTP errors
+          if (!resp.ok) {
+            if (resp.status === 401) {
+              alert('You must be logged in to re-analyze this email. Please log in and try again.');
+            } else if (resp.status === 404) {
+              alert('Email not found or you do not have permission to access it.');
+            } else {
+              const txt = await resp.text().catch(()=>null);
+              alert('Failed to load email for re-analysis: ' + (txt || `status ${resp.status}`));
+            }
+            return;
+          }
+
+          let body;
+          try {
+            body = await resp.json();
+          } catch (err) {
+            console.error('Failed to parse /api/email JSON', err);
+            alert('Failed to parse server response. See console for details.');
+            return;
+          }
+
+          if (!body || !body.success || !body.email) {
+            console.error('Unexpected /api/email response:', body);
+            alert('Server returned unexpected data for the email. See console for details.');
+            return;
+          }
+
+          // Store the same payload the index page expects
+          const payload = {
+            email: body.email,
+            useAI: useAI
+          };
+          localStorage.setItem('reanalyze_payload', JSON.stringify(payload));
+
+          // Navigate to index analysis section (the index script will consume the payload and start analysis)
+          window.location.href = '/#analysis';
+
+        } catch (err) {
+          console.error("Reanalyze fetch error:", err);
+          alert("Network or server error while requesting re-analysis. See console for details.");
+        } finally {
+          confirmReanalyzeBtn.disabled = false;
+          // pendingReanalyzeId cleared on modal close or navigation
+        }
       });
     }
   }
@@ -1989,4 +2090,42 @@ document.addEventListener("DOMContentLoaded", function() {
       openReanalyzeModal(emailId);
     });
   });
+
+  // -------========-------    reanalyze_payload handling -------========-------
+  try {
+    const raw = localStorage.getItem('reanalyze_payload');
+    if (raw) {
+      let payload = null;
+      try {
+        payload = JSON.parse(raw);
+      } catch (e) {
+        console.error("Invalid reanalyze_payload JSON:", e);
+        localStorage.removeItem('reanalyze_payload');
+      }
+
+      if (payload && payload.email) {
+        // Remove key immediately to avoid repeated runs
+        localStorage.removeItem('reanalyze_payload');
+
+        // Use same client-side analysis flow as upload - set AI pref and uploadedFiles
+        window.useAI = !!payload.useAI;
+        window.uploadedFiles = [payload.email];
+        window.currentFileIndex = 0;
+        window.fileAnalysisResults = {};
+
+        // Ensure analysis view is visible (toggleAnalysis is resilient on pages without UpForm)
+        toggleAnalysis();
+        hideSidebars();
+
+        const downloadSection = document.getElementById("downloadSection");
+        if (downloadSection) downloadSection.classList.add("hidden");
+
+        // Start analysis for the single email
+        renderFileAnalysis(0);
+        runFileAnalyses(0);
+      }
+    }
+  } catch (e) {
+    console.error("Error handling reanalyze_payload:", e);
+  }
 });
