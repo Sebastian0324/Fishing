@@ -61,30 +61,134 @@
             </tbody>
         </table>
     </div>
-    <!-- Settings Panel -->
-    <div class="settings-panel" id="settingsPanel" style="display: none;">
-        <div class="account-section">
-            <div class="header-with-close">
-                <h3 class="section-header">Account Settings</h3>
-                <button class="close-login" onclick="toggleSettings()" aria-label="Close Settings">
-                    <i data-lucide="x"></i>
-                </button>
-            </div>
-            <div class="settings-content">
-                <p>Change your account preferences here.</p>
-            </div>
+
+  <!-- Settings Panel -->
+<div class="settings-panel" id="settingsPanel" style="display: none;">
+    <div class="account-section">
+        <div class="header-with-close">
+            <h3 class="section-header">Account Settings</h3>
+            <button class="close-login" onclick="toggleSettings()" aria-label="Close Settings">
+                <i data-lucide="x"></i>
+            </button>
         </div>
+                <div class="settings-content">
+                        <p>Change your account preferences here.</p>
+
+                        <!-- Change Password Form -->
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Change Password</h5>
+                                <form id="changePasswordForm">
+                                    <div id="changePasswordError" class="mb-3" style="display:none"></div>
+                                    <div id="changePasswordSuccess" class="mb-3" style="display:none"></div>
+
+                                    <div class="mb-3">
+                                        <label for="currentPassword" class="form-label">Current password</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                                            <button type="button" class="btn btn-outline-secondary" id="toggleCurrentPassword" title="Hold to show password">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="newPassword" class="form-label">New password</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+                                            <button type="button" class="btn btn-outline-secondary" id="toggleNewPassword" title="Hold to show password">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                  
+                                    <div class="mb-3">
+                                        <label for="confirmPassword" class="form-label">Confirm new password</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                                            <button type="button" class="btn btn-outline-secondary" id="toggleConfirmPassword" title="Hold to show password">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div id="acc-password-match" class="mb-3 small text-muted" style="display:none">❌ Passwords do not match</div>
+
+                                    <button type="submit" class="btn btn-primary">Change password</button>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- Delete Account Section -->
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <h5 class="card-title text-danger">Delete Account</h5>
+                                <p class="small text-muted">
+                                    Choose what should happen to your data when deleting your account.
+                                </p>
+
+                                <form id="deleteAccountForm">
+                                    <div class="mb-3">
+                                        <div>
+                                            <input type="radio" id="keepData" name="deleteOption" value="anonymize">
+                                            <label for="keepData">
+                                                Delete my account but <strong>keep my uploaded emails and comments</strong>.  
+                                                This allows for your data to stay anonymized and continue helping others detect phishing scams.
+                                            </label>
+                                        </div>
+                                        <div>
+                                            <input type="radio" id="deleteData" name="deleteOption" value="delete" checked>
+                                            <label for="deleteAll">
+                                                Delete my account and <strong>permanently remove all my uploaded emails and comments</strong>.  
+                                                This data cannot be recovered and will no longer help other users.
+                                            </label>
+
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-danger">Delete Account</button>
+                                </form>
+                            </div>
+                        </div>
     </div>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <script>
-        lucide.createIcons();
-    </script>
 </div>
 
-{% else %}
-<div class="page-container">    
-    <div class="header-container">
-        <h1 class="page-title">Access to this page requires you to be logged on.</h1>
-    </div>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script>
+        lucide.createIcons();
+
+        // Minimal handler for Re-analyze buttons (delegated)
+        document.addEventListener('click', function (ev) {
+            const btn = ev.target.closest && ev.target.closest('.reanalyze-btn');
+            if (!btn) return;
+            const id = btn.getAttribute('data-id');
+            if (!id) return;
+            btn.disabled = true;
+            const originalTitle = btn.getAttribute('title');
+            btn.setAttribute('title', 'Requesting...');
+            fetch('/reanalyze/' + encodeURIComponent(id), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
+                .then(r => {
+                    btn.disabled = false;
+                    btn.setAttribute('title', originalTitle);
+                    if (r.ok) {
+                        // small visual feedback: replace icon with check briefly
+                        const icon = btn.querySelector('i');
+                        if (icon) {
+                            icon.setAttribute('data-lucide', 'check');
+                            lucide.createIcons();
+                            setTimeout(() => { icon.setAttribute('data-lucide', 'refresh-cw'); lucide.createIcons(); }, 1200);
+                        }
+                    } else {
+                        alert('Re-analysis request failed');
+                    }
+                })
+                .catch(() => { btn.disabled = false; btn.setAttribute('title', originalTitle); alert('Network error'); });
+        });
+    </script>
+
 </div>
+{% else %}
+    <div>
+        <h1>You need to log in in order to use this page</h1>
+    </div>
 {% endif %}{% endblock %}

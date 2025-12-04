@@ -102,8 +102,6 @@ if (Sign && SignIn && SignUp) {
   // Signup submit handler with client-side validation
   SignUp.onsubmit = async (e) => {
     e.preventDefault();
-    const errorDiv = document.getElementById("SignUpError");
-    errorDiv.style.display = "none";
 
     const signupErrorDiv = document.getElementById('signupError');
     if (signupErrorDiv) {
@@ -149,28 +147,16 @@ if (Sign && SignIn && SignUp) {
       console.error("Signup response parsing error:", err);
     }
 
-    if (SignUpData.success) {
-      window.open(window.location.href, "_self");
-    } else {
-      errorDiv.innerHTML = `<strong>Error:</strong> ${SignUpData.error || SignUpData.message || "Failed to create account"}`;
-      errorDiv.style.display = "block";
-    }
+    window.open(window.location.href, "_self");
   };
   SignIn.onsubmit = async (e) => {
     e.preventDefault();
-    const errorDiv = document.getElementById("SignInError");
-    errorDiv.style.display = "none";
 
     let SignInForm = new FormData(e.target);
     let SignInResponse = await fetch("/login", { method: "POST", body: SignInForm });
     let SignInData = await SignInResponse.json();
 
-    if (SignInData.success) {
-      window.open(window.location.href, "_self");
-    } else {
-      errorDiv.innerHTML = `<strong>Error:</strong> ${SignInData.error || SignInData.message || "Incorect username or password"}`;
-      errorDiv.style.display = "block";
-    }
+    window.open(window.location.href, "_self");
   };
 }
 
@@ -1654,23 +1640,50 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // -------========-------    Password Focus/Blur Toggle    -------========-------
+  // -------========-------    Password Press-and-Hold Toggle    -------========-------
   const passwordInputs = [
-    document.getElementById("currentPassword"),
-    document.getElementById("newPassword"),
-    document.getElementById("confirmPassword")
+    // Account settings
+    { inputId: "currentPassword", buttonId: "toggleCurrentPassword" },
+    { inputId: "newPassword", buttonId: "toggleNewPassword" },
+    { inputId: "confirmPassword", buttonId: "toggleConfirmPassword" },
+    // Login form
+    { inputId: "pass", buttonId: "toggleLoginPassword" },
+    // Signup form
+    { inputId: "pass-req", buttonId: "toggleSignupPassword" },
+    { inputId: "pass-ver", buttonId: "toggleSignupVerifyPassword" }
   ];
 
-  passwordInputs.forEach(input => {
-    if (input) {
-      // Show password when focused
-      input.addEventListener("focus", function() {
-        this.type = "text";
+  passwordInputs.forEach(({ inputId, buttonId }) => {
+    const input = document.getElementById(inputId);
+    const button = document.getElementById(buttonId);
+    
+    if (input && button) {
+      // Show password on mouse down
+      button.addEventListener("mousedown", function(e) {
+        e.preventDefault();
+        input.type = "text";
       });
 
-      // Hide password when blurred
-      input.addEventListener("blur", function() {
-        this.type = "password";
+      // Hide password on mouse up
+      button.addEventListener("mouseup", function(e) {
+        e.preventDefault();
+        input.type = "password";
+      });
+
+      // Also hide if mouse leaves the button while holding
+      button.addEventListener("mouseleave", function(e) {
+        input.type = "password";
+      });
+
+      // Touch support for mobile
+      button.addEventListener("touchstart", function(e) {
+        e.preventDefault();
+        input.type = "text";
+      });
+
+      button.addEventListener("touchend", function(e) {
+        e.preventDefault();
+        input.type = "password";
       });
     }
   });
