@@ -1,5 +1,6 @@
 import sqlite3
-from flask import Blueprint, jsonify, render_template, session
+from flask import Blueprint, jsonify, render_template, session, request, redirect
+import json
 
 from static.Helper_eml import DB_PATH
 
@@ -48,3 +49,55 @@ def account():
 @bp_ui.route('/AboutUs')
 def info():
     return render_template('AboutUs.html')
+
+@bp_ui.get('/api/email/<int:email_id>')
+def get_email_api(email_id):
+    """Retrieve email data for analysis view"""
+    try:
+        if "user_id" not in session or not session.get("user_id"):
+            return jsonify({
+                "success": False,
+                "error": "Not authenticated",
+                "status_code": 401
+            }), 401
+        
+        user_id = session["user_id"]
+        conn = sqlite3.connect(DB_PATH)
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT Email_ID, Title, Body_Text, Sender_IP, Eml_file
+                FROM Email 
+                WHERE Email_ID = ? AND User_ID = ?
+            """, (email_id, user_id))
+            result = cursor.fetchone()
+            
+            if not result:
+                return jsonify({
+                    "success": False,
+                    "error": "Email not found",
+                    "status_code": 404
+                }), 404
+            
+            email_id_val, title, body_text, sender_ip, eml_file = result
+            
+            return jsonify({
+                "success": True,
+                "status_code": 200,
+                "email": {
+                    "email_id": email_id_val,
+                    "filename": title,
+                    "data": {
+                        "body_text": body_text,
+                        "sender_ip": sender_ip
+                    }
+                }
+            }), 200
+        finally:
+            conn.close()
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Server error: {str(e)}",
+            "status_code": 500
+        }), 500

@@ -2,6 +2,7 @@ from flask import Blueprint, request, session, jsonify
 import sqlite3
 import hashlib
 import json
+import os
 from static.Helper_eml import parse_eml_bytes, generate_llm_body, DB_PATH
 
 bp_upload = Blueprint('upload', __name__)
@@ -53,6 +54,7 @@ def upload():
                     "status_code": 400,
                     "message": f"Failed to parse email file '{file.filename}'. The file may be corrupted or not a valid .eml file."
                 }), 400
+            title = file.filename[:-4]
             llm_body_text = generate_llm_body(parsed)
             urls_json = json.dumps(parsed['urls'])
             uid = session.get("user_id") or 1
@@ -70,8 +72,8 @@ def upload():
                 cursor.execute("""
                     INSERT INTO Email (
                         User_ID, Eml_file, SHA256, Size_Bytes, Received_At,
-                        From_Addr, Sender_IP, Body_Text, Extracted_URLs, Email_Description
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        From_Addr, Sender_IP, Title, Body_Text, Extracted_URLs, Email_Description
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     uid,
                     file_content,
@@ -80,6 +82,7 @@ def upload():
                     parsed['received_at'],
                     parsed['sender']['email'],
                     parsed['sender']['ip'],
+                    title,
                     llm_body_text,
                     urls_json,
                     comment_text
