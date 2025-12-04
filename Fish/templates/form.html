@@ -26,81 +26,68 @@
         {% if session.name %}<button id="Logout_btn" class="btn btn-light"><i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>Logout</button>
         {% else %}<button id="Login_btn" class="btn btn-light"><i class="bi bi-box-arrow-in-right me-2" aria-hidden="true"></i>Login</button>{% endif %}
     </nav>
-    <div id="Login">
-        <div id="Close_Login">
-            <button type="button" id="SignIn/Up" class="btn">
-                <i class="bi bi-person-plus me-2" aria-hidden="true"></i>Sign up
-            </button>
-            <button type="button" class="btn btn-secondary">X</button>
-        </div>
-        {% if session.name %}
-            <!-- Logout -->
-            <button type="submit" id="Logout_btn" class="btn btn-primary">
-                <i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>Sign out
-            </button>
-        {% else %}
-            <!-- Login -->
-        <div id="SignInError" class="alert alert-danger" role="alert" style="display: none;"></div>
-        <form action="/login" method="post" id="SignIn">
-            <div class="mb-3">
-                <label for="name" class="form-label">Enter your Username</label>
-                <input type="text" class="form-control" id="name" name="name" placeholder="Usermane" required>
+    <div id="LoginContainer">
+        <div id="Login">
+            <div id="Close_Login">
+                <button type="button" id="SignIn/Up" class="btn">
+                    <i class="bi bi-person-plus me-2" aria-hidden="true"></i>Sign up
+                </button>
+                <button type="button" class="btn btn-secondary">X</button>
             </div>
-            <div class="mb-3">
-                <label for="pass" class="form-label">Enter your password:</label>
-                <div class="input-group">
+            {% if session.name %}
+                <!-- Logout -->
+                <button type="submit" id="Logout_btn" class="btn btn-primary">
+                    <i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>Sign out
+                </button>
+            {% else %}
+                <!-- Login -->
+            <div id="SignInError" class="alert alert-danger" role="alert" style="display: none;"></div>
+            <form action="/login" method="post" id="SignIn">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Enter your Username</label>
+                    <input type="text" class="form-control" id="name" name="name" placeholder="Usermane" required>
+                </div>
+                <div class="mb-3">
+                    <label for="pass" class="form-label">Enter your password:</label>
                     <input type="password" class="form-control" id="pass" name="pass" placeholder="Password" required>
-                    <button type="button" class="btn btn-outline-secondary" id="toggleLoginPassword" title="Press and hold to show password">
-                        <i class="bi bi-eye"></i>
-                    </button>
                 </div>
-            </div>
-            <button type="submit" class="btn btn-primary">Sign in</button>
-        </form>
-            <!-- Signup -->
-        <div id="SignUpError" class="alert alert-danger" role="alert" style="display: none;"></div>
-        <form action="/Signup" method="post" id="SignUp" class="hidden">
-            <div class="mb-3">
-                <label for="Username" class="form-label">Enter your Username</label>
-                <input type="text" class="form-control" id="Username" name="Username" placeholder="Usermane" required>
-            </div>
-            <div class="mb-3">
-                <label for="pass-req" class="form-label">Enter your password:</label>
-                <div class="input-group">
+                <button type="submit" class="btn btn-primary">Sign in</button>
+            </form>
+                <!-- Signup -->
+            <div id="SignUpError" class="alert alert-danger" role="alert" style="display: none;"></div>
+            <form action="/Signup" method="post" id="SignUp" class="hidden">
+                <div class="mb-3">
+                    <label for="Username" class="form-label">Enter your Username</label>
+                    <input type="text" class="form-control" id="Username" name="Username" placeholder="Usermane" required>
+                </div>
+                <div class="mb-3">
+                    <label for="pass-req" class="form-label">Enter your password:</label>
                     <input type="password" class="form-control" id="pass-req" name="Password" placeholder="Password" required>
-                    <button type="button" class="btn btn-outline-secondary" id="toggleSignupPassword" title="Press and hold to show password">
-                        <i class="bi bi-eye"></i>
-                    </button>
                 </div>
-            </div>
-            <!-- Password requirements checklist -->
-            <div id="password-requirements" class="mb-3 small text-muted">
-                <p class="mb-1 fw-semibold">Password requirements</p>
-                <ul class="list-unstyled ms-3" style="line-height:1.5">
-                    <li id="req-length">❌ At least 8 characters (recommended 16+)</li>
-                    <li id="req-lower">❌ Contains a lowercase letter</li>
-                    <li id="req-upper">❌ Contains an uppercase letter</li>
-                    <li id="req-number">❌ Contains a number</li>
-                    <li id="req-symbol">❌ Contains a symbol</li>
-                </ul>
-            </div>
-            <div class="mb-3">
-                <label for="pass-ver" class="form-label">Verify your password:</label>
-                <div class="input-group">
+                <!-- Password requirements checklist -->
+                <div id="password-requirements" class="mb-3 small text-muted">
+                    <p class="mb-1 fw-semibold">Password requirements</p>
+                    <ul class="list-unstyled ms-3" style="line-height:1.5">
+                        <li id="req-length">❌ At least 8 characters (recommended 16+)</li>
+                        <li id="req-lower">❌ Contains a lowercase letter</li>
+                        <li id="req-upper">❌ Contains an uppercase letter</li>
+                        <li id="req-number">❌ Contains a number</li>
+                        <li id="req-symbol">❌ Contains a symbol</li>
+                    </ul>
+                </div>
+                <div class="mb-3">
+                    <label for="pass-ver" class="form-label">Verify your password:</label>
                     <input type="password" class="form-control" id="pass-ver" name="pass-ver" placeholder="Password" required>
-                    <button type="button" class="btn btn-outline-secondary" id="toggleSignupVerifyPassword" title="Press and hold to show password">
-                        <i class="bi bi-eye"></i>
-                    </button>
                 </div>
-            </div>
-            <div id="password-match" class="mb-3 small text-muted">❌ Passwords do not match</div>
-            <div id="signupError" class="mb-3" style="display:none"></div>
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-person-plus me-2" aria-hidden="true"></i>Create account
-            </button>
-        </form>
-        {% endif %}
+                <div id="password-match" class="mb-3 small text-muted">❌ Passwords do not match</div>
+                <div id="signupError" class="mb-3" style="display:none"></div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-person-plus me-2" aria-hidden="true"></i>Create account
+                </button>
+            </form>
+            {% endif %}
         </div>
+    </div>
    {% block content %}{% endblock %}
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <!-- Bootstrap JS + Popper -->
