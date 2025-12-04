@@ -156,34 +156,6 @@
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script>
         lucide.createIcons();
-
-        // Minimal handler for Re-analyze buttons (delegated)
-        document.addEventListener('click', function (ev) {
-            const btn = ev.target.closest && ev.target.closest('.reanalyze-btn');
-            if (!btn) return;
-            const id = btn.getAttribute('data-id');
-            if (!id) return;
-            btn.disabled = true;
-            const originalTitle = btn.getAttribute('title');
-            btn.setAttribute('title', 'Requesting...');
-            fetch('/reanalyze/' + encodeURIComponent(id), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
-                .then(r => {
-                    btn.disabled = false;
-                    btn.setAttribute('title', originalTitle);
-                    if (r.ok) {
-                        // small visual feedback: replace icon with check briefly
-                        const icon = btn.querySelector('i');
-                        if (icon) {
-                            icon.setAttribute('data-lucide', 'check');
-                            lucide.createIcons();
-                            setTimeout(() => { icon.setAttribute('data-lucide', 'refresh-cw'); lucide.createIcons(); }, 1200);
-                        }
-                    } else {
-                        alert('Re-analysis request failed');
-                    }
-                })
-                .catch(() => { btn.disabled = false; btn.setAttribute('title', originalTitle); alert('Network error'); });
-        });
     </script>
 </div>
     
