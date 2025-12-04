@@ -1,7 +1,6 @@
 from flask import Blueprint, request, session, jsonify
 import sqlite3
-import hashlib
-import hmac
+from bcrypt import hashpw, checkpw, gensalt
 from static.Helper_eml import DB_PATH
 
 bp_auth = Blueprint('auth', __name__)
@@ -37,14 +36,15 @@ def CreateAccount():
                 "status_code": 409,
                 "message": f"Username '{username}' is already registered"
             }), 409
-        hash_obj = hashlib.sha3_512()
-        hash_obj.update(request.form.get("Password").encode())
+        # bcrypt automatically generates salt and hashes
+        password_bytes = request.form.get("Password").encode()
+        password_hash = hashpw(password_bytes, gensalt()).decode()
         cursor.execute("""
                         INSERT INTO USER (
                             Username, Password_Hash
                         ) VALUES (?, ?)""", (
                         username,
-                        hash_obj.hexdigest()
+                        password_hash
                     ))
         user_id = cursor.lastrowid
         session["name"] = username
@@ -88,10 +88,8 @@ def Login():
                 "message": f"No account found with username '{username}'"
             }), 404
         user_id, stored_hash = row
-        hash_obj = hashlib.sha3_512()
-        hash_obj.update(passw.encode())
-        provided_hash = hash_obj.hexdigest()
-        if stored_hash != provided_hash:
+        # bcrypt.checkpw returns True if password matches
+        if not checkpw(passw.encode(), stored_hash.encode()):
             return jsonify({
                 "success": False,
                 "error": "Invalid password",
@@ -165,19 +163,17 @@ def change_password():
                 "status_code": 404
             }), 404
         stored_hash = result[0]
-        hash_obj = hashlib.sha3_512()
-        hash_obj.update(current_password.encode())
-        provided_hash = hash_obj.hexdigest()
-        if not hmac.compare_digest(stored_hash, provided_hash):
+        # bcrypt.checkpw returns True if password matches
+        if not checkpw(current_password.encode(), stored_hash.encode()):
             conn.close()
             return jsonify({
                 "success": False,
                 "error": "Current password is incorrect",
                 "status_code": 401
             }), 401
-        new_hash_obj = hashlib.sha3_512()
-        new_hash_obj.update(new_password.encode())
-        new_hash = new_hash_obj.hexdigest()
+        # bcrypt automatically generates salt and hashes
+        new_password_bytes = new_password.encode()
+        new_hash = hashpw(new_password_bytes, gensalt()).decode()
         cursor.execute("""UPDATE USER SET Password_Hash = ? WHERE User_ID = ?""",
                       (new_hash, user_id))
         conn.commit()
