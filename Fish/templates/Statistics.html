@@ -1,16 +1,17 @@
 {% extends "form.html" %}
-{% block content %}
+
+{% block content %}{% if session.name %}
      
     <div class="page-container">
         <!-- Page Title -->
-        <h1 class="page-title">Dashboard</h1>
+        <h1 class="page-title">Statistics</h1>
             <p style="text-align: center;">Here you can view  recent and hstorical  activity.</p>
         
         
         <!-- Two Column Layout -->
-        <div class="dashboard-layout">
+        <div class="statistics-layout">
             <!-- Left Column: Topics List -->
-            <div class="dashboard-sidebar">
+            <div class="statistics-sidebar">
                 <div class="content-section">
                     <h3 class="section-header">Sort By</h3>
                     <div class="sort-buttons">
@@ -59,7 +60,7 @@
             <div class="column-divider"></div>
             
             <!-- Right Column: Two Column Layout -->
-            <div class="dashboard-main">
+            <div class="statistics-main">
                 <div class="content-section uploads-container">
                     <!-- Recently Uploaded Section -->
                     <div class="upload-section">
@@ -103,4 +104,16 @@
             </div>
         </div>
    </div>
-{% endblock %}
+{% else %}
+<div class="page-container">
+    <div class="content-section">
+        <h3 class="section-header">Our Mission</h3>
+        <div class="placeholder-content">
+            <!--  Place general statistics or information here. The same information will be placed on login to the Statistics -->
+        </div>
+    </div>    
+    <div class="header-container">
+        <h1 class="page-title">Limited data available. Please log in for full metrics.</h1>
+    </div>
+</div>
+{% endif %}{% endblock %}

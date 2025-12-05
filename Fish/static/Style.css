@@ -1237,7 +1237,7 @@ main h1 {
 }
 
 /* ################################## */
-/* #######    Dashboard CSS    ###### */
+/* #######    Statistics CSS    ###### */
 /* ################################## */
 
 
@@ -1292,22 +1292,22 @@ main h1 {
 .sort-btn.active i {
     color: #a05182;
 }
-/* Dashboard layout - three columns with dividers */
-.dashboard-layout {
+/* Statistics layout - three columns with dividers */
+.statistics-layout {
     display: grid;
     grid-template-columns: 350px 2px 1fr;
     gap: 2em;
     align-items: start;
 }
 
-/* Dashboard sidebar */
-.dashboard-sidebar {
+/* Statistics sidebar */
+.statistics-sidebar {
     position: sticky;
     top: 2em;
 }
 
-/* Vertical divider line for dashboard */
-.dashboard-layout .column-divider {
+/* Vertical divider line for statistics */
+.statistics-layout .column-divider {
     width: 2px;
     background: linear-gradient(to bottom, 
         transparent,
@@ -1321,15 +1321,15 @@ main h1 {
     align-self: stretch;
 }
 
-/* Sort buttons for dashboard */
-.dashboard-layout .sort-buttons {
+/* Sort buttons for statistics */
+.statistics-layout .sort-buttons {
     display: flex;
     flex-direction: column;
     gap: 0.8em;
     margin-top: 1em;
 }
 
-.dashboard-layout .sort-btn {
+.statistics-layout .sort-btn {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -1346,20 +1346,20 @@ main h1 {
     text-align: left;
 }
 
-.dashboard-layout .btn-content {
+.statistics-layout .btn-content {
     width: 100%;
     display: flex;
     flex-direction: column;
     gap: 0.5em;
 }
 
-.dashboard-layout .btn-header {
+.statistics-layout .btn-header {
     display: flex;
     align-items: center;
     gap: 0.8em;
 }
 
-.dashboard-layout .btn-header .badge {
+.statistics-layout .btn-header .badge {
     margin-left: auto;
     background: rgba(110, 93, 198, 0.6);
     padding: 0.2em 0.6em;
@@ -1367,7 +1367,7 @@ main h1 {
     font-size: 0.85rem;
 }
 
-.dashboard-layout .button-description {
+.statistics-layout .button-description {
     font-size: 0.85rem;
     color: rgba(238, 238, 238, 0.6);
     font-weight: 400;
@@ -1375,33 +1375,33 @@ main h1 {
     margin: 0;
 }
 
-.dashboard-layout .sort-btn i {
+.statistics-layout .sort-btn i {
     font-size: 1.2rem;
     color: rgba(110, 93, 198, 0.8);
 }
 
-.dashboard-layout .sort-btn:hover {
+.statistics-layout .sort-btn:hover {
     background-color: rgba(110, 93, 198, 0.15);
     border-left-color: #6E5DC6;
     transform: translateX(5px);
 }
 
-.dashboard-layout .sort-btn.active {
+.statistics-layout .sort-btn.active {
     background: linear-gradient(135deg, rgba(110, 93, 198, 0.2), rgba(160, 81, 130, 0.2));
     border-left: 3px solid #6E5DC6;
 }
 
-.dashboard-layout .sort-btn.active i {
+.statistics-layout .sort-btn.active i {
     color: #a05182;
 }
 
-/* Dashboard main area */
-.dashboard-main {
+/* Statistics main area */
+.statistics-main {
     min-height: 500px;
 }
 
 /* Uploads container - two column layout */
-.dashboard-layout .uploads-container {
+.statistics-layout .uploads-container {
     display: grid;
     grid-template-columns: 1fr 2px 1fr;
     gap: 2em;
@@ -1409,24 +1409,24 @@ main h1 {
 }
 
 /* Upload sections */
-.dashboard-layout .upload-section {
+.statistics-layout .upload-section {
     padding: 0;
     margin: 0;
 }
 
-.dashboard-layout .upload-section .section-header {
+.statistics-layout .upload-section .section-header {
     margin: 0 0 1em 0;
     font-size: 1.4rem;
 }
 
-.dashboard-layout .upload-list {
+.statistics-layout .upload-list {
     min-height: 300px;
     padding: 0;
     margin: 0;
 }
 
 /* Vertical divider between upload sections */
-.dashboard-layout .vertical-divider {
+.statistics-layout .vertical-divider {
     width: 2px;
     background: linear-gradient(to bottom, 
         transparent,
@@ -1442,27 +1442,27 @@ main h1 {
 
 
 
-/* Responsive dashboard */
+/* Responsive statistics */
 @media (max-width: 968px) {
-    .dashboard-layout {
+    .statistics-layout {
         grid-template-columns: 1fr;
     }
     
-    .dashboard-sidebar {
+    .statistics-sidebar {
         position: relative;
         top: 0;
     }
     
-    .dashboard-layout .column-divider {
+    .statistics-layout .column-divider {
         display: none;
     }
     
-    .dashboard-layout .uploads-container {
+    .statistics-layout .uploads-container {
         grid-template-columns: 1fr;
         gap: 1em;
     }
     
-    .dashboard-layout .vertical-divider {
+    .statistics-layout .vertical-divider {
         display: none;
     }
 }

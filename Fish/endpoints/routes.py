@@ -14,9 +14,9 @@ def form():
 def Forum():
     return render_template('Forum.html')
 
-@bp_ui.route('/Dashboard')
+@bp_ui.route('/Statistics')
 def admin():
-    return render_template('Dashboard.html')
+    return render_template('Statistics.html')
 
 @bp_ui.route('/Account')
 def account():
