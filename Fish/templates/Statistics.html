@@ -2,30 +2,42 @@
 
 {% block content %}{% if session.name %}
      
-    <div class="page-container">
+
+<div class="page-container">
         <!-- Page Title -->
-        <h1 class="page-title">Statistics</h1>
-            <p style="text-align: center;">Here you can view  recent and hstorical  activity.</p>
-        
-        
+       <h1 class="page-title">Statistics</h1>
+        <h5 class="text-center">Welcome to the Phishing Email Statistics Dashboard</h5>
         <!-- Two Column Layout -->
         <div class="statistics-layout">
             <!-- Left Column: Topics List -->
             <div class="statistics-sidebar">
                 <div class="content-section">
+
                     <h3 class="section-header">Sort By</h3>
+
                     <div class="sort-buttons">
-                        <button class="sort-btn active">
+                        <button class="sort-btn active" data-target="general">
                             <div class="btn-content">
                                 <div class="btn-header">
                                     <i class="bi bi-clock"></i> 
-                                    <span>Frequent Sender</span>
+                                    <span>General</span>
                                     <span class="badge"> test  12</span> 
                                 </div>
-                                <span class="button-description">Search for IP addr. with the most uploaded emails</span>
+                                <span class="button-description">View general statistics about the phishing emails</span>
                             </div>
                         </button>
-                        <button class="sort-btn">
+
+                        <button class="sort-btn" data-target="receivers">
+                            <div class="btn-content">
+                                <div class="btn-header">
+                                    <i class="bi bi-person-lines-fill"></i>
+                                    <span>Frequent Receiver</span>
+                                </div>
+                                <span class="button-description">Search for email addresses that have received the most phishing emails</span>
+                            </div>
+                        </button>
+
+                        <button class="sort-btn" data-target="subjects">
                             <div class="btn-content">
                                 <div class="btn-header">
                                     <i class="bi bi-envelope"></i>
@@ -34,7 +46,7 @@
                                 <span class="button-description">Order the subjects by how commonly they are found in phishing emails</span>
                             </div>
                         </button>
-                        <button class="sort-btn">
+                        <button class="sort-btn" data-target="comments">
                             <div class="btn-content">
                                 <div class="btn-header">
                                     <i class="bi bi-chat-left-text"></i>
@@ -42,16 +54,7 @@
                                 </div>
                                 <span class="button-description">Search for forum post that have the most amount of comments</span>
                             </div>
-                        </button>
-                        <button class="sort-btn">
-                            <div class="btn-content">
-                                <div class="btn-header">
-                                    <i class="bi bi-activity"></i>
-                                    <span>Activity</span>
-                                </div>
-                                <span class="button-description">Show how many emails have been uploaded during a certain time period</span>
-                            </div>
-                        </button>
+                        </button>    
                     </div>
                 </div>
             </div>
@@ -60,50 +63,123 @@
             <div class="column-divider"></div>
             
             <!-- Right Column: Two Column Layout -->
-            <div class="statistics-main">
+            <div class="dashboard-main">
                 <div class="content-section uploads-container">
-                    <!-- Recently Uploaded Section -->
-                    <div class="upload-section">
-                        <h3 class="section-header">
-                            <span><i class="bi bi-clock-history"></i> Recently Uploaded</span>
-                        </h3>
+                    <div class="panel-title-container">
+                        <h3 class="panel-title" id="panel-title">Metrics Overview</h3>
+                    </div>
+                    
+                     
 
-                        <!-- TEST DATA -->
-                        <table class="upload-table">
-                            <thead>
-                                <tr>
-                                    <th>IP Address</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>192.168.1.100</td>
-                                </tr>
-                                <tr>
-                                    <td>10.0.0.50</td>
-                                </tr>
-                                <tr>
-                                    <td>172.16.0.25</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                  
+                    <!-- Frequent Receiver Panel -->
+                    <div class="stats-panel" data-panel="receivers">
+                        <div class="stats-panel-two-col">
+                            <!-- Top Column -->
+                            <div class="stats-column">
+                                <div class="content-section">
+                                    <h4 class="section-header"><i class="bi bi-fire"></i> Top</h4>
+                                    <div class="small-data-list">
+                                        <div class="small-data-item"><span class="small-label">user 1 </span><span class="small-value">11</span></div>
+                                        <div class="small-data-item"><span class="small-label">user 2</span><span class="small-value">10</span></div>
+                                   
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Historical Uploaded Column -->
+                            <div class="stats-column">
+                                <div class="content-section">
+                                    <h4 class="section-header"><i class="bi bi-clock-history"></i> Historical</h4>
+                                    <div class="small-data-list">
+                                        <div class="small-data-item"><span class="small-label">Test</span><span class="small-value">156</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Vertical Divider Line -->
-                    <div class="vertical-divider"></div>
+                    <!-- Common Subject Panel -->
+                    <div class="stats-panel" data-panel="subjects">
+                        <div class="stats-panel-two-col">
+                            <!-- Top Column -->
+                            <div class="stats-column">
+                                <div class="content-section">
+                                    <h4 class="section-header"><i class="bi bi-fire"></i> Top</h4>
+                                    <div class="small-data-list">
+                                        <div class="small-data-item"><span class="small-label">"Action Required"</span><span class="small-value">54</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Historical Uploaded Column -->
+                            <div class="stats-column">
+                                <div class="content-section">
+                                    <h4 class="section-header"><i class="bi bi-clock-history"></i> Historical</h4>
+                                    <div class="small-data-list">
+                                        <div class="small-data-item"><span class="small-label">"Update Payment"</span><span class="small-value">47</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                    <!-- Historical Uploaded Section -->
-                    <div class="upload-section">
-                        <h3 class="section-header">
-                            <span><i class="bi bi-archive"></i> Historical Uploaded</span>
-                        </h3>
-                        
+                    <!-- Most Commented Panel -->
+                    <div class="stats-panel" data-panel="comments">
+                        <div class="stats-panel-two-col">
+                            <!-- Top Column -->
+                            <div class="stats-column">
+                                <div class="content-section">
+                                    <h4 class="section-header"><i class="bi bi-fire"></i> Top</h4>
+                                    <div class="small-data-list">
+                                        <div class="small-data-item"><span class="small-label">Vendor invoice fraud</span><span class="small-value">18</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Historical Uploaded Column -->
+                            <div class="stats-column">
+                                <div class="content-section">
+                                    <h4 class="section-header"><i class="bi bi-clock-history"></i> Historical</h4>
+                                    <div class="small-data-list">
+                                        <div class="small-data-item"><span class="small-label">Social engineering techniques</span><span class="small-value">31</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
    </div>
+
+
+ 
+    <script>
+        (function() {
+            const buttons = document.querySelectorAll('.sort-btn');
+            const panels = document.querySelectorAll('.stats-panel');
+            const panelTitle = document.getElementById('panel-title');
+            
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const target = btn.getAttribute('data-target');
+                    const btnText = btn.querySelector('.btn-header span:nth-of-type(1)').textContent.trim();
+                    
+                    buttons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    panels.forEach(p => p.classList.toggle('active', p.getAttribute('data-panel') === target));
+                    
+                    // Update the panel title
+                    if (panelTitle) {
+                        panelTitle.textContent = btnText;
+                    }
+                });
+            });
+        })();
+    </script>
+
+
+
 {% else %}
 <div class="page-container">
     <h1 class="page-title">Limited data available. Please log in for full metrics.</h1>
@@ -111,6 +187,7 @@
         <h3 class="section-header">General Statistics</h3>
         <div class="placeholder-content">
             <!--  Place general statistics or information here. The same information will be placed on login to the Statistics -->
+            
         </div>
     </div>    
 </div>

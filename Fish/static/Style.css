@@ -1240,58 +1240,6 @@ main h1 {
 /* #######    Statistics CSS    ###### */
 /* ################################## */
 
-
- 
-
-.btn-content {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5em;
-}
-
-.btn-header {
-    display: flex;
-    align-items: center;
-    gap: 0.8em;
-}
-
-.btn-header .badge {
-    margin-left: auto;
-    background: rgba(110, 93, 198, 0.6);
-    padding: 0.2em 0.6em;
-    border-radius: 1em;
-    font-size: 0.85rem;
-}
-
-.button-description {
-    font-size: 0.8rem;
-    color: rgba(238, 238, 238, 0.6);
-    font-weight: 400;
-    line-height: 1.3;
-    margin-top: 0.2em;
-}
-
-.sort-btn i {
-    font-size: 1.2rem;
-    color: rgba(110, 93, 198, 0.8);
-}
-
-.sort-btn:hover {
-    background-color: rgba(110, 93, 198, 0.15);
-    border-color: #6E5DC6;
-    transform: translateX(5px);
-}
-
-.sort-btn.active {
-    background: linear-gradient(135deg, rgba(110, 93, 198, 0.3), rgba(160, 81, 130, 0.3));
-    border-color: #6E5DC6;
-    box-shadow: 0 4px 12px rgba(110, 93, 198, 0.3);
-}
-
-.sort-btn.active i {
-    color: #a05182;
-}
 /* Statistics layout - three columns with dividers */
 .statistics-layout {
     display: grid;
@@ -1395,17 +1343,123 @@ main h1 {
     color: #a05182;
 }
 
-/* Statistics main area */
-.statistics-main {
-    min-height: 500px;
+/* Stats panel styling */
+.stats-panel {
+    display: none;
 }
 
-/* Uploads container - two column layout */
-.statistics-layout .uploads-container {
+.stats-panel.active {
+    display: block;
+}
+
+/* Small data list styling */
+.small-data-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    padding: 1rem 0;
+}
+
+.small-data-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+   
+    border-radius: 0.5rem;  
+   
+}
+
+.small-data-item:hover {
+    background: rgba(110, 93, 198, 0.1);
+    border-color: rgba(110, 93, 198, 0.3);
+    transform: translateX(3px);
+}
+
+.small-label {
+    color: rgba(238, 238, 238, 0.9);
+    font-weight: 500;
+    word-break: break-word;
+    max-width: 70%;
+}
+
+.small-value {
+    color: #a05182;
+    font-weight: 700;
+    min-width: 2.5rem;
+    text-align: right;
+}
+
+/* Two-column layout within stats panels */
+.stats-panel-two-col {
     display: grid;
-    grid-template-columns: 1fr 2px 1fr;
-    gap: 2em;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
     align-items: start;
+}
+
+.stats-column {
+    display: flex;
+    flex-direction: column;
+    background: transparent;
+}
+
+.stats-column .content-section {
+    padding: 0;
+    margin-bottom: 0;
+    background: transparent;
+}
+
+.stats-column .section-header {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1.2rem;
+    padding: 0.6rem 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    justify-content: flex-start;
+    background: linear-gradient(135deg, rgba(110, 93, 198, 0.12), rgba(160, 81, 130, 0.12));
+    border-radius: 0.3rem;
+    color: rgba(238, 238, 238, 0.95);
+    transition: all 0.3s ease;
+}
+
+ 
+.stats-column .section-header i {
+    font-size: 1.2rem;
+    color: #a05182;
+}
+
+/* Panel title styling */
+.panel-title-container {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid rgba(110, 93, 198, 0.3);
+    
+}
+
+.panel-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--Text_Color);
+    margin: 0;
+    padding: 0;
+}
+
+/* Dashboard main container */
+.dashboard-main {
+    width: 100%;
+    min-height: auto;
+}
+
+/* Uploads container - full width layout */
+.statistics-layout .uploads-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2em;
+    width: 100%;
 }
 
 /* Upload sections */
@@ -1441,6 +1495,71 @@ main h1 {
 }
 
 
+
+
+
+/* Statistics Cards Styling */
+.stats-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.stats-card {
+    background: linear-gradient(135deg, rgba(110, 93, 198, 0.08), rgba(160, 81, 130, 0.08));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    height: 100%;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(110, 93, 198, 0.3);
+    border-color: rgba(110, 93, 198, 0.4);
+}
+
+.stats-card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6E5DC6, #a05182);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(110, 93, 198, 0.4);
+}
+
+.stats-card-icon i {
+    font-size: 1.8rem;
+    color: white;
+}
+
+.stats-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.stats-card-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #a05182;
+    line-height: 1;
+}
+
+.stats-card-label {
+    font-size: 0.95rem;
+    color: rgba(238, 238, 238, 0.8);
+    font-weight: 500;
+}
 
 /* Responsive statistics */
 @media (max-width: 968px) {
