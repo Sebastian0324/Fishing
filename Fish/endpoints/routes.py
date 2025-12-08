@@ -33,8 +33,6 @@ def account():
             
             q = cursor.fetchall()
             emails = [(id, str(title).strip('"'), str(time).split('T')[0]) for id, time, title in q]
-            print(q)
-            print(session["user_id"])
 
         except Exception as e:
             return jsonify({
