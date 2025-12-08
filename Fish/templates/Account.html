@@ -5,11 +5,19 @@
 
     <!-- Account Name Title -->
     <div class="header-container">
+
+    <div class="account-header-left">
+        <img src="/profile-picture/{{ session.user_id }}" 
+            class="profile-preview"
+            style="width:120px;height:120px;border-radius:50%;object-fit:cover;">
+
         <h1 class="page-title">{{ session.name }}</h1>
-        <button class="settings-cogwheel" onclick="toggleSettings()" aria-label="Open Settings">
-            <i data-lucide="settings"></i>
-        </button>
     </div>
+
+    <button class="settings-cogwheel" onclick="toggleSettings()" aria-label="Open Settings">
+        <i data-lucide="settings"></i>
+    </button>
+</div>
 
     <!-- Uploaded Emails Section -->
     <div class="account-section uploaded-emails-section" id="emailsSection">
@@ -115,6 +123,21 @@
                                     <div id="acc-password-match" class="mb-3 small text-muted" style="display:none">❌ Passwords do not match</div>
 
                                     <button type="submit" class="btn btn-primary">Change password</button>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- Upload Profile Picture Section -->
+                        <div class="card mt-3">
+                           <div class="card-body">
+                               <h5 class="card-title">Profile Picture</h5>
+
+                               <img src="/profile-picture/{{ session.user_id }}" 
+                                    class="profile-preview"
+                                    style="width:90px;height:90px;border-radius:50%;object-fit:cover;">
+                                
+                                <form id="uploadProfilePicForm" method="POST" enctype="multipart/form-data">
+                                    <input type="file" name="profile_picture" id="profile_picture" required>
+                                    <button type="submit">Upload</button>
                                 </form>
                             </div>
                         </div>

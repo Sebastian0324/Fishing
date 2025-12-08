@@ -1,6 +1,7 @@
 import sqlite3
-from flask import Blueprint, jsonify, render_template, session, request, redirect
+from flask import Blueprint, jsonify, render_template, session, request, redirect, send_file
 import json
+from io import BytesIO
 
 from static.Helper_eml import DB_PATH
 
@@ -101,3 +102,23 @@ def get_email_api(email_id):
             "error": f"Server error: {str(e)}",
             "status_code": 500
         }), 500
+    
+@bp_ui.get('/profile-picture/<int:user_id>')
+def get_profile_picture(user_id):
+    """Get profile picture of a user by user_id"""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""SELECT Profile_picture FROM User WHERE User_ID = ?""", (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+
+    # if no picture found, return placeholder
+    if not row or row[0] is None:
+        return send_file('static/default_profile.png', mimetype='image/png')
+    
+    picture_bytes = row[0]
+
+    # Return actual stored image
+    return send_file(
+        BytesIO(picture_bytes),
+        mimetype="image/png")

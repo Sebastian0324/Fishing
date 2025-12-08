@@ -1870,6 +1870,29 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 });
 
+// -------========------- Upload Profile Picture -------========-------
+const uploadForm = document.getElementById("uploadProfilePicForm");
+if (uploadForm) {
+  uploadForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(uploadForm);
+    const response = await fetch('/upload-profile-picture', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      alert("Profile picture updated!");
+      location.reload();
+    } else {
+      alert("Failed to upload picture: " + data.error);
+    }
+  });
+}
+
 // -------========------- Delete Account Form -------========-------
 const deleteAccountForm = document.getElementById("deleteAccountForm");
 if (deleteAccountForm) {

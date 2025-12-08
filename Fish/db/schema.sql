@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS User(
     User_ID INTEGER PRIMARY KEY AUTOINCREMENT,
     Username TEXT NOT NULL,
-    Password_Hash TEXT NOT NULL
+    Password_Hash TEXT NOT NULL,
+    Profile_picture BLOB
 );
 
 

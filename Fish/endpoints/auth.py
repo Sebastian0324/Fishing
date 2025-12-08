@@ -1,6 +1,8 @@
 from flask import Blueprint, request, session, jsonify
 import sqlite3
 from bcrypt import hashpw, checkpw, gensalt
+from io import BytesIO
+from PIL import Image
 from static.Helper_eml import DB_PATH
 
 bp_auth = Blueprint('auth', __name__)
@@ -229,3 +231,47 @@ def delete_account():
     except Exception as e:
         return jsonify({"success": False, "error": f"Database error: {str(e)}", "status_code": 500, 
                         "message": "Failed to delete account due to server error"}), 500
+
+@bp_auth.post('/upload-profile-picture')
+def upload_profile_picture():
+    """Upload or update user profile pic"""
+    if "user_id" not in session:
+        return jsonify({"success": False, "error": "Not authenticated", "status_code": 401}), 401
+    user_id = session["user_id"]
+
+    # check if file part is in request
+    if 'profile_picture' not in request.files:
+        return jsonify({"success": False, "error": "No file uploaded", "status_code": 400}), 400
+    
+    file = request.files['profile_picture']
+    picture_bytes = file.read()
+
+    # checking format (security)
+    try:
+        img = Image.open(BytesIO(picture_bytes))
+        img.verify()
+    except Exception:
+        return jsonify({"success": False, "error": "Invalid image file", "status_code": 400}), 400
+    
+    # file needs to be reopened after verify
+    img = Image.open(BytesIO(picture_bytes))
+    real_format = img.format
+    
+    # sanitize image
+    img = img.convert("RGB")
+    img.thumbnail((512, 512))  # resize to max 512x512
+    output = BytesIO()
+    img.save(output, format="PNG", quality=85)
+    safe_bytes = output.getvalue()
+
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("""UPDATE User SET Profile_picture = ? WHERE User_ID = ?""",
+                       (safe_bytes, user_id))
+        conn.commit()
+        conn.close()
+        return jsonify({"success": True, "message": "Profile picture updated successfully", "status_code": 200}), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Database error: {str(e)}", "status_code": 500, 
+                        "message": "Failed to upload profile picture due to server error"}), 500
