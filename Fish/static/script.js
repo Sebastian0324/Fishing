@@ -1944,7 +1944,7 @@ if (newForum) {
   newForum.addEventListener("click", async function(e) {
     try {
       e.preventDefault();
-      const response = await fetch("/Forum_Cration", {
+      const response = await fetch("/Forum_Creator", {
         method: "POST"
       });
       const data = await response.json();
@@ -1952,15 +1952,33 @@ if (newForum) {
 
       page.insertAdjacentHTML("afterbegin", data.obj);
       document.getElementById("Close").addEventListener("click", DeletForumCreator);
+      document.getElementById("SubmitForum").onsubmit = CreateForum;
       
     } catch (err) {
       console.error(err);
       alert("An error occurred while conecting to the back end.");
     }
   });
+}
 
-  function DeletForumCreator() {
-    document.getElementById("CreateForumBackdrop").remove();
+function DeletForumCreator() {
+  document.getElementById("CreateForumBackdrop").remove();
+}
+
+async function CreateForum(e) {
+  e.preventDefault()
+  try {
+    let ForumData = new FormData(e.target);
+    const response = await fetch("/Forum_Creation", {
+      method: "POST", body: ForumData
+    });
+    const data = await response.json();
+    const page = document.body;
+
+    
+  } catch (err) {
+    console.error(err);
+    alert("An error occurred while conecting to the back end.");
   }
 }
 
