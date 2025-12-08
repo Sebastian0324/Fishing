@@ -1,4 +1,5 @@
 from flask import Blueprint, request, session, render_template, jsonify
+from datetime import datetime, timedelta
 import sqlite3
 
 from static.Helper_eml import DB_PATH
@@ -72,3 +73,43 @@ def ForumCreation():
             "status_code": 200,
             "message": "Creation complet",
         }), 200
+
+
+def TimeDiff(date):
+    general_time = datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+    now = datetime.now()
+    diff = now - general_time - timedelta(hours=1)
+
+    print(datetime.now())
+
+    if (diff.total_seconds() < 3600):
+        diff = str(int(diff.total_seconds() / 60)) + " Minutes"
+    elif (diff.total_seconds() < 86400):
+        diff = str(int(diff.total_seconds() / 3600)) + " Hours"
+    else:
+        diff = str(diff.days) + " Days"
+
+    return diff
+
+def GetForumPosts():
+    posts = []
+    try:
+        # Connect to database
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute("""SELECT Title, Created_At FROM Discussion""")
+
+        q = cursor.fetchall()
+        posts = [[t, TimeDiff(d), 0] for t, d in q]
+        posts.reverse()
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Database error: {str(e)}",
+            "status_code": 500,
+            "message": "Failed due to server error"
+        }), 500
+    
+    return posts or [["None", "--", 0]]

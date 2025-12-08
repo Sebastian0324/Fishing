@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, render_template, session, request, redirec
 import json
 
 from static.Helper_eml import DB_PATH
+from endpoints.forum import GetForumPosts
 
 bp_ui = Blueprint('ui', __name__)
 
@@ -12,7 +13,8 @@ def form():
 
 @bp_ui.route('/Forum')
 def Forum():
-    return render_template('Forum.html')
+    posts = GetForumPosts()
+    return render_template('Forum.html', post=posts)
 
 @bp_ui.route('/Statistics')
 def admin():
