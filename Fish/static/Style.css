@@ -1585,3 +1585,153 @@ main h1 {
         display: none;
     }
 }
+
+/* ################################## */
+/* ###  General Statistics Cards  ### */
+/* ################################## */
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5em;
+    padding: 1em 0;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 1em;
+    padding: 1.5em;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(110, 93, 198, 0.3);
+    border-color: rgba(110, 93, 198, 0.5);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5em;
+    color: #6E5DC6;
+}
+
+.stat-icon i {
+    display: inline-block;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--Text_Color);
+    line-height: 1.2;
+    margin-bottom: 0.2em;
+}
+
+.stat-label {
+    font-size: 0.95rem;
+    color: rgba(238, 238, 238, 0.7);
+    font-weight: 500;
+}
+
+/* Verdict-specific card colors */
+.stat-card.stat-phishing {
+    border-color: rgba(255, 77, 77, 0.4);
+    background: linear-gradient(135deg, rgba(255, 77, 77, 0.15), rgba(255, 77, 77, 0.05));
+}
+
+.stat-card.stat-phishing .stat-icon {
+    color: #ff4d4d;
+}
+
+.stat-card.stat-phishing:hover {
+    box-shadow: 0 8px 25px rgba(255, 77, 77, 0.3);
+    border-color: rgba(255, 77, 77, 0.6);
+}
+
+.stat-card.stat-suspicious {
+    border-color: rgba(255, 193, 7, 0.4);
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 193, 7, 0.05));
+}
+
+.stat-card.stat-suspicious .stat-icon {
+    color: #ffc107;
+}
+
+.stat-card.stat-suspicious:hover {
+    box-shadow: 0 8px 25px rgba(255, 193, 7, 0.3);
+    border-color: rgba(255, 193, 7, 0.6);
+}
+
+.stat-card.stat-benign {
+    border-color: rgba(40, 167, 69, 0.4);
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.15), rgba(40, 167, 69, 0.05));
+}
+
+.stat-card.stat-benign .stat-icon {
+    color: #28a745;
+}
+
+.stat-card.stat-benign:hover {
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+    border-color: rgba(40, 167, 69, 0.6);
+}
+
+/* Sign up button */
+.btn-signup {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.8em 2em;
+    margin-top: 1em;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, #6E5DC6, #a05182);
+    border: none;
+    border-radius: 0.5em;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(110, 93, 198, 0.4);
+}
+
+.btn-signup:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(110, 93, 198, 0.5);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-signup:active {
+    transform: translateY(-1px);
+}
+
+/* Responsive stats grid */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1em;
+    }
+    
+    .stat-card {
+        padding: 1em;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}

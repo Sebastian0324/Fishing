@@ -1,12 +1,66 @@
 {% extends "form.html" %}
 
+{# Reusable macro for general statistics cards #}
+{% macro stats_cards(stats) %}
+<div class="stats-grid">
+    <!-- Platform Activity -->
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+        <div class="stat-value">{{ stats.total_users }}</div>
+        <div class="stat-label">Registered Users</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-envelope-fill"></i></div>
+        <div class="stat-value">{{ stats.total_emails }}</div>
+        <div class="stat-label">Emails Uploaded</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-search"></i></div>
+        <div class="stat-value">{{ stats.total_analyses }}</div>
+        <div class="stat-label">Analyses Completed</div>
+    </div>
+    
+    <!-- Verdict Breakdown -->
+    <div class="stat-card stat-phishing">
+        <div class="stat-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="stat-value">{{ stats.phishing_count }}</div>
+        <div class="stat-label">Phishing Detected</div>
+    </div>
+    
+    <div class="stat-card stat-suspicious">
+        <div class="stat-icon"><i class="bi bi-question-circle-fill"></i></div>
+        <div class="stat-value">{{ stats.suspicious_count }}</div>
+        <div class="stat-label">Suspicious Emails</div>
+    </div>
+    
+    <div class="stat-card stat-benign">
+        <div class="stat-icon"><i class="bi bi-check-circle-fill"></i></div>
+        <div class="stat-value">{{ stats.benign_count }}</div>
+        <div class="stat-label">Benign Emails</div>
+    </div>
+    
+    <!-- Community Activity -->
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-chat-dots-fill"></i></div>
+        <div class="stat-value">{{ stats.total_discussions }}</div>
+        <div class="stat-label">Forum Discussions</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-chat-left-text-fill"></i></div>
+        <div class="stat-value">{{ stats.total_comments }}</div>
+        <div class="stat-label">Community Comments</div>
+    </div>
+</div>
+{% endmacro %}
+
 {% block content %}{% if session.name %}
      
-
 <div class="page-container">
         <!-- Page Title -->
        <h1 class="page-title">Statistics</h1>
-        <h5 class="text-center">Welcome to the Phishing Email Statistics Dashboard</h5>
         <!-- Two Column Layout -->
         <div class="statistics-layout">
             <!-- Left Column: Topics List -->
@@ -23,7 +77,7 @@
                                     <span>General</span>
                                     <span class="badge"> test  12</span> 
                                 </div>
-                                <span class="button-description">View general statistics about the phishing emails</span>
+                                <span class="button-description">View general statistics about the application</span>
                             </div>
                         </button>
 
@@ -66,10 +120,13 @@
             <div class="dashboard-main">
                 <div class="content-section uploads-container">
                     <div class="panel-title-container">
-                        <h3 class="panel-title" id="panel-title">Metrics Overview</h3>
+                        <h3 class="panel-title" id="panel-title">General</h3>
                     </div>
                     
-                     
+                    <!-- General Statistics Panel (default/first shown) -->
+                    <div class="stats-panel active" data-panel="general">
+                        {{ stats_cards(stats) }}
+                    </div>
 
                     <!-- Frequent Receiver Panel -->
                     <div class="stats-panel" data-panel="receivers">
@@ -152,8 +209,6 @@
         </div>
    </div>
 
-
- 
     <script>
         (function() {
             const buttons = document.querySelectorAll('.sort-btn');
@@ -178,17 +233,18 @@
         })();
     </script>
 
-
-
 {% else %}
 <div class="page-container">
-    <h1 class="page-title">Limited data available. Please log in for full metrics.</h1>
+    <h1 class="page-title">Statistics Overview</h1>
+    
     <div class="content-section">
-        <h3 class="section-header">General Statistics</h3>
-        <div class="placeholder-content">
-            <!--  Place general statistics or information here. The same information will be placed on login to the Statistics -->
-            
-        </div>
-    </div>    
+        <h3 class="section-header"></i> General Statistics</h3>
+        {{ stats_cards(stats) }}
+    </div>
+    
+    <div class="content-section" style="margin-top: 2rem; text-align: center;">
+        <p><strong>Want to see more?</strong> Create an account to access more metrics and contribute to our community.</p>
+        <button type="button" class="btn-signup" onclick="document.getElementById('LoginContainer').style.display = 'block';"><i class="bi bi-person-plus"></i> Sign Up Now</button>
+    </div>
 </div>
 {% endif %}{% endblock %}
