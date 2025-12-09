@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, render_template, session, request, redirec
 import json
 
 from static.Helper_eml import DB_PATH
+from endpoints.forum import GetForumPosts
 
 bp_ui = Blueprint('ui', __name__)
 
@@ -12,11 +13,74 @@ def form():
 
 @bp_ui.route('/Forum')
 def Forum():
-    return render_template('Forum.html')
+    posts = GetForumPosts()
+    return render_template('Forum.html', post=posts)
 
-@bp_ui.route('/Dashboard')
+@bp_ui.route('/Statistics')
 def admin():
-    return render_template('Dashboard.html')
+    # Fetch general statistics for all users (including non-logged-in)
+    stats = get_general_statistics()
+    return render_template('Statistics.html', stats=stats)
+
+def get_general_statistics():
+    """Get general statistics from the database for public display"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Total emails analyzed
+        cursor.execute("SELECT COUNT(*) FROM Email")
+        total_emails = cursor.fetchone()[0]
+        
+        # Total users registered
+        cursor.execute("SELECT COUNT(*) FROM User WHERE User_ID > 1")  # Exclude system users
+        total_users = cursor.fetchone()[0]
+        
+        # Total analyses completed
+        cursor.execute("SELECT COUNT(*) FROM Analysis WHERE Analyzed = 1")
+        total_analyses = cursor.fetchone()[0]
+        
+        # Verdict breakdown
+        cursor.execute("""
+            SELECT Verdict, COUNT(*) 
+            FROM Analysis 
+            WHERE Verdict IS NOT NULL 
+            GROUP BY Verdict
+        """)
+        verdict_counts = dict(cursor.fetchall())
+        
+        # Total forum discussions
+        cursor.execute("SELECT COUNT(*) FROM Discussion")
+        total_discussions = cursor.fetchone()[0]
+        
+        # Total comments
+        cursor.execute("SELECT COUNT(*) FROM Comment")
+        total_comments = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        return {
+            "total_emails": total_emails,
+            "total_users": total_users,
+            "total_analyses": total_analyses,
+            "phishing_count": verdict_counts.get("Phishing", 0),
+            "suspicious_count": verdict_counts.get("Suspicious", 0),
+            "benign_count": verdict_counts.get("Benign", 0),
+            "total_discussions": total_discussions,
+            "total_comments": total_comments
+        }
+    except Exception as e:
+        print(f"Error fetching statistics: {e}")
+        return {
+            "total_emails": 0,
+            "total_users": 0,
+            "total_analyses": 0,
+            "phishing_count": 0,
+            "suspicious_count": 0,
+            "benign_count": 0,
+            "total_discussions": 0,
+            "total_comments": 0
+        }
 
 @bp_ui.route('/Account')
 def account():
@@ -33,8 +97,6 @@ def account():
             
             q = cursor.fetchall()
             emails = [(id, str(title).strip('"'), str(time).split('T')[0]) for id, time, title in q]
-            print(q)
-            print(session["user_id"])
 
         except Exception as e:
             return jsonify({

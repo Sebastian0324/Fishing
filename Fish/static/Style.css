@@ -16,10 +16,17 @@ body {
 nav.navbar {
     flex-wrap: nowrap;
     justify-content: flex-start;
+    background-image: linear-gradient(180deg, color-mix(in srgb, var(--BC), #000000cc), color-mix(in srgb, var(--BC), #000000bb));
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    color: var(--Text_Color);
+    border-bottom-style: solid;
+    border-bottom-color: rgb(0, 0, 0);
 }
 #nav {
     justify-content: left;
     font-weight: bold;
+    font-size: 1.2rem;
+    color: var(--Text_Color);
 }
 #nav .navbar-nav {
     flex-direction: row;
@@ -27,37 +34,32 @@ nav.navbar {
     width: 25em;
 }
 
+.navbar-brand.angler-title {
+    font-weight: bold;
+    font-size: 2rem;
+    color: var(--Text_Color);
+    margin-bottom: 0.08em;
+    margin-right: 1em;
+    padding: 0.2em 0.6em;
+}
+
 #Login_btn, #Logout_btn {
     margin: 0 2em;
+    font-weight: bold;
+    color: var(--Text_Color);
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0);
 }
 
 #LoginContainer {
-    position: absolute;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background: #000000cc;
-    z-index: 10000;
     display: none;
 }
 div#Login {
-    position: absolute;
-
-    transform: translate(-50%, -50%);
-    left: 50%;
-    top: 50%;
-
     width: 44em;
-    background: linear-gradient(color-mix(in srgb, var(--BC), #000000cc), color-mix(in srgb, var(--BC), #000000cc)) padding-box,
-                var(--BG_IMG) border-box;
-
-    border-radius: 2em;
-    border: 3px solid transparent;
     padding: 5em 10em 5em 7em;
-
     z-index: 10000;
 }
-#Login #Close_Login {
+#Login #Close_Login, #Close {
     position: absolute;
     right: 4em;
     top: 3em;
@@ -89,7 +91,6 @@ div#Login {
     padding-bottom: 0.5em;
     color: var(--Text_Color);
     border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -324,6 +325,29 @@ div#Login {
 /* ################################## */
 /* ######    General Styles    ###### */
 /* ################################## */
+
+#LoginContainer, .backdrop {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: #000000cc;
+    z-index: 10000;
+}
+.centered {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    left: 50%;
+    top: 50%;
+}
+
+.colored-boarder {
+    border-radius: 2em;
+    border: 3px solid transparent;
+    background: linear-gradient(color-mix(in srgb, var(--BC), #000000cc), color-mix(in srgb, var(--BC), #000000cc)) padding-box,
+                var(--BG_IMG) border-box;
+
+}
 
 /* stops img from escaping its box */
 img {
@@ -755,6 +779,18 @@ tbody tr:nth-child(odd) {
     min-height: 500px;
 }
 
+#new-forum {
+    position: absolute;
+    bottom: 3em;
+    right: 3em;
+}
+
+#CreateForum {
+    width: 75%;
+    height: 80%;
+    padding: 4em 5em;
+}
+
 /* Topics list */
 .topic-list {
     list-style: none;
@@ -1087,8 +1123,34 @@ main h1 {
 .download-btn .download-label { margin-left: 6px; }
 
 /* Re-analyze button: ensure icon + label align nicely */
-.reanalyze-btn { display: inline-flex; align-items: center; gap: 8px; }
+.reanalyze-btn { 
+    display: inline-flex; 
+    align-items: center; gap: 8px; 
+    gap: 8px; 
+    padding: 6px 10px;
+    border-radius: 25px;
+    background: rgba(110, 93, 198, 0.1);
+    color: #6E5DC6;
+    border: 1px solid rgba(110, 93, 198, 0.3);
+    box-shadow: 0 6px 14px rgba(110, 93, 198, 0.18);
+    cursor: pointer;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.12s ease;
+}
 .reanalyze-btn span { margin-left: 0; }
+
+.delete-btn {
+    padding: 6px 10px;
+    border-radius: 25px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 0, 0, 0.1);
+    color: #ff4d4d;
+    border: 1px solid rgba(255, 77, 77, 0.3);
+    box-shadow: 0 6px 14px rgba(255, 77, 77, 0.18);
+    cursor: pointer;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.12s ease;
+}
 
 /* Reanalyze Modal Styles */
 #ReanalyzeModal {
@@ -1175,77 +1237,25 @@ main h1 {
 }
 
 /* ################################## */
-/* #######    Dashboard CSS    ###### */
+/* #######    Statistics CSS    ###### */
 /* ################################## */
 
-
- 
-
-.btn-content {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5em;
-}
-
-.btn-header {
-    display: flex;
-    align-items: center;
-    gap: 0.8em;
-}
-
-.btn-header .badge {
-    margin-left: auto;
-    background: rgba(110, 93, 198, 0.6);
-    padding: 0.2em 0.6em;
-    border-radius: 1em;
-    font-size: 0.85rem;
-}
-
-.button-description {
-    font-size: 0.8rem;
-    color: rgba(238, 238, 238, 0.6);
-    font-weight: 400;
-    line-height: 1.3;
-    margin-top: 0.2em;
-}
-
-.sort-btn i {
-    font-size: 1.2rem;
-    color: rgba(110, 93, 198, 0.8);
-}
-
-.sort-btn:hover {
-    background-color: rgba(110, 93, 198, 0.15);
-    border-color: #6E5DC6;
-    transform: translateX(5px);
-}
-
-.sort-btn.active {
-    background: linear-gradient(135deg, rgba(110, 93, 198, 0.3), rgba(160, 81, 130, 0.3));
-    border-color: #6E5DC6;
-    box-shadow: 0 4px 12px rgba(110, 93, 198, 0.3);
-}
-
-.sort-btn.active i {
-    color: #a05182;
-}
-/* Dashboard layout - three columns with dividers */
-.dashboard-layout {
+/* Statistics layout - three columns with dividers */
+.statistics-layout {
     display: grid;
     grid-template-columns: 350px 2px 1fr;
     gap: 2em;
     align-items: start;
 }
 
-/* Dashboard sidebar */
-.dashboard-sidebar {
+/* Statistics sidebar */
+.statistics-sidebar {
     position: sticky;
     top: 2em;
 }
 
-/* Vertical divider line for dashboard */
-.dashboard-layout .column-divider {
+/* Vertical divider line for statistics */
+.statistics-layout .column-divider {
     width: 2px;
     background: linear-gradient(to bottom, 
         transparent,
@@ -1259,15 +1269,15 @@ main h1 {
     align-self: stretch;
 }
 
-/* Sort buttons for dashboard */
-.dashboard-layout .sort-buttons {
+/* Sort buttons for statistics */
+.statistics-layout .sort-buttons {
     display: flex;
     flex-direction: column;
     gap: 0.8em;
     margin-top: 1em;
 }
 
-.dashboard-layout .sort-btn {
+.statistics-layout .sort-btn {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -1284,20 +1294,20 @@ main h1 {
     text-align: left;
 }
 
-.dashboard-layout .btn-content {
+.statistics-layout .btn-content {
     width: 100%;
     display: flex;
     flex-direction: column;
     gap: 0.5em;
 }
 
-.dashboard-layout .btn-header {
+.statistics-layout .btn-header {
     display: flex;
     align-items: center;
     gap: 0.8em;
 }
 
-.dashboard-layout .btn-header .badge {
+.statistics-layout .btn-header .badge {
     margin-left: auto;
     background: rgba(110, 93, 198, 0.6);
     padding: 0.2em 0.6em;
@@ -1305,7 +1315,7 @@ main h1 {
     font-size: 0.85rem;
 }
 
-.dashboard-layout .button-description {
+.statistics-layout .button-description {
     font-size: 0.85rem;
     color: rgba(238, 238, 238, 0.6);
     font-weight: 400;
@@ -1313,58 +1323,164 @@ main h1 {
     margin: 0;
 }
 
-.dashboard-layout .sort-btn i {
+.statistics-layout .sort-btn i {
     font-size: 1.2rem;
     color: rgba(110, 93, 198, 0.8);
 }
 
-.dashboard-layout .sort-btn:hover {
+.statistics-layout .sort-btn:hover {
     background-color: rgba(110, 93, 198, 0.15);
     border-left-color: #6E5DC6;
     transform: translateX(5px);
 }
 
-.dashboard-layout .sort-btn.active {
+.statistics-layout .sort-btn.active {
     background: linear-gradient(135deg, rgba(110, 93, 198, 0.2), rgba(160, 81, 130, 0.2));
     border-left: 3px solid #6E5DC6;
 }
 
-.dashboard-layout .sort-btn.active i {
+.statistics-layout .sort-btn.active i {
     color: #a05182;
 }
 
-/* Dashboard main area */
-.dashboard-main {
-    min-height: 500px;
+/* Stats panel styling */
+.stats-panel {
+    display: none;
 }
 
-/* Uploads container - two column layout */
-.dashboard-layout .uploads-container {
+.stats-panel.active {
+    display: block;
+}
+
+/* Small data list styling */
+.small-data-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    padding: 1rem 0;
+}
+
+.small-data-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+   
+    border-radius: 0.5rem;  
+   
+}
+
+.small-data-item:hover {
+    background: rgba(110, 93, 198, 0.1);
+    border-color: rgba(110, 93, 198, 0.3);
+    transform: translateX(3px);
+}
+
+.small-label {
+    color: rgba(238, 238, 238, 0.9);
+    font-weight: 500;
+    word-break: break-word;
+    max-width: 70%;
+}
+
+.small-value {
+    color: #a05182;
+    font-weight: 700;
+    min-width: 2.5rem;
+    text-align: right;
+}
+
+/* Two-column layout within stats panels */
+.stats-panel-two-col {
     display: grid;
-    grid-template-columns: 1fr 2px 1fr;
-    gap: 2em;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
     align-items: start;
 }
 
+.stats-column {
+    display: flex;
+    flex-direction: column;
+    background: transparent;
+}
+
+.stats-column .content-section {
+    padding: 0;
+    margin-bottom: 0;
+    background: transparent;
+}
+
+.stats-column .section-header {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1.2rem;
+    padding: 0.6rem 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    justify-content: flex-start;
+    background: linear-gradient(135deg, rgba(110, 93, 198, 0.12), rgba(160, 81, 130, 0.12));
+    border-radius: 0.3rem;
+    color: rgba(238, 238, 238, 0.95);
+    transition: all 0.3s ease;
+}
+
+ 
+.stats-column .section-header i {
+    font-size: 1.2rem;
+    color: #a05182;
+}
+
+/* Panel title styling */
+.panel-title-container {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid rgba(110, 93, 198, 0.3);
+    
+}
+
+.panel-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--Text_Color);
+    margin: 0;
+    padding: 0;
+}
+
+/* Dashboard main container */
+.dashboard-main {
+    width: 100%;
+    min-height: auto;
+}
+
+/* Uploads container - full width layout */
+.statistics-layout .uploads-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2em;
+    width: 100%;
+}
+
 /* Upload sections */
-.dashboard-layout .upload-section {
+.statistics-layout .upload-section {
     padding: 0;
     margin: 0;
 }
 
-.dashboard-layout .upload-section .section-header {
+.statistics-layout .upload-section .section-header {
     margin: 0 0 1em 0;
     font-size: 1.4rem;
 }
 
-.dashboard-layout .upload-list {
+.statistics-layout .upload-list {
     min-height: 300px;
     padding: 0;
     margin: 0;
 }
 
 /* Vertical divider between upload sections */
-.dashboard-layout .vertical-divider {
+.statistics-layout .vertical-divider {
     width: 2px;
     background: linear-gradient(to bottom, 
         transparent,
@@ -1380,27 +1496,242 @@ main h1 {
 
 
 
-/* Responsive dashboard */
+
+
+/* Statistics Cards Styling */
+.stats-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.stats-card {
+    background: linear-gradient(135deg, rgba(110, 93, 198, 0.08), rgba(160, 81, 130, 0.08));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    height: 100%;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(110, 93, 198, 0.3);
+    border-color: rgba(110, 93, 198, 0.4);
+}
+
+.stats-card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6E5DC6, #a05182);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(110, 93, 198, 0.4);
+}
+
+.stats-card-icon i {
+    font-size: 1.8rem;
+    color: white;
+}
+
+.stats-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.stats-card-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #a05182;
+    line-height: 1;
+}
+
+.stats-card-label {
+    font-size: 0.95rem;
+    color: rgba(238, 238, 238, 0.8);
+    font-weight: 500;
+}
+
+/* Responsive statistics */
 @media (max-width: 968px) {
-    .dashboard-layout {
+    .statistics-layout {
         grid-template-columns: 1fr;
     }
     
-    .dashboard-sidebar {
+    .statistics-sidebar {
         position: relative;
         top: 0;
     }
     
-    .dashboard-layout .column-divider {
+    .statistics-layout .column-divider {
         display: none;
     }
     
-    .dashboard-layout .uploads-container {
+    .statistics-layout .uploads-container {
         grid-template-columns: 1fr;
         gap: 1em;
     }
     
-    .dashboard-layout .vertical-divider {
+    .statistics-layout .vertical-divider {
         display: none;
+    }
+}
+
+/* ################################## */
+/* ###  General Statistics Cards  ### */
+/* ################################## */
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5em;
+    padding: 1em 0;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 1em;
+    padding: 1.5em;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(110, 93, 198, 0.3);
+    border-color: rgba(110, 93, 198, 0.5);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5em;
+    color: #6E5DC6;
+}
+
+.stat-icon i {
+    display: inline-block;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--Text_Color);
+    line-height: 1.2;
+    margin-bottom: 0.2em;
+}
+
+.stat-label {
+    font-size: 0.95rem;
+    color: rgba(238, 238, 238, 0.7);
+    font-weight: 500;
+}
+
+/* Verdict-specific card colors */
+.stat-card.stat-phishing {
+    border-color: rgba(255, 77, 77, 0.4);
+    background: linear-gradient(135deg, rgba(255, 77, 77, 0.15), rgba(255, 77, 77, 0.05));
+}
+
+.stat-card.stat-phishing .stat-icon {
+    color: #ff4d4d;
+}
+
+.stat-card.stat-phishing:hover {
+    box-shadow: 0 8px 25px rgba(255, 77, 77, 0.3);
+    border-color: rgba(255, 77, 77, 0.6);
+}
+
+.stat-card.stat-suspicious {
+    border-color: rgba(255, 193, 7, 0.4);
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 193, 7, 0.05));
+}
+
+.stat-card.stat-suspicious .stat-icon {
+    color: #ffc107;
+}
+
+.stat-card.stat-suspicious:hover {
+    box-shadow: 0 8px 25px rgba(255, 193, 7, 0.3);
+    border-color: rgba(255, 193, 7, 0.6);
+}
+
+.stat-card.stat-benign {
+    border-color: rgba(40, 167, 69, 0.4);
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.15), rgba(40, 167, 69, 0.05));
+}
+
+.stat-card.stat-benign .stat-icon {
+    color: #28a745;
+}
+
+.stat-card.stat-benign:hover {
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+    border-color: rgba(40, 167, 69, 0.6);
+}
+
+/* Sign up button */
+.btn-signup {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.8em 2em;
+    margin-top: 1em;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, #6E5DC6, #a05182);
+    border: none;
+    border-radius: 0.5em;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(110, 93, 198, 0.4);
+}
+
+.btn-signup:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(110, 93, 198, 0.5);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-signup:active {
+    transform: translateY(-1px);
+}
+
+/* Responsive stats grid */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1em;
+    }
+    
+    .stat-card {
+        padding: 1em;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
     }
 }
