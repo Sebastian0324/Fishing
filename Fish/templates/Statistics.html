@@ -1,0 +1,250 @@
+{% extends "form.html" %}
+
+{# Reusable macro for general statistics cards #}
+{% macro stats_cards(stats) %}
+<div class="stats-grid">
+    <!-- Platform Activity -->
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+        <div class="stat-value">{{ stats.total_users }}</div>
+        <div class="stat-label">Registered Users</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-envelope-fill"></i></div>
+        <div class="stat-value">{{ stats.total_emails }}</div>
+        <div class="stat-label">Emails Uploaded</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-search"></i></div>
+        <div class="stat-value">{{ stats.total_analyses }}</div>
+        <div class="stat-label">Analyses Completed</div>
+    </div>
+    
+    <!-- Verdict Breakdown -->
+    <div class="stat-card stat-phishing">
+        <div class="stat-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="stat-value">{{ stats.phishing_count }}</div>
+        <div class="stat-label">Phishing Detected</div>
+    </div>
+    
+    <div class="stat-card stat-suspicious">
+        <div class="stat-icon"><i class="bi bi-question-circle-fill"></i></div>
+        <div class="stat-value">{{ stats.suspicious_count }}</div>
+        <div class="stat-label">Suspicious Emails</div>
+    </div>
+    
+    <div class="stat-card stat-benign">
+        <div class="stat-icon"><i class="bi bi-check-circle-fill"></i></div>
+        <div class="stat-value">{{ stats.benign_count }}</div>
+        <div class="stat-label">Benign Emails</div>
+    </div>
+    
+    <!-- Community Activity -->
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-chat-dots-fill"></i></div>
+        <div class="stat-value">{{ stats.total_discussions }}</div>
+        <div class="stat-label">Forum Discussions</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-chat-left-text-fill"></i></div>
+        <div class="stat-value">{{ stats.total_comments }}</div>
+        <div class="stat-label">Community Comments</div>
+    </div>
+</div>
+{% endmacro %}
+
+{% block content %}{% if session.name %}
+     
+<div class="page-container">
+        <!-- Page Title -->
+       <h1 class="page-title">Statistics</h1>
+        <!-- Two Column Layout -->
+        <div class="statistics-layout">
+            <!-- Left Column: Topics List -->
+            <div class="statistics-sidebar">
+                <div class="content-section">
+
+                    <h3 class="section-header">Sort By</h3>
+
+                    <div class="sort-buttons">
+                        <button class="sort-btn active" data-target="general">
+                            <div class="btn-content">
+                                <div class="btn-header">
+                                    <i class="bi bi-clock"></i> 
+                                    <span>General</span>
+                                    <span class="badge"> test  12</span> 
+                                </div>
+                                <span class="button-description">View general statistics about the application</span>
+                            </div>
+                        </button>
+
+                        <button class="sort-btn" data-target="receivers">
+                            <div class="btn-content">
+                                <div class="btn-header">
+                                    <i class="bi bi-person-lines-fill"></i>
+                                    <span>Frequent Receiver</span>
+                                </div>
+                                <span class="button-description">Search for email addresses that have received the most phishing emails</span>
+                            </div>
+                        </button>
+
+                        <button class="sort-btn" data-target="subjects">
+                            <div class="btn-content">
+                                <div class="btn-header">
+                                    <i class="bi bi-envelope"></i>
+                                    <span>Common Subject</span>
+                                </div>
+                                <span class="button-description">Order the subjects by how commonly they are found in phishing emails</span>
+                            </div>
+                        </button>
+                        <button class="sort-btn" data-target="comments">
+                            <div class="btn-content">
+                                <div class="btn-header">
+                                    <i class="bi bi-chat-left-text"></i>
+                                    <span>Most Commented</span>
+                                </div>
+                                <span class="button-description">Search for forum post that have the most amount of comments</span>
+                            </div>
+                        </button>    
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vertical Divider Line -->
+            <div class="column-divider"></div>
+            
+            <!-- Right Column: Two Column Layout -->
+            <div class="dashboard-main">
+                <div class="content-section uploads-container">
+                    <div class="panel-title-container">
+                        <h3 class="panel-title" id="panel-title">General</h3>
+                    </div>
+                    
+                    <!-- General Statistics Panel (default/first shown) -->
+                    <div class="stats-panel active" data-panel="general">
+                        {{ stats_cards(stats) }}
+                    </div>
+
+                    <!-- Frequent Receiver Panel -->
+                    <div class="stats-panel" data-panel="receivers">
+                        <div class="stats-panel-two-col">
+                            <!-- Top Column -->
+                            <div class="stats-column">
+                                <div class="content-section">
+                                    <h4 class="section-header"><i class="bi bi-fire"></i> Top</h4>
+                                    <div class="small-data-list">
+                                        <div class="small-data-item"><span class="small-label">user 1 </span><span class="small-value">11</span></div>
+                                        <div class="small-data-item"><span class="small-label">user 2</span><span class="small-value">10</span></div>
+                                   
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Historical Uploaded Column -->
+                            <div class="stats-column">
+                                <div class="content-section">
+                                    <h4 class="section-header"><i class="bi bi-clock-history"></i> Historical</h4>
+                                    <div class="small-data-list">
+                                        <div class="small-data-item"><span class="small-label">Test</span><span class="small-value">156</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Common Subject Panel -->
+                    <div class="stats-panel" data-panel="subjects">
+                        <div class="stats-panel-two-col">
+                            <!-- Top Column -->
+                            <div class="stats-column">
+                                <div class="content-section">
+                                    <h4 class="section-header"><i class="bi bi-fire"></i> Top</h4>
+                                    <div class="small-data-list">
+                                        <div class="small-data-item"><span class="small-label">"Action Required"</span><span class="small-value">54</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Historical Uploaded Column -->
+                            <div class="stats-column">
+                                <div class="content-section">
+                                    <h4 class="section-header"><i class="bi bi-clock-history"></i> Historical</h4>
+                                    <div class="small-data-list">
+                                        <div class="small-data-item"><span class="small-label">"Update Payment"</span><span class="small-value">47</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Most Commented Panel -->
+                    <div class="stats-panel" data-panel="comments">
+                        <div class="stats-panel-two-col">
+                            <!-- Top Column -->
+                            <div class="stats-column">
+                                <div class="content-section">
+                                    <h4 class="section-header"><i class="bi bi-fire"></i> Top</h4>
+                                    <div class="small-data-list">
+                                        <div class="small-data-item"><span class="small-label">Vendor invoice fraud</span><span class="small-value">18</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Historical Uploaded Column -->
+                            <div class="stats-column">
+                                <div class="content-section">
+                                    <h4 class="section-header"><i class="bi bi-clock-history"></i> Historical</h4>
+                                    <div class="small-data-list">
+                                        <div class="small-data-item"><span class="small-label">Social engineering techniques</span><span class="small-value">31</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+   </div>
+
+    <script>
+        (function() {
+            const buttons = document.querySelectorAll('.sort-btn');
+            const panels = document.querySelectorAll('.stats-panel');
+            const panelTitle = document.getElementById('panel-title');
+            
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const target = btn.getAttribute('data-target');
+                    const btnText = btn.querySelector('.btn-header span:nth-of-type(1)').textContent.trim();
+                    
+                    buttons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    panels.forEach(p => p.classList.toggle('active', p.getAttribute('data-panel') === target));
+                    
+                    // Update the panel title
+                    if (panelTitle) {
+                        panelTitle.textContent = btnText;
+                    }
+                });
+            });
+        })();
+    </script>
+
+{% else %}
+<div class="page-container">
+    <h1 class="page-title">Statistics Overview</h1>
+    
+    <div class="content-section">
+        <h3 class="section-header"></i> General Statistics</h3>
+        {{ stats_cards(stats) }}
+    </div>
+    
+    <div class="content-section" style="margin-top: 2rem; text-align: center;">
+        <p><strong>Want to see more?</strong> Create an account to access more metrics and contribute to our community.</p>
+        <button type="button" class="btn-signup" onclick="document.getElementById('LoginContainer').style.display = 'block';"><i class="bi bi-person-plus"></i> Sign Up Now</button>
+    </div>
+</div>
+{% endif %}{% endblock %}

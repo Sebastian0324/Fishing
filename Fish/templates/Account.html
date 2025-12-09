@@ -25,50 +25,82 @@
         <table class="uploads-table">
             <thead>
                 <th>Title</th>
-                <th>Last Updated</th>
+                <th>Last Analyzed</th>
                 <th>Options</th>
+                <th>Download</th>
                 <th>Re-Analyze</th>
-            </thead>
-            <tbody>
-            {% for eml_id, title, last_update in emails %}
-                <tr>
-                    <td>{{ title }}</td>
-                    <td>{{ last_update }}</td>
-                    <td>
-                        <form id="eml-{{eml_id}}">
-                            <div class="options-row">
-                                <div class="options-group">
-                                    <div class="options-group-inner">
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" id="emlSwitch-{{eml_id}}" name="eml" value="1" role="switch" aria-checked="false">
-                                            <label class="form-check-label" for="emlSwitch-{{eml_id}}">.eml</label>
-                                        </div>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" id="analysisSwitch-{{eml_id}}" name="analysis" value="1" role="switch" aria-checked="false">
-                                            <label class="form-check-label" for="analysisSwitch-{{eml_id}}">Analysis</label>
-                                        </div>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for eml_id, title, last_update in emails %}
+            <tr>
+                <td>{{ title }}</td>
+                <td>{{ last_update }}</td>
+                <td>
+                    <form id="eml-form-{{eml_id}}">
+                        <div class="options-row">
+                            <div class="options-group">
+                                <div class="options-group-inner">
+
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               id="emlSwitch-{{eml_id}}"
+                                               name="eml"
+                                               value="1">
+                                        <label class="form-check-label"
+                                               for="emlSwitch-{{eml_id}}">.eml</label>
                                     </div>
-                                </div>
-                                <div class="download-wrap">
-                                    <button type="submit" class="download-btn btn btn-sm btn-outline-secondary" title="Download">
-                                        <i data-lucide="download-cloud" aria-hidden="true"></i>
-                                        <span class="download-label">Download</span>
-                                    </button>
+
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               id="analysisSwitch-{{eml_id}}"
+                                               name="analysis"
+                                               value="1">
+                                        <label class="form-check-label"
+                                               for="analysisSwitch-{{eml_id}}">Analysis</label>
+                                    </div>
+
                                 </div>
                             </div>
-                        </form>
-                    </td>
-                    <td>
-                        <button type="button" class="reanalyze-btn btn btn-sm btn-outline-primary" data-id="{{eml_id}}" title="Re-analyze" aria-label="Re-analyze">
-                            <i data-lucide="refresh-cw" aria-hidden="true"></i>
-                            <span style="margin-left:8px">Re-analyze</span>
-                        </button>
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                        </div>
+                    </form>
+                </td>
+                <td>
+                    <button type="submit"
+                            class="download-btn btn btn-sm btn-outline-secondary"
+                            form="eml-form-{{eml_id}}"
+                            title="Download">
+                        <i data-lucide="download-cloud"></i>
+                        <span class="download-label">Download</span>
+                    </button>
+                </td>
+                <td>
+                    <button type="button"
+                            class="reanalyze-btn btn btn-sm btn-outline-primary"
+                            data-id="{{eml_id}}"
+                            title="Re-analyze">
+                        <i data-lucide="refresh-cw"></i>
+                        <span style="margin-left:8px">Re-analyze</span>
+                    </button>
+                </td>
+                <td>
+                    <button type="button"
+                            class="delete-btn btn btn-sm btn-outline-danger"
+                            data-id="{{eml_id}}"
+                            title="Delete email">
+                        <i data-lucide="trash-2"></i>
+                        <span style="margin-left:8px">Delete email</span>
+                    </button>
+                </td>
+
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
 
   <!-- Settings Panel -->
 <div class="settings-panel" id="settingsPanel" style="display: none;">
@@ -81,7 +113,6 @@
         </div>
                 <div class="settings-content">
                         <p>Change your account preferences here.</p>
-
                         <!-- Change Password Form -->
                         <div class="card mt-3">
                             <div class="card-body">

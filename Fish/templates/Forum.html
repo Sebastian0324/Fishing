@@ -13,8 +13,13 @@
                     <div class="placeholder-content">
                         <ul class="topic-list">
                             <!-- for each disc in Query -->
-
+                            {% for title, Created, nr_comments in post %}
                             <li class="topic-item">
+                                <h2 class="discussion-title">{{ title }}</h2>
+                                <p class="topic-meta">Posted {{ Created }} ago • {{ nr_comments }} replies</p>
+                            </li>
+                            {% endfor %}
+                            <!-- <li class="topic-item">
                                 <h2 class="discussion-title">Discussion 1</h2>
                                 <p class="topic-meta">Posted (x) time ago • (x) replies</p>
                             </li>
@@ -33,9 +38,10 @@
                             <li class="topic-item">
                                 <h2 class="discussion-title">Discussion 5</h2>
                                 <p class="topic-meta">Posted (x) time ago • (x) replies</p>
-                            </li>
+                            </li> -->
                         </ul>
                     </div>
+                    <button id="new-forum">+</button>
                 </div>
             </div>
             

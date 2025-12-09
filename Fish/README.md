@@ -13,7 +13,7 @@ Angler is a Python web application built with Flask that allows users to upload 
 - **Multiple Views**: 
   - Main index page with file upload form
   - Forum/Discussion section for collaborative analysis
-  - User Dashboard panel
+  - User Statistics panel
   - Account management page
   - About Us information page
 - **LLM Integration**: AI-powered email analysis for phishing detection
@@ -48,7 +48,7 @@ Fish/
     ├── index.html              # Main landing page
     ├── form.html               # Email upload form
     ├── Forum.html              # Discussion forum
-    ├── Dashboard.html          # User dashboard
+    ├── Statistics.html          # User statistics
     ├── Account.html            # Account management
     └── AboutUs.html            # About page
 ```
