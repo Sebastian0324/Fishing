@@ -1762,3 +1762,135 @@ main h1 {
         grid-template-columns: 1fr;
     }
 }
+
+/* ################################## */
+/* ###  Frequent Sender Statistics ### */
+/* ################################## */
+
+.stats-panel-three-col {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5em;
+    margin-top: 1.5em;
+}
+
+.ip-list-section {
+    padding: 1em;
+    min-height: 200px;
+}
+
+.ip-list-section .section-header {
+    font-size: 1.1rem;
+    margin-bottom: 1em;
+    padding-bottom: 0.5em;
+}
+
+.small-data-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+}
+
+.small-data-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6em 0.8em;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 0.5em;
+    transition: all 0.2s ease;
+}
+
+.small-data-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateX(3px);
+}
+
+.small-label {
+    font-size: 0.95rem;
+    color: var(--Text_Color);
+}
+
+.small-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: rgba(238, 238, 238, 0.8);
+    padding: 0.2em 0.6em;
+    background: rgba(110, 93, 198, 0.2);
+    border-radius: 0.3em;
+}
+
+.ip-item {
+    border-left: 3px solid transparent;
+}
+
+.ip-item.danger {
+    border-left-color: #ff4d4d;
+    background: rgba(255, 77, 77, 0.08);
+}
+
+.ip-item.danger:hover {
+    background: rgba(255, 77, 77, 0.15);
+}
+
+.ip-item.warning {
+    border-left-color: #ffc107;
+    background: rgba(255, 193, 7, 0.08);
+}
+
+.ip-item.warning:hover {
+    background: rgba(255, 193, 7, 0.15);
+}
+
+.ip-address {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+}
+
+.ip-address i {
+    margin-right: 0.5em;
+    opacity: 0.7;
+}
+
+.badge-danger {
+    background: rgba(255, 77, 77, 0.3);
+    color: #ff6b6b;
+    padding: 0.2em 0.6em;
+    border-radius: 0.3em;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.badge-warning {
+    background: rgba(255, 193, 7, 0.3);
+    color: #ffc107;
+    padding: 0.2em 0.6em;
+    border-radius: 0.3em;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.text-danger {
+    color: #ff4d4d !important;
+}
+
+.text-warning {
+    color: #ffc107 !important;
+}
+
+.text-muted {
+    color: rgba(238, 238, 238, 0.5) !important;
+    font-style: italic;
+}
+
+@media (max-width: 1200px) {
+    .stats-panel-three-col {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .stats-panel-three-col {
+        grid-template-columns: 1fr;
+    }
+}

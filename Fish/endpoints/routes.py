@@ -19,9 +19,89 @@ def Forum():
 
 @bp_ui.route('/Statistics')
 def admin():
-    # Fetch general statistics for all users (including non-logged-in)
     stats = get_general_statistics()
-    return render_template('Statistics.html', stats=stats)
+    frequent_senders = get_frequent_sender_statistics()
+    return render_template('Statistics.html', stats=stats, frequent_senders=frequent_senders)
+
+def get_frequent_sender_statistics():
+    """Get frequent sender IP statistics from the database"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Top sender IPs by email (all time)
+        cursor.execute("""
+            SELECT Sender_IP, COUNT(*) as count
+            FROM Email 
+            WHERE Sender_IP IS NOT NULL AND Sender_IP != ''
+            GROUP BY Sender_IP
+            ORDER BY count DESC
+            LIMIT 10
+        """)
+        top_senders = cursor.fetchall()
+        
+        # Top sender IPs with phishing emails
+        cursor.execute("""
+            SELECT e.Sender_IP, COUNT(*) as count
+            FROM Email e
+            JOIN Analysis a ON e.Email_ID = a.Email_ID
+            WHERE e.Sender_IP IS NOT NULL AND e.Sender_IP != ''
+            AND a.Verdict = 'Phishing'
+            GROUP BY e.Sender_IP
+            ORDER BY count DESC
+            LIMIT 10
+        """)
+        top_phishing_senders = cursor.fetchall()
+        
+        # Top sender IPs that are suspicious
+        cursor.execute("""
+            SELECT e.Sender_IP, COUNT(*) as count
+            FROM Email e
+            JOIN Analysis a ON e.Email_ID = a.Email_ID
+            WHERE e.Sender_IP IS NOT NULL AND e.Sender_IP != ''
+            AND a.Verdict = 'Suspicious'
+            GROUP BY e.Sender_IP
+            ORDER BY count DESC
+            LIMIT 10
+        """)
+        top_suspicious_senders = cursor.fetchall()
+        
+        # Total unique sender IPs
+        cursor.execute("""
+            SELECT COUNT(DISTINCT Sender_IP)
+            FROM Email 
+            WHERE Sender_IP IS NOT NULL AND Sender_IP != ''
+        """)
+        total_unique_ips = cursor.fetchone()[0]
+        
+        # IPs flagged as dangerous (phishing or suspicious)
+        cursor.execute("""
+            SELECT COUNT(DISTINCT e.Sender_IP)
+            FROM Email e
+            JOIN Analysis a ON e.Email_ID = a.Email_ID
+            WHERE e.Sender_IP IS NOT NULL AND e.Sender_IP != ''
+            AND a.Verdict IN ('Phishing', 'Suspicious')
+        """)
+        dangerous_ips = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        return {
+            "top_senders": top_senders,
+            "top_phishing_senders": top_phishing_senders,
+            "top_suspicious_senders": top_suspicious_senders,
+            "total_unique_ips": total_unique_ips,
+            "dangerous_ips": dangerous_ips
+        }
+    except Exception as e:
+        print(f"Error fetching frequent sender statistics: {e}")
+        return {
+            "top_senders": [],
+            "top_phishing_senders": [],
+            "top_suspicious_senders": [],
+            "total_unique_ips": 0,
+            "dangerous_ips": 0
+        }
 
 def get_general_statistics():
     """Get general statistics from the database for public display"""
