@@ -1870,6 +1870,29 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 });
 
+// -------========------- Upload Profile Picture -------========-------
+const uploadForm = document.getElementById("uploadProfilePicForm");
+if (uploadForm) {
+  uploadForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(uploadForm);
+    const response = await fetch('/upload-profile-picture', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      alert("Profile picture updated!");
+      location.reload();
+    } else {
+      alert("Failed to upload picture: " + data.error);
+    }
+  });
+}
+
 // -------========------- Delete Account Form -------========-------
 const deleteAccountForm = document.getElementById("deleteAccountForm");
 if (deleteAccountForm) {
@@ -2146,4 +2169,56 @@ document.addEventListener("DOMContentLoaded", function() {
   } catch (e) {
     console.error("Error handling reanalyze_payload:", e);
   }
+});
+
+
+// Download Logic
+document.addEventListener("DOMContentLoaded", () => {
+    const emailsBtn = document.getElementById("downloadEmails");
+    const analysisBtn = document.getElementById("downloadAnalysis");
+    const bothBtn = document.getElementById("downloadBoth");
+
+    const modalElement = document.getElementById("downloadErrorModal");
+    const msgBox = document.getElementById("downloadErrorMessage");
+    const modal = modalElement ? new bootstrap.Modal(modalElement) : null;
+
+    async function check(route) {
+        const res = await fetch("/check/" + route);
+        return res.json();
+    }
+
+    function showMessage(msg) {
+        if (msgBox && modal) {
+            msgBox.innerHTML = `<p>${msg}</p>`;
+            modal.show();
+        } else {
+            alert(msg); // fallback
+        }
+    }
+
+    if (emailsBtn) {
+        emailsBtn.addEventListener("click", async () => {
+            const data = await check("emails");
+            if (!data.hasEmails) return showMessage("You have no emails to download.");
+            window.location.href = "/download/emails";
+        });
+    }
+
+    if (analysisBtn) {
+        analysisBtn.addEventListener("click", async () => {
+            const data = await check("analysis");
+            if (!data.hasAnalysis) return showMessage("You have no analyses to download.");
+            window.location.href = "/download/analysis";
+        });
+    }
+
+    if (bothBtn) {
+        bothBtn.addEventListener("click", async () => {
+            const data = await check("both");
+            if (!data.hasEmails && !data.hasAnalysis) return showMessage("No emails or analyses to download.");
+            if (!data.hasEmails) return showMessage("No emails to download.");
+            if (!data.hasAnalysis) return showMessage("No analyses to download.");
+            window.location.href = "/download/both";
+        });
+    }
 });

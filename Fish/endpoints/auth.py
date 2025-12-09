@@ -1,7 +1,8 @@
 from flask import Blueprint, request, session, jsonify
 import sqlite3
-import hashlib
-import hmac
+from bcrypt import hashpw, checkpw, gensalt
+from io import BytesIO
+from PIL import Image
 from static.Helper_eml import DB_PATH
 
 bp_auth = Blueprint('auth', __name__)
@@ -37,14 +38,15 @@ def CreateAccount():
                 "status_code": 409,
                 "message": f"Username '{username}' is already registered"
             }), 409
-        hash_obj = hashlib.sha3_512()
-        hash_obj.update(request.form.get("Password").encode())
+        # bcrypt automatically generates salt and hashes
+        password_bytes = request.form.get("Password").encode()
+        password_hash = hashpw(password_bytes, gensalt()).decode()
         cursor.execute("""
                         INSERT INTO USER (
                             Username, Password_Hash
                         ) VALUES (?, ?)""", (
                         username,
-                        hash_obj.hexdigest()
+                        password_hash
                     ))
         user_id = cursor.lastrowid
         session["name"] = username
@@ -88,10 +90,8 @@ def Login():
                 "message": f"No account found with username '{username}'"
             }), 404
         user_id, stored_hash = row
-        hash_obj = hashlib.sha3_512()
-        hash_obj.update(passw.encode())
-        provided_hash = hash_obj.hexdigest()
-        if stored_hash != provided_hash:
+        # bcrypt.checkpw returns True if password matches
+        if not checkpw(passw.encode(), stored_hash.encode()):
             return jsonify({
                 "success": False,
                 "error": "Invalid password",
@@ -165,19 +165,17 @@ def change_password():
                 "status_code": 404
             }), 404
         stored_hash = result[0]
-        hash_obj = hashlib.sha3_512()
-        hash_obj.update(current_password.encode())
-        provided_hash = hash_obj.hexdigest()
-        if not hmac.compare_digest(stored_hash, provided_hash):
+        # bcrypt.checkpw returns True if password matches
+        if not checkpw(current_password.encode(), stored_hash.encode()):
             conn.close()
             return jsonify({
                 "success": False,
                 "error": "Current password is incorrect",
                 "status_code": 401
             }), 401
-        new_hash_obj = hashlib.sha3_512()
-        new_hash_obj.update(new_password.encode())
-        new_hash = new_hash_obj.hexdigest()
+        # bcrypt automatically generates salt and hashes
+        new_password_bytes = new_password.encode()
+        new_hash = hashpw(new_password_bytes, gensalt()).decode()
         cursor.execute("""UPDATE USER SET Password_Hash = ? WHERE User_ID = ?""",
                       (new_hash, user_id))
         conn.commit()
@@ -233,3 +231,47 @@ def delete_account():
     except Exception as e:
         return jsonify({"success": False, "error": f"Database error: {str(e)}", "status_code": 500, 
                         "message": "Failed to delete account due to server error"}), 500
+
+@bp_auth.post('/upload-profile-picture')
+def upload_profile_picture():
+    """Upload or update user profile pic"""
+    if "user_id" not in session:
+        return jsonify({"success": False, "error": "Not authenticated", "status_code": 401}), 401
+    user_id = session["user_id"]
+
+    # check if file part is in request
+    if 'profile_picture' not in request.files:
+        return jsonify({"success": False, "error": "No file uploaded", "status_code": 400}), 400
+    
+    file = request.files['profile_picture']
+    picture_bytes = file.read()
+
+    # checking format (security)
+    try:
+        img = Image.open(BytesIO(picture_bytes))
+        img.verify()
+    except Exception:
+        return jsonify({"success": False, "error": "Invalid image file", "status_code": 400}), 400
+    
+    # file needs to be reopened after verify
+    img = Image.open(BytesIO(picture_bytes))
+    real_format = img.format
+    
+    # sanitize image
+    img = img.convert("RGB")
+    img.thumbnail((512, 512))  # resize to max 512x512
+    output = BytesIO()
+    img.save(output, format="PNG", quality=85)
+    safe_bytes = output.getvalue()
+
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("""UPDATE User SET Profile_picture = ? WHERE User_ID = ?""",
+                       (safe_bytes, user_id))
+        conn.commit()
+        conn.close()
+        return jsonify({"success": True, "message": "Profile picture updated successfully", "status_code": 200}), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Database error: {str(e)}", "status_code": 500, 
+                        "message": "Failed to upload profile picture due to server error"}), 500
