@@ -2172,7 +2172,7 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 
-// Download Logic
+// Download Logic for all emails/analysis/both
 document.addEventListener("DOMContentLoaded", () => {
     const emailsBtn = document.getElementById("downloadEmails");
     const analysisBtn = document.getElementById("downloadAnalysis");
@@ -2221,4 +2221,34 @@ document.addEventListener("DOMContentLoaded", () => {
             window.location.href = "/download/both";
         });
     }
+});
+
+// Download logic for account page 
+document.addEventListener("DOMContentLoaded", () => {
+
+    document.querySelectorAll(".download-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            e.preventDefault();
+
+            const formId = btn.getAttribute("form");
+            const form = document.getElementById(formId);
+
+            const emailId = formId.replace("eml-form-", "");
+
+            const wantEml = form.querySelector("[name='eml']").checked ? 1 : 0;
+            const wantAnalysis = form.querySelector("[name='analysis']").checked ? 1 : 0;
+
+            if (wantEml === 0 && wantAnalysis === 0) {
+                alert("Please select .eml or Analysis before downloading.");
+                return;
+            }
+
+            // build download URL
+            const url = `/download/email/${emailId}?eml=${wantEml}&analysis=${wantAnalysis}`;
+
+          
+            window.location.href = url; // redirect triggers dowload 
+        });
+    });
+
 });
