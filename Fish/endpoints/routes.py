@@ -264,3 +264,78 @@ def get_profile_picture(user_id):
     return send_file(
         BytesIO(picture_bytes),
         mimetype="image/png")
+
+
+@bp_ui.delete('/api/email/<int:email_id>')
+def delete_email_api(email_id):
+    """Delete an email and all its associated data (analysis, etc.)"""
+    try:
+        # Check authentication
+        if "user_id" not in session or not session.get("user_id"):
+            return jsonify({
+                "success": False,
+                "error": "Not authenticated",
+                "status_code": 401
+            }), 401
+        
+        user_id = session["user_id"]
+        conn = sqlite3.connect(DB_PATH)
+        try:
+            conn.execute("PRAGMA foreign_keys = ON;")
+            cursor = conn.cursor()
+            
+            # First verify the email belongs to the current user
+            cursor.execute("""
+                SELECT Email_ID FROM Email 
+                WHERE Email_ID = ? AND User_ID = ?
+            """, (email_id, user_id))
+            result = cursor.fetchone()
+            
+            if not result:
+                return jsonify({
+                    "success": False,
+                    "error": "Email not found or you do not have permission to delete it",
+                    "status_code": 404
+                }), 404
+            
+            cursor.execute("""
+                DELETE FROM Analysis WHERE Email_ID = ?
+            """, (email_id,))
+            
+            # Check if there are any discussions linked to this email
+            cursor.execute("""
+                SELECT Discussion_ID FROM Discussion WHERE Email_ID = ?
+            """, (email_id,))
+            discussions = cursor.fetchall()
+            
+            for (discussion_id,) in discussions:
+                cursor.execute("""
+                    DELETE FROM Comment WHERE Discussion_ID = ?
+                """, (discussion_id,))
+            
+            # Delete discussions linked to this email
+            cursor.execute("""
+                DELETE FROM Discussion WHERE Email_ID = ?
+            """, (email_id,))
+            
+            cursor.execute("""
+                DELETE FROM Email WHERE Email_ID = ? AND User_ID = ?
+            """, (email_id, user_id))
+            
+            conn.commit()
+            
+            return jsonify({
+                "success": True,
+                "message": "Email and all associated data deleted successfully",
+                "status_code": 200
+            }), 200
+            
+        finally:
+            conn.close()
+            
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Server error: {str(e)}",
+            "status_code": 500
+        }), 500

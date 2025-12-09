@@ -948,11 +948,11 @@ function reconstructAnalysisFromBackend(fileIndex, backendData) {
     let riskClass = "success";
     let riskIcon = "[OK]";
     
-    if (abuseScore >= 75) {
+    if (abuseScore >= 50) {
       riskLevel = "High";
       riskClass = "danger";
       riskIcon = "[!]";
-    } else if (abuseScore >= 50) {
+    } else if (abuseScore >= 25) {
       riskLevel = "Medium";
       riskClass = "warning";
       riskIcon = "[!]";
@@ -2049,6 +2049,21 @@ function closeReanalyzeModal() {
   pendingReanalyzeId = null;
 }
 
+// -------========-------    Delete Email Modal Functions    -------========-------
+let pendingDeleteEmailId = null;
+
+function openDeleteEmailModal(emailId) {
+  const modal = document.getElementById("DeleteEmailModal");
+  pendingDeleteEmailId = emailId;
+  modal.style.display = "flex";
+}
+
+function closeDeleteEmailModal() {
+  const modal = document.getElementById("DeleteEmailModal");
+  modal.style.display = "none";
+  pendingDeleteEmailId = null;
+}
+
 document.addEventListener("DOMContentLoaded", function() {
 
   const reanalyzeModal = document.getElementById("ReanalyzeModal");
@@ -2129,6 +2144,77 @@ document.addEventListener("DOMContentLoaded", function() {
       e.preventDefault();
       const emailId = this.getAttribute("data-id");
       openReanalyzeModal(emailId);
+    });
+  });
+
+  // -------========-------    Delete Email Modal Event Listeners    -------========-------
+  const deleteEmailModal = document.getElementById("DeleteEmailModal");
+  if (deleteEmailModal) {
+    // Close modal when clicking outside
+    deleteEmailModal.addEventListener("click", function(event) {
+      if (event.target === deleteEmailModal) {
+        closeDeleteEmailModal();
+      }
+    });
+
+    // Handle confirm delete button
+    const confirmDeleteEmailBtn = document.getElementById("confirmDeleteEmailBtn");
+    if (confirmDeleteEmailBtn) {
+      confirmDeleteEmailBtn.addEventListener("click", async function() {
+        if (!pendingDeleteEmailId) return;
+
+        confirmDeleteEmailBtn.disabled = true;
+        confirmDeleteEmailBtn.textContent = "Deleting...";
+
+        try {
+          const id = encodeURIComponent(pendingDeleteEmailId);
+          const resp = await fetch(`/api/email/${id}`, { 
+            method: 'DELETE', 
+            credentials: 'same-origin' 
+          });
+
+          let body;
+          try {
+            body = await resp.json();
+          } catch (err) {
+            console.error('Failed to parse delete response JSON', err);
+            alert('Failed to parse server response. See console for details.');
+            return;
+          }
+
+          if (resp.ok && body.success) {
+            const row = document.querySelector(`button.delete-btn[data-id="${pendingDeleteEmailId}"]`)?.closest('tr');
+            if (row) {
+              row.remove();
+            }
+            closeDeleteEmailModal();
+          } else {
+            if (resp.status === 401) {
+              alert('You must be logged in to delete this email. Please log in and try again.');
+            } else if (resp.status === 404) {
+              alert('Email not found or you do not have permission to delete it.');
+            } else {
+              alert('Failed to delete email: ' + (body.error || body.message || `status ${resp.status}`));
+            }
+          }
+        } catch (err) {
+          console.error("Delete email fetch error:", err);
+          alert("Network or server error while deleting email. See console for details.");
+        } finally {
+          confirmDeleteEmailBtn.disabled = false;
+          confirmDeleteEmailBtn.textContent = "Delete Email";
+        }
+      });
+    }
+  }
+
+  // Attach click handlers to all delete buttons
+  const deleteButtons = document.querySelectorAll(".delete-btn");
+  deleteButtons.forEach(btn => {
+    btn.addEventListener("click", function(e) {
+      e.preventDefault();
+      const emailId = this.getAttribute("data-id");
+      openDeleteEmailModal(emailId);
     });
   });
 
