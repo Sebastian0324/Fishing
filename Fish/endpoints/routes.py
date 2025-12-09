@@ -2,6 +2,7 @@ import sqlite3
 from flask import Blueprint, jsonify, render_template, session, request, redirect, send_file
 import json
 from io import BytesIO
+from datetime import datetime, timedelta
 
 from static.Helper_eml import DB_PATH
 from endpoints.forum import GetForumPosts
@@ -20,14 +21,13 @@ def Forum():
 @bp_ui.route('/Statistics')
 def admin():
     stats = get_general_statistics()
-    frequent_senders = get_frequent_sender_statistics()
-    
-    # Add admin-specific statistics if user is admin
+        # Add admin-specific statistics if user is admin
     if session.get('name') == 'admin':
         admin_stats = get_admin_statistics()
         stats.update(admin_stats)
-    
-    return render_template('Statistics.html', stats=stats, frequent_senders=frequent_senders)
+    frequent_senders = get_frequent_sender_statistics()
+    common_subjects = get_common_subjects_statistics()  # aggregates by Email.Tag (categories)
+    return render_template('Statistics.html', stats=stats, frequent_senders=frequent_senders, common_subjects=common_subjects)
 
 def get_frequent_sender_statistics():
     """Get frequent sender IP statistics from the database"""
@@ -108,6 +108,49 @@ def get_frequent_sender_statistics():
             "total_unique_ips": 0,
             "dangerous_ips": 0
         }
+
+
+def get_common_subjects_statistics(limit=10, days=30):
+    """Aggregate by Email.Tag (whitelisted categories). Return top and historical lists.
+    This function replaces raw subject grouping with categorized Tag statistics.
+    """
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        # Top overall tags
+        cursor.execute("""
+            SELECT Tag AS tag, COUNT(*) as count
+            FROM Email
+            WHERE Tag IS NOT NULL AND TRIM(Tag) != ''
+            GROUP BY Tag
+            ORDER BY count DESC
+            LIMIT ?
+        """, (limit,))
+        top = cursor.fetchall()
+
+        # Top tags in the last `days` days using Received_At timestamp
+        cutoff = (datetime.utcnow() - timedelta(days=days)).replace(microsecond=0).isoformat() + 'Z'
+        cursor.execute("""
+            SELECT Tag AS tag, COUNT(*) as count
+            FROM Email
+            WHERE Received_At >= ? AND Tag IS NOT NULL AND TRIM(Tag) != ''
+            GROUP BY Tag
+            ORDER BY count DESC
+            LIMIT ?
+        """, (cutoff, limit))
+        historical = cursor.fetchall()
+
+        conn.close()
+        # Return lists of dicts for easy template use (key names match macro expectations)
+        return {
+            "top": [{"tag": t, "count": c} for t, c in top],
+            "historical": [{"tag": t, "count": c} for t, c in historical]
+        }
+    except Exception as e:
+        print(f"Error fetching tag statistics: {e}")
+        return {"top": [], "historical": []}
+
 
 def get_general_statistics():
     """Get general statistics from the database for public display"""

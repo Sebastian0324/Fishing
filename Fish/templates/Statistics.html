@@ -1,5 +1,5 @@
 {% extends "form.html" %}
-{% from "StatisticsMacro.html" import stats_cards, frequent_sender_cards %}
+{% from "StatisticsMacro.html" import stats_cards, frequent_sender_cards, tag_cards %}
 {% block content %}{% if session.name %}
      
 <div class="page-container">
@@ -237,27 +237,7 @@
 
                     <!-- Common Subject Panel -->
                     <div class="stats-panel" data-panel="subjects">
-                        <div class="stats-panel-two-col">
-                            <!-- Top Column -->
-                            <div class="stats-column">
-                                <div class="content-section">
-                                    <h4 class="section-header"><i class="bi bi-fire"></i> Top</h4>
-                                    <div class="small-data-list">
-                                        <div class="small-data-item"><span class="small-label">"Action Required"</span><span class="small-value">54</span></div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Historical Uploaded Column -->
-                            <div class="stats-column">
-                                <div class="content-section">
-                                    <h4 class="section-header"><i class="bi bi-clock-history"></i> Historical</h4>
-                                    <div class="small-data-list">
-                                        <div class="small-data-item"><span class="small-label">"Update Payment"</span><span class="small-value">47</span></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        {{ tag_cards(common_subjects) }}
                     </div>
 
                     <!-- Most Commented Panel -->

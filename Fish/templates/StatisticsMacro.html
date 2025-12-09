@@ -134,3 +134,46 @@
     </div>
 </div>
 {% endmacro %}
+
+{# Reusable macro to render Tag lists (Top + Historical) - used for Common Subject stats #}
+{% macro tag_cards(common_subjects) %}
+<div class="stats-panel-two-col">
+    <!-- Top Column -->
+    <div class="stats-column">
+        <div class="content-section">
+            <h4 class="section-header"><i class="bi bi-fire"></i> Top</h4>
+            <div class="small-data-list">
+                {% if common_subjects and common_subjects.top %}
+                    {% for item in common_subjects.top %}
+                    <div class="small-data-item">
+                        <span class="small-label">{{ item.tag }}</span>
+                        <span class="small-value">{{ item.count }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="small-data-item"><span class="small-label text-muted">No tags recorded yet</span></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Historical Column -->
+    <div class="stats-column">
+        <div class="content-section">
+            <h4 class="section-header"><i class="bi bi-clock-history"></i> Historical</h4>
+            <div class="small-data-list">
+                {% if common_subjects and common_subjects.historical %}
+                    {% for item in common_subjects.historical %}
+                    <div class="small-data-item">
+                        <span class="small-label">{{ item.tag }}</span>
+                        <span class="small-value">{{ item.count }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="small-data-item"><span class="small-label text-muted">No historical tags found</span></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}

@@ -199,6 +199,15 @@ if (UpForm != null) {
       
       const prevComments = fileInput._preservedComments ?? Array.from(selectedFilesBox.querySelectorAll('.comment-input')).map(t => t.value || '');
       if (fileInput._preservedComments) delete fileInput._preservedComments;
+      
+      // Tag options for dropdowns
+      const tagOptions = [
+        "Account Notice", "Payment/Invoice", "Security Alert", "Password Reset", "Shipping/Delivery",
+        "Subscription", "Promotion/Offer", "Job Alert", "Social Notification", "Banking",
+        "Legal/Policy", "System Alert", "Survey/Feedback", "News/Newsletter", "Authentication",
+        "Two-Factor", "Travel/Booking", "Support/Ticket", "Confirmation/Receipt", "Other"
+      ];
+      
       const items = files.map((f, idx) => {
         const fileNumber = idx + 1;
         const isTooLarge = f.size > MAX_FILE_SIZE;
@@ -235,6 +244,17 @@ if (UpForm != null) {
             </button>
           </div>
           ${isTooLarge ? '<small class="text-danger">File exceeds max size</small>' : ''}
+            </div>
+          </div>
+
+          <div class="mt-2">
+            <label for="tag-${idx}" class="form-label small mb-1" style="color: rgba(238,238,238,0.8);">Category:</label>
+            <div class="d-flex gap-2 align-items-center">
+              <select name="tags[]" id="tag-${idx}" class="form-control form-control-sm flex-grow-1">
+                <option value="">-- Select a category --</option>
+                ${tagOptions.map(tag => `<option value="${tag.replace(/"/g, '&quot;')}">${tag}</option>`).join('')}
+              </select>
+              <span class="suggest-tag-hint small text-muted" data-index="${idx}" style="white-space: nowrap;"></span>
             </div>
           </div>
 
@@ -306,6 +326,20 @@ if (UpForm != null) {
             });
             });
         }
+
+        // Helper: display suggested tag from upload response
+        function displayTagSuggestion(fileIndex, suggestedTag) {
+          const hint = document.querySelector(`.suggest-tag-hint[data-index="${fileIndex}"]`);
+          if (!hint || !suggestedTag) return;
+          hint.textContent = `Suggested: ${suggestedTag}`;
+          hint.style.color = 'rgba(200,220,255,0.9)';
+          // Optionally auto-select the suggested tag in the dropdown
+          const select = document.getElementById(`tag-${fileIndex}`);
+          if (select) {
+            select.value = suggestedTag;
+          }
+        }
+
 
 
   UpForm.onsubmit = async (e) => {
@@ -459,9 +493,34 @@ if (UpForm != null) {
     // Store AI preference globally so it can be accessed by analysis functions
     window.useAI = useAI;
     
+    // Collect tag selections from dropdowns
+    const tagSelects = document.querySelectorAll('select[name="tags[]"]');
+    const selectedTags = Array.from(tagSelects).map(select => select.value || '');
+    
     // Now initiate the upload
     let formData = new FormData(e.target);
-    let respons = await fetch("/upload", { method: "POST", body: formData });
+    // Remove any existing tags[] entries and re-add with selected values
+    // (FormData doesn't let us easily update, so we reconstruct)
+    const files = fileInput.files;
+    const comments = Array.from(document.querySelectorAll('.comment-input')).map(inp => inp.value || '');
+    const useAIVal = useAICheckbox ? useAICheckbox.checked : false;
+    
+    // Create a new FormData with explicit ordering
+    const newFormData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      newFormData.append('file', files[i]);
+    }
+    for (let i = 0; i < comments.length; i++) {
+      newFormData.append('comments[]', comments[i]);
+    }
+    for (let i = 0; i < selectedTags.length; i++) {
+      newFormData.append('tags[]', selectedTags[i]);
+    }
+    if (useAIVal) {
+      newFormData.append('use_ai', '1');
+    }
+    
+    let respons = await fetch("/upload", { method: "POST", body: newFormData });
     let data = await respons.json();
     
     // Handle error response
@@ -476,6 +535,15 @@ if (UpForm != null) {
     window.uploadedFiles = (data.data && data.data.files) || [];
     window.currentFileIndex = 0;
     window.fileAnalysisResults = {}; // Store analysis results per file
+    
+    // Display suggested tags from the upload response (after server processes)
+    if (data.data && data.data.files && Array.isArray(data.data.files)) {
+      data.data.files.forEach((file, idx) => {
+        if (file.data && file.data.suggested_tag) {
+          displayTagSuggestion(idx, file.data.suggested_tag);
+        }
+      });
+    }
     
     // Update the header to show success - render first file and start its analysis
     if (data.success && window.uploadedFiles.length > 0) {
