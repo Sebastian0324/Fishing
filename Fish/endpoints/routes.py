@@ -21,6 +21,12 @@ def Forum():
 def admin():
     stats = get_general_statistics()
     frequent_senders = get_frequent_sender_statistics()
+    
+    # Add admin-specific statistics if user is admin
+    if session.get('name') == 'admin':
+        admin_stats = get_admin_statistics()
+        stats.update(admin_stats)
+    
     return render_template('Statistics.html', stats=stats, frequent_senders=frequent_senders)
 
 def get_frequent_sender_statistics():
@@ -161,6 +167,155 @@ def get_general_statistics():
             "benign_count": 0,
             "total_discussions": 0,
             "total_comments": 0
+        }
+
+def get_admin_statistics():
+    """Get admin-specific statistics including system status and moderation data"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Total uploads (emails)
+        cursor.execute("SELECT COUNT(*) FROM Email")
+        total_uploads = cursor.fetchone()[0]
+        
+        # Active sessions (approximate - count unique users with recent activity)
+        cursor.execute("SELECT COUNT(DISTINCT User_ID) FROM Email WHERE datetime(Received_At) > datetime('now', '-24 hours')")
+        active_sessions = cursor.fetchone()[0]
+        
+        # Phishing emails detected
+        cursor.execute("SELECT COUNT(*) FROM Analysis WHERE Verdict = 'Phishing'")
+        phishing_detected = cursor.fetchone()[0]
+        
+        # Total forum posts
+        cursor.execute("SELECT COUNT(*) FROM Discussion")
+        total_posts = cursor.fetchone()[0]
+        
+        # Total comments
+        cursor.execute("SELECT COUNT(*) FROM Comment")
+        total_comments = cursor.fetchone()[0]
+        
+        # Pending moderations (discussions without any comments could be pending review)
+        cursor.execute("""
+            SELECT COUNT(*) FROM Discussion d
+            LEFT JOIN Comment c ON d.Discussion_ID = c.Discussion_ID
+            WHERE c.Comment_ID IS NULL
+        """)
+        pending_moderations = cursor.fetchone()[0]
+        
+        # Flagged IPs (IPs with phishing or suspicious emails)
+        cursor.execute("""
+            SELECT COUNT(DISTINCT e.Sender_IP)
+            FROM Email e
+            JOIN Analysis a ON e.Email_ID = a.Email_ID
+            WHERE e.Sender_IP IS NOT NULL AND e.Sender_IP != ''
+            AND a.Verdict IN ('Phishing', 'Suspicious')
+        """)
+        flagged_ips = cursor.fetchone()[0]
+        
+        # Get database file size for storage info
+        cursor.execute("SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()")
+        db_size_bytes = cursor.fetchone()[0]
+        db_size_mb = round(db_size_bytes / (1024 * 1024), 2)
+        
+        # Get last analysis timestamp
+        cursor.execute("SELECT MAX(Analyzed_At) FROM Analysis WHERE Analyzed = 1")
+        last_backup = cursor.fetchone()[0]
+        if last_backup:
+            from datetime import datetime
+            try:
+                last_backup_dt = datetime.fromisoformat(last_backup)
+                now = datetime.now()
+                diff = now - last_backup_dt
+                if diff.days > 0:
+                    last_backup = f"{diff.days} days ago"
+                elif diff.seconds > 3600:
+                    last_backup = f"{diff.seconds // 3600} hours ago"
+                else:
+                    last_backup = f"{diff.seconds // 60} minutes ago"
+            except:
+                last_backup = "Recently"
+        else:
+            last_backup = "Never"
+        
+        conn.close()
+        
+        # Check API service status
+        server_status = "Online"  # If this code runs, server is online
+        database_status = "Connected"  # If we got here, DB is connected
+        
+        # Check VirusTotal API
+        virustotal_status = "Disconnected"
+        try:
+            from api.VirusTotal import VirusTotal
+            vt = VirusTotal()
+            if vt.api_key:
+                virustotal_status = "Connected"
+        except:
+            virustotal_status = "Not Configured"
+        
+        # Check AbuseIPDB API
+        abuseipdb_status = "Disconnected"
+        try:
+            from api.AbuseIp import AbuseIPDB
+            abuse = AbuseIPDB()
+            if abuse.api_key:
+                abuseipdb_status = "Connected"
+        except:
+            abuseipdb_status = "Not Configured"
+        
+        # Check LLM Service
+        llm_status = "Disconnected"
+        try:
+            import os
+            llm_key = os.getenv('API_KEY') or os.getenv('API_KEY')
+            if llm_key:
+                llm_status = "Running"
+        except:
+            llm_status = "Not Configured"
+        
+        # API Services status (general)
+        api_services_status = "Active" if any([
+            virustotal_status == "Connected",
+            abuseipdb_status == "Connected",
+            llm_status == "Running"
+        ]) else "Limited"
+        
+        return {
+            "total_uploads": total_uploads,
+            "active_sessions": active_sessions,
+            "phishing_detected": phishing_detected,
+            "total_posts": total_posts,
+            "total_comments": total_comments,
+            "pending_moderations": pending_moderations,
+            "flagged_ips": flagged_ips,
+            "storage_available": f"{db_size_mb} MB",
+            "last_backup": last_backup,
+            "server_status": server_status,
+            "database_status": database_status,
+            "api_services_status": api_services_status,
+            "virustotal_status": virustotal_status,
+            "abuseipdb_status": abuseipdb_status,
+            "llm_status": llm_status
+        }
+    except Exception as e:
+        print(f"Error fetching admin statistics: {e}")
+        return {
+            "total_uploads": 0,
+            "active_sessions": 0,
+            "phishing_detected": 0,
+            "total_posts": 0,
+            "total_comments": 0,
+            "pending_moderations": 0,
+            "flagged_ips": 0,
+            "storage_available": "Unknown",
+            "last_backup": "Unknown",
+            "server_status": "Error",
+            "database_status": "Error",
+            "api_services_status": "Error",
+            "virustotal_status": "Error",
+            "abuseipdb_status": "Error",
+            "llm_status": "Error"
         }
 
 @bp_ui.route('/Account')
