@@ -23,8 +23,33 @@
                 <a class="nav-link" href="/AboutUs">About Us</a>
             </div>
         </div>
-        {% if session.name %}<button id="Logout_btn" class="btn btn-light"><i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>Logout</button>
-        {% else %}<button id="Login_btn" class="btn btn-light"><i class="bi bi-box-arrow-in-right me-2" aria-hidden="true"></i>Login</button>{% endif %}
+      
+        <!-- Download dropdown + Login/Logout buttons -->
+<div class="d-flex gap-2 align-items-center">
+    <!-- Download dropdown -->
+    <div class="dropdown me-2">
+        <button id="download_btn" class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            Download
+        </button>
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" id="downloadEmails">Download Emails</a></li>
+            <li><a class="dropdown-item" href="#" id="downloadAnalysis">Download Analysis</a></li>
+            <li><a class="dropdown-item" href="#" id="downloadBoth">Download Emails & Analysis</a></li>
+        </ul>
+    </div>
+
+    <!-- Login / Logout button -->
+    {% if session.name %}
+        <button id="Logout_btn" class="btn btn-light">
+            <i class="bi bi-box-arrow-right me-2"></i>Logout
+        </button>
+    {% else %}
+        <button id="Login_btn" class="btn btn-light">
+            <i class="bi bi-box-arrow-in-right me-2"></i>Login
+        </button>
+    {% endif %}
+</div>
+
     </nav>
     <div id="LoginContainer">
         <div id="Login" class="centered colored-boarder">
@@ -92,5 +117,19 @@
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <!-- Bootstrap JS + Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Download Error Popup Modal -->
+<div class="modal fade" id="downloadErrorModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Download Unavailable</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="downloadErrorMessage"></div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

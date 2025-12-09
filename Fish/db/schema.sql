@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS User(
     User_ID INTEGER PRIMARY KEY AUTOINCREMENT,
     Username TEXT NOT NULL,
-    Password_Hash TEXT NOT NULL
+    Password_Hash TEXT NOT NULL,
+    Profile_picture BLOB
 );
 
 
@@ -93,7 +94,6 @@ VALUES (1, 'anonymous', '!!SYSTEM!!');
 INSERT OR IGNORE INTO User (User_ID, Username, Password_Hash)
 VALUES (0, 'deleted user', '!!SYSTEM!!');
 
--- Test acc. remove this
 INSERT OR IGNORE INTO User (User_ID, Username, Password_Hash)
-VALUES (2, 'test', '28f9769820918857e4ae2b4e91a41d8624d58fd926f7c3678732d69740c5684db562accf252cb8cd06bc4965186f9d6d5c5c5235c2ebede586d6526bcb3fcd92');
--- user: test, pass: t
+VALUES (2, 'admin', '$2b$12$g7Dudw0Bo9YK5aNhLzbVU.G921DkziQ71jEHBKEf49la42LrRUEda');
+-- name: admin    pass: damin
