@@ -1963,6 +1963,7 @@ function toggleSettings() {
 // -------========-------    Forum Page    -------========-------
 
 const newForum = document.getElementById("new-forum");
+const Forum = document.getElementById("forum-main");
 if (newForum) {
   newForum.addEventListener("click", async function(e) {
     try {
@@ -1982,6 +1983,11 @@ if (newForum) {
       alert("An error occurred while conecting to the back end.");
     }
   });
+
+  let ForumPosts = document.getElementsByClassName("topic-item")
+  for (let i = 0; i < ForumPosts.length; i++) {
+    ForumPosts[i].addEventListener("click", ShowForum);
+  }
 }
 
 function DeletForumCreator() {
@@ -2005,34 +2011,29 @@ async function CreateForum(e) {
   }
 }
 
-// Forum Page (placeholder data)
-const discussions = { /* ... unchanged ... */ };
-const topicItems = document.querySelectorAll(".topic-item");
-topicItems.forEach((item) => {
-  item.addEventListener("click", function () {
-    topicItems.forEach((i) => i.classList.remove("active"));
-    this.classList.add("active");
-    const title = this.querySelector(".discussion-title").textContent;
-    const discussion = discussions[title];
-    if (discussion) {
-      const discussionHTML = `
-        <div class="discussion-header">
-          <h2 class="discussion-title-large">${title}</h2>
-          <p class="topic-meta">Posted by ${discussion.author} • ${discussion.time}</p>
-          <div class="discussion-stats">
-            <span class="stat-item"> ${discussion.replies} replies</span>
-            <span class="stat-item"> ${discussion.likes} likes</span>
-          </div>
-        </div>
-        <div class="discussion-body">${discussion.content}</div>
-        <div class="reply-section">
-          <h3>Replies</h3>
-          <p class="placeholder-text">Discussion replies would appear here...</p>
-        </div>`;
-      document.getElementById("discussion-content").innerHTML = discussionHTML;
-    }
-  });
-});
+async function ShowForum(e) {
+  e.preventDefault()
+
+  id = this.value;
+  try {
+    const response = await fetch("/Get_Forum", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ post_id: id })
+    });
+
+    const data = await response.json();
+    console.log(data["Forum"]);
+    Forum.children[0].innerHTML = `
+    <h2>` + data["Forum"][0] + `</h2>
+    <p>` + data["Forum"][1] + `</p>
+    `;
+    
+  } catch (err) {
+    console.error(err);
+    alert("An error occurred while conecting to the back end.");
+  }
+}
 
 // -------========-------    Reanalyze Modal Functions    -------========-------
 let pendingReanalyzeId = null;
@@ -2306,5 +2307,5 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!data.hasAnalysis) return showMessage("No analyses to download.");
             window.location.href = "/download/both";
         });
-    }
+  }
 });

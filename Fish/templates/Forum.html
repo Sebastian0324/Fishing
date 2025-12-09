@@ -13,8 +13,8 @@
                     <div class="placeholder-content">
                         <ul class="topic-list">
                             <!-- for each disc in Query -->
-                            {% for title, Created, nr_comments in post %}
-                            <li class="topic-item">
+                            {% for id, title, Created, nr_comments in post %}
+                            <li class="topic-item" value="{{ id }}">
                                 <h2 class="discussion-title">{{ title }}</h2>
                                 <p class="topic-meta">Posted {{ Created }} ago • {{ nr_comments }} replies</p>
                             </li>
@@ -46,7 +46,7 @@
             </div>
             
             <!-- Right Column: Discussion View -->
-            <div class="forum-main">
+            <div id="forum-main">
                 <!-- Current Topic View -->
                 <div class="content-section discussion-view">
                     <div id="discussion-content">
