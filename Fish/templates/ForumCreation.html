@@ -1,20 +1,34 @@
-<div id="CreateForumBackdrop" class='backdrop'>
-    <div id="CreateForum" class="centered colored-boarder">
-        <h1 class="page-title">Create a Forum Post</h1>
-        <button id="Close" type="button" class="btn btn-secondary">X</button>
-        <form method="Post" enctype="multipart/form-data" id="SubmitForum" action="/Forum_Creation">
-            <label for="Selected-email">Select a Email for the Forum post</label>
-            <input list="emails" name="Selected-email" id="Selected-email" autocomplete="off" placeholder="Select an email" required>
-            <datalist id="emails">
+<div id="CreateForumBackdrop" class="backdrop">
+    <div id="CreateForum" class="centered colored-border">
+
+        <button id="Close" type="button" class="close-btn">✕</button>
+        <h1 class="page-title">Create a Discussion</h1>
+
+        <form method="POST" enctype="multipart/form-data" id="SubmitForum" action="/Forum_Creation">
+
+            <!-- SELECT EMAIL -->
+            <label for="Selected-email" class="input-label">Select an Email for the Forum Post</label>
+            <select name="Selected-email" id="Selected-email" class="forum-input" required>
+                <option value="" disabled selected>Select an email</option>
                 {% for eml_id, title in emails %}
-                    <option value="{{eml_id}}">{{ title }}</option>
+                    <option value="{{ eml_id }}">{{ title }}</option>
                 {% endfor %}
-            </datalist>
-            Gör det till en drop down menu
-            <input type="text" name="title" placeholder="Give the post a titl" required> Välj titel till forumet
-            <input type="text" name="description" required> Skriv lite text till forumet
+            </select>
+
+            <!-- TITLE -->
+            <label for="forum-title" class="input-label">Forum Title</label>
+            <input type="text" id="forum-title" name="title"
+                   class="forum-input"
+                   placeholder="Give the post a title" required>
+
+            <!-- DESCRIPTION -->
+            <label for="forum-description" class="input-label">Forum Description</label>
+            <textarea id="forum-description" name="description"
+                      class="forum-input textarea"
+                      placeholder="Write something for the forum…" required></textarea>
+
+            <!-- SUBMIT -->
             <button type="submit" class="submit-btn">Submit</button>
         </form>
-
     </div>
 </div>

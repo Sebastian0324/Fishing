@@ -9,39 +9,27 @@
             <!-- Left Column: Topics List -->
             <div class="forum-sidebar">
                 <div class="content-section">
-                    <h3 class="section-header">Topics</h3>
                     <div class="placeholder-content">
+                        <div class="topic-header">
+                            <div class="header-with-close">
+                                <h3 class="section-header">Discussions</h3>
+
+                                {% if session.name %}
+                                <button id="new-forum" class="new-discussion-btn">
+                                    <i class="bi bi-plus-circle"></i> New
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
                         <ul class="topic-list">
-                            <!-- for each disc in Query -->
                             {% for id, title, Created, nr_comments in post %}
                             <li class="topic-item" value="{{ id }}">
                                 <h2 class="discussion-title">{{ title }}</h2>
                                 <p class="topic-meta">Posted {{ Created }} ago • {{ nr_comments }} replies</p>
                             </li>
                             {% endfor %}
-                            <!-- <li class="topic-item">
-                                <h2 class="discussion-title">Discussion 1</h2>
-                                <p class="topic-meta">Posted (x) time ago • (x) replies</p>
-                            </li>
-                            <li class="topic-item">
-                                <h2 class="discussion-title">Discussion 2</h2>
-                                <p class="topic-meta">Posted (x) time ago • (x) replies</p>
-                            </li>
-                            <li class="topic-item">
-                                <h2 class="discussion-title">Discussion 3</h2>
-                                <p class="topic-meta">Posted (x) time ago • (x) replies</p>
-                            </li>
-                            <li class="topic-item">
-                                <h2 class="discussion-title">Discussion 4</h2>
-                                <p class="topic-meta">Posted (x) time ago • (x) replies</p>
-                            </li>
-                            <li class="topic-item">
-                                <h2 class="discussion-title">Discussion 5</h2>
-                                <p class="topic-meta">Posted (x) time ago • (x) replies</p>
-                            </li> -->
                         </ul>
                     </div>
-                    <button id="new-forum">+</button>
                 </div>
             </div>
             

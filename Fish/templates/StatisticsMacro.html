@@ -1,5 +1,7 @@
-{# Reusable macro for general statistics cards #}
 {% macro stats_cards(stats) %}
+<div style="text-align:center;">
+  <h5>General Metrics about Angler</h5>
+</div>
 <div class="stats-grid">
     <!-- Platform Activity -->
     <div class="stat-card">
@@ -54,10 +56,9 @@
 </div>
 {% endmacro %}
 
-{# Reusable macro for frequent sender statistics #}
 {% macro frequent_sender_cards(frequent_senders) %}
 <div style="text-align:center;">
-  <h5>Email senders can be faked through relays. Do not solely rely on the displayed addresses.</h5>
+  <h5>Email senders can be faked through relays. Do not solely rely on the displayed addresses</h5>
 </div>
 <div class="stats-grid">
     <!-- Summary Cards -->
@@ -175,5 +176,27 @@
             </div>
         </div>
     </div>
+</div>
+{% endmacro %}
+
+{% macro most_commented_cards(most_commented) %}
+<div style="text-align:center;">
+  <h5>Which phishing emails have the most comments?</h5>
+</div>
+<div class="most-commented-list">
+    {% if most_commented.top_commented_emails %}
+        {% for subject, count in most_commented.top_commented_emails %}
+        <div class="most-commented-item {% if count >= 5 %}high-comment{% endif %}">
+            <div style="flex: 1;">
+                <div class="discussion-title"><i class="bi bi-envelope-fill" style="margin-right: 0.5em; color: #6E5DC6;"></i>{{ subject }}</div>
+                <span class="comment-count"><i class="bi bi-chat-dots-fill"></i>{{ count }} comments</span>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="most-commented-item">
+            <span class="text-muted">No comments recorded yet</span>
+        </div>
+    {% endif %}
 </div>
 {% endmacro %}

@@ -1,5 +1,5 @@
 {% extends "form.html" %}
-{% from "StatisticsMacro.html" import stats_cards, frequent_sender_cards, tag_cards %}
+{% from "StatisticsMacro.html" import stats_cards, frequent_sender_cards, tag_cards, most_commented_cards %}
 {% block content %}{% if session.name %}
      
 <div class="page-container">
@@ -208,61 +208,14 @@
                     </div>
                     {% endif %}
 
-                    <!-- Frequent Receiver Panel -->
-                    <div class="stats-panel" data-panel="receivers">
-                        <div class="stats-panel-two-col">
-                            <!-- Top Column -->
-                            <div class="stats-column">
-                                <div class="content-section">
-                                    <h4 class="section-header"><i class="bi bi-fire"></i> Top</h4>
-                                    <div class="small-data-list">
-                                        <div class="small-data-item"><span class="small-label">user 1 </span><span class="small-value">11</span></div>
-                                        <div class="small-data-item"><span class="small-label">user 2</span><span class="small-value">10</span></div>
-                                   
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Historical Uploaded Column -->
-                            <div class="stats-column">
-                                <div class="content-section">
-                                    <h4 class="section-header"><i class="bi bi-clock-history"></i> Historical</h4>
-                                    <div class="small-data-list">
-                                        <div class="small-data-item"><span class="small-label">Test</span><span class="small-value">156</span></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <!-- Most Commented Panel -->
+                    <div class="stats-panel" data-panel="comments">
+                        {{ most_commented_cards(most_commented) }}
                     </div>
 
                     <!-- Common Subject Panel -->
                     <div class="stats-panel" data-panel="subjects">
                         {{ tag_cards(common_subjects) }}
-                    </div>
-
-                    <!-- Most Commented Panel -->
-                    <div class="stats-panel" data-panel="comments">
-                        <div class="stats-panel-two-col">
-                            <!-- Top Column -->
-                            <div class="stats-column">
-                                <div class="content-section">
-                                    <h4 class="section-header"><i class="bi bi-fire"></i> Top</h4>
-                                    <div class="small-data-list">
-                                        <div class="small-data-item"><span class="small-label">Vendor invoice fraud</span><span class="small-value">18</span></div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Historical Uploaded Column -->
-                            <div class="stats-column">
-                                <div class="content-section">
-                                    <h4 class="section-header"><i class="bi bi-clock-history"></i> Historical</h4>
-                                    <div class="small-data-list">
-                                        <div class="small-data-item"><span class="small-label">Social engineering techniques</span><span class="small-value">31</span></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

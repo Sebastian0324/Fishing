@@ -773,14 +773,6 @@ tbody tr:nth-child(odd) {
     top: 2em;
 }
 
-
-/* Right main area for discussion */
-#new-forum {
-    position: absolute;
-    bottom: 3em;
-    right: 3em;
-}
-
 #CreateForum {
     width: 75%;
     height: 80%;
@@ -793,6 +785,110 @@ tbody tr:nth-child(odd) {
     padding: 0;
     margin: 1em 0 0 0;
 }
+
+.new-discussion-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0.2em 0.75em;
+    margin-bottom: 1em;
+    background: linear-gradient(135deg, #6E5DC6, #a05182);
+    color: white;
+    border: none;
+    border-radius: 0.5em;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 2px rgba(110, 93, 198, 0.4);
+}
+
+/* Modal */
+#CreateForum {
+    width: 70%;
+    max-width: 700px;
+    padding: 3em 4em;
+    background: linear-gradient(color-mix(in srgb, var(--BC), #000000cc), color-mix(in srgb, var(--BC), #000000cc)) padding-box, var(--BG_IMG) border-box;
+    border-radius: 1em;
+    border: 2px solid rgba(110, 93, 198, 0.5);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    position: relative;
+    justify-content: space-between;
+}
+
+/* Close button */
+.close-btn {
+    position: absolute;
+    top: 1.2em;
+    right: 1.2em;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    padding: 0.3em 0.6em;
+    border-radius: 0.5em;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.close-btn:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+/* Labels */
+.input-label {
+    display: block;
+    margin-top: 1.2em;
+    margin-bottom: 0.4em;
+    font-size: 1rem;
+    color: var(--Text_Color);
+    font-weight: 600;
+}
+
+/* Inputs */
+.forum-input {
+    width: 100%;
+    padding: 0.8em 1em;
+    font-size: 1rem;
+    color: white;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(110, 93, 198, 0.4);
+    border-radius: 0.6em;
+    outline: none;
+    transition: 0.25s ease;
+}
+
+.forum-input:focus {
+    border-color: #6E5DC6;
+    background: rgba(255,255,255,0.12);
+}
+
+/* Textarea */
+.textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* Submit button */
+.submit-btn {
+    margin-top: 2em;
+    width: 100%;
+    padding: 0.9em 1.5em;
+    background: linear-gradient(135deg, #6E5DC6, #a05182);
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 0.6em;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(110, 93, 198, 0.4);
+    transition: 0.25s ease;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(110, 93, 198, 0.6);
+}
+
 
 .topic-item {
     background-color: rgba(255, 255, 255, 0.05);
@@ -1950,3 +2046,59 @@ main h1 {
         grid-template-columns: 1fr;
     }
 }
+
+/* ########################################### */
+/* #######    Most Commented CSS     ######### */
+/* ########################################### */
+
+.most-commented-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    margin-top: 1em;
+    width: 100%;
+}
+.most-commented-item {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 0.5em;
+    padding: 1.2em 1.5em;
+    transition: all 0.2s ease;
+    border-left: 4px solid transparent;
+    width: 100%;
+}
+.most-commented-item:hover {
+    background: rgba(110, 93, 198, 0.1);
+    transform: translateX(3px);
+}
+.most-commented-item.high-comment {
+    border-left-color: #a05182;
+}
+
+.most-commented-item .discussion-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--Text_Color);
+    margin: 0 0 0.5em 0;
+}
+.most-commented-item .comment-count {
+    font-size: 0.9rem;
+    color: rgba(238, 238, 238, 0.7);
+    font-weight: 500;
+    background: rgba(110, 93, 198, 0.2);
+    padding: 0.2em 0.6em;
+    border-radius: 0.3em;
+}
+.most-commented-item .comment-count i {
+    margin-right: 0.4em;
+    color: #a05182;
+}
+@media (max-width: 600px) {
+    .most-commented-item .discussion-title {
+        font-size: 1rem;
+    }
+}
+/* ################################## */
+/* #########    End of File   ######### */
+/* ################################## */

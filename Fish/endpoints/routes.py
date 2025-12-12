@@ -27,7 +27,8 @@ def admin():
         stats.update(admin_stats)
     frequent_senders = get_frequent_sender_statistics()
     common_subjects = get_common_subjects_statistics()  # aggregates by Email.Tag (categories)
-    return render_template('Statistics.html', stats=stats, frequent_senders=frequent_senders, common_subjects=common_subjects)
+    most_commented = get_most_commented_statistics()
+    return render_template('Statistics.html', stats=stats, frequent_senders=frequent_senders, common_subjects=common_subjects, most_commented=most_commented)
 
 def get_frequent_sender_statistics():
     """Get frequent sender IP statistics from the database"""
@@ -360,6 +361,31 @@ def get_admin_statistics():
             "abuseipdb_status": "Error",
             "llm_status": "Error"
         }
+
+def get_most_commented_statistics():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            SELECT e.Title, COUNT(c.Comment_ID) AS comment_count
+            FROM Email e
+            JOIN Discussion d ON e.Email_ID = d.Email_ID
+            JOIN Comment c ON d.Discussion_ID = c.Discussion_ID
+            GROUP BY e.Email_ID, e.Title
+            ORDER BY comment_count DESC
+            LIMIT 10
+        """)
+        rows = cursor.fetchall()
+        return {
+            "top_commented_emails": [(title, count) for (title, count) in rows]
+        }
+
+    except Exception as e:
+        print(f"Error fetching most commented statistics: {e}")
+        return {"top_commented_emails": []}
+
+    finally:
+        conn.close()
 
 @bp_ui.route('/Account')
 def account():
