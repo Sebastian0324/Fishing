@@ -2067,17 +2067,21 @@ async function CreateForum(e) {
   try {
     let ForumData = new FormData(e.target);
     const response = await fetch("/Forum_Creation", {
-      method: "POST", body: ForumData
+      method: "POST",
+      body: ForumData
     });
-    const data = await response.json();
-    const page = document.body;
 
-    
+    const data = await response.json();
+
+    DeletForumCreator();
+    location.reload();
+
   } catch (err) {
     console.error(err);
-    alert("An error occurred while conecting to the back end.");
+    alert("An error occurred while connecting to the back end.");
   }
 }
+
 
 async function ShowForum(e) {
   e.preventDefault()
