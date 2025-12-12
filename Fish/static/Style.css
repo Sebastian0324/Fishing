@@ -1270,6 +1270,192 @@ tbody tr:nth-child(odd) {
     font-weight: 600;
 }
 
+/* Email Display Section in Forum */
+/* View Email Button */
+.view-email-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.6em 1em;
+    background: linear-gradient(135deg, rgba(110, 93, 198, 0.3), rgba(160, 81, 130, 0.3));
+    border: 1px solid rgba(110, 93, 198, 0.5);
+    border-radius: 0.5em;
+    color: var(--Text_Color);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.view-email-btn:hover {
+    background: linear-gradient(135deg, rgba(110, 93, 198, 0.5), rgba(160, 81, 130, 0.5));
+    border-color: rgba(110, 93, 198, 0.8);
+    transform: translateY(-1px);
+}
+
+.view-email-btn i {
+    font-size: 1.1em;
+}
+
+/* Email Modal */
+.email-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.email-modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+}
+
+.email-modal-content {
+    position: relative;
+    width: 95%;
+    max-width: 1000px;
+    max-height: 100vh;
+    background: var(--Box_Bg);
+    border: 3px solid var(--Text_Color);
+    border-radius: 1em;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.email-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1em 1.5em;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg, rgba(110, 93, 198, 0.2), rgba(160, 81, 130, 0.2));
+}
+
+.email-modal-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: var(--Text_Color);
+}
+
+.email-modal-close {
+    background: transparent;
+    border: none;
+    color: var(--Text_Color);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.3em;
+    border-radius: 0.3em;
+    transition: background 0.2s ease;
+}
+
+.email-modal-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.email-modal-content .email-metadata {
+    margin: 1em 1.5em;
+    border-radius: 0.5em;
+}
+
+.email-modal-content .email-body-container {
+    flex: 1;
+    margin: 0 1.5em;
+    min-height: 300px;
+    overflow: hidden;
+}
+
+.email-modal-content .email-iframe {
+    width: 100%;
+    height: 100%;
+    min-height: 350px;
+}
+
+.email-modal-content .email-warning {
+    margin: 1em 1.5em 1.5em;
+}
+
+/* Keep existing styles for inline display if needed */
+.email-display-section {
+    margin-top: 2em;
+    padding-top: 1.5em;
+    border-top: 2px solid rgba(110, 93, 198, 0.3);
+}
+
+.email-section-title {
+    font-size: 1.3rem;
+    color: var(--Text_Color);
+    margin-bottom: 1em;
+    font-weight: 600;
+}
+
+.email-metadata {
+    background: linear-gradient(135deg, rgba(110, 93, 198, 0.1), rgba(160, 81, 130, 0.1));
+    border: 1px solid rgba(110, 93, 198, 0.2);
+    border-radius: 0.5em;
+    padding: 1em 1.5em;
+    margin-bottom: 1em;
+}
+
+.email-meta-row {
+    display: flex;
+    gap: 0.8em;
+    padding: 0.4em 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.email-meta-row:last-child {
+    border-bottom: none;
+}
+
+.email-meta-label {
+    font-weight: 600;
+    color: #a05182;
+    min-width: 70px;
+    flex-shrink: 0;
+}
+
+.email-meta-value {
+    color: var(--Text_Color);
+    word-break: break-word;
+}
+
+.email-body-container {
+    background: #ffffff;
+    border: 1px solid rgba(110, 93, 198, 0.3);
+    border-radius: 0.5em;
+    overflow: hidden;
+    margin-bottom: 0.8em;
+}
+
+.email-iframe {
+    width: 100%;
+    min-height: 400px;
+    border: none;
+    background: #ffffff;
+}
+
+.email-warning {
+    font-size: 0.85rem;
+    color: rgba(238, 238, 238, 0.7);
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 0.4em;
+    padding: 0.6em 1em;
+    text-align: center;
+}
+
 .reply-section {
     margin-top: 3em;
     padding-top: 2em;

@@ -13,8 +13,8 @@ from pathlib import Path
 import sqlite3
 
 # Single source of truth for paths
-DB_PATH = "db/emails.db"
-SCHEMA_PATH = "db/schema.sql"
+DB_PATH = "Fish/db/emails.db"
+SCHEMA_PATH = "Fish/db/schema.sql"
 
 # ---------------------- DB init ----------------------
 
@@ -188,7 +188,7 @@ def clean_text(text: str | None) -> str:
     out = re.sub(r"[ \t]+", " ", out)
     return out.strip()
 
-def _extract_body(msg, prefer_plain: bool = True) -> dict:
+def _extract_body(msg, prefer_plain: bool = True, include_raw_html: bool = False) -> dict:
     plain_parts, html_parts = [], []
     if msg.is_multipart():
         for part in msg.walk():
@@ -234,7 +234,10 @@ def _extract_body(msg, prefer_plain: bool = True) -> dict:
 
     body_urls = extract_urls(body_text)
     all_urls = list(dict.fromkeys(body_urls + html_links))
-    return {"text": body_text, "format": body_fmt, "html_links": all_urls}
+    result = {"text": body_text, "format": body_fmt, "html_links": all_urls}
+    if include_raw_html:
+        result["raw_html"] = html_text
+    return result
 
 # -------------------- Public parsing API --------------------
 
@@ -304,6 +307,97 @@ def generate_email_body(parsed_email: dict) -> str:
     parts.append("\nEmail body:\n")
     parts.append(body_text)
     return "\n\n".join(parts)
+
+def sanitize_html_for_display(html: str) -> str:
+    """
+    Sanitize HTML for safe display in forum:
+    - Remove scripts, event handlers, forms
+    - Convert links to non-clickable spans
+    - Keep images (external URLs load normally)
+    """
+    import bleach
+    
+    # Allowed tags - keep visual elements, remove dangerous ones
+    ALLOWED_TAGS = [
+        'p', 'br', 'div', 'span', 'table', 'tr', 'td', 'th', 'thead', 'tbody',
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'b', 'em', 'i', 'u',
+        'ul', 'ol', 'li', 'img', 'hr', 'blockquote', 'pre', 'code',
+        'font', 'center', 'a', 'style', 'head', 'body', 'html'
+    ]
+    
+    ALLOWED_ATTRS = {
+        '*': ['style', 'class', 'id'],
+        'img': ['src', 'alt', 'width', 'height'],
+        'a': ['href', 'title'],
+        'td': ['colspan', 'rowspan', 'width', 'height', 'align', 'valign', 'bgcolor'],
+        'th': ['colspan', 'rowspan', 'width', 'height', 'align', 'valign', 'bgcolor'],
+        'table': ['width', 'height', 'border', 'cellpadding', 'cellspacing', 'bgcolor', 'align'],
+        'font': ['color', 'size', 'face'],
+        'body': ['bgcolor', 'background'],
+    }
+    
+    # First pass: bleach sanitization
+    cleaned = bleach.clean(html, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS, strip=True)
+    
+    # Second pass: neutralize links (convert <a> to <span>)
+    cleaned = re.sub(
+        r'<a\s+[^>]*href=["\']([^"\']*)["\'][^>]*>(.*?)</a>',
+        r'<span class="neutralized-link" title="URL: \1">\2</span>',
+        cleaned,
+        flags=re.IGNORECASE | re.DOTALL
+    )
+    
+    # Also handle <a> tags without quotes around href
+    cleaned = re.sub(
+        r'<a\s+[^>]*href=([^\s>]+)[^>]*>(.*?)</a>',
+        r'<span class="neutralized-link" title="URL: \1">\2</span>',
+        cleaned,
+        flags=re.IGNORECASE | re.DOTALL
+    )
+    
+    return cleaned
+
+
+def extract_email_for_display(eml_bytes: bytes) -> dict:
+    """
+    Extract email content for safe display in forum.
+    Returns metadata + sanitized HTML body.
+    """
+    try:
+        msg = _parse_message(eml_bytes)
+    except Exception as e:
+        return {"error": str(e), "valid": False}
+    
+    # Get metadata
+    sender = extract_sender_info(msg)
+    subject = (msg.get("Subject") or "").strip('" ').strip() or "No Subject"
+    date = msg.get("Date") or "Unknown Date"
+    
+    # Get body with raw HTML
+    body = _extract_body(msg, prefer_plain=False, include_raw_html=True)
+    
+    # Sanitize HTML (neutralize links, remove scripts)
+    raw_html = body.get("raw_html")
+    if raw_html:
+        sanitized_html = sanitize_html_for_display(raw_html)
+    else:
+        # Fallback: wrap plain text in pre tag
+        plain_text = body.get("text", "")
+        # Escape HTML entities in plain text
+        import html
+        escaped = html.escape(plain_text)
+        sanitized_html = f"<pre style='white-space: pre-wrap; font-family: inherit;'>{escaped}</pre>"
+    
+    return {
+        "valid": True,
+        "from_email": sender.get("email"),
+        "from_name": sender.get("name"),
+        "subject": subject,
+        "date": date,
+        "html_body": sanitized_html,
+        "is_html": raw_html is not None
+    }
+
 
 def generate_llm_body(parsed_email):
     """

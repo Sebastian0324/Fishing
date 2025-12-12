@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import sqlite3
 import html
 
-from static.Helper_eml import DB_PATH
+from static.Helper_eml import DB_PATH, extract_email_for_display
 
 bp_forum = Blueprint('bp_forum', __name__)
 
@@ -199,6 +199,12 @@ def GetForum():
 
         post = [q[0], q[1], q[2], q[3], q[4]]
         
+        # Parse the email for display (Eml_file is at index 5)
+        eml_bytes = q[5]
+        email_display = None
+        if eml_bytes:
+            email_display = extract_email_for_display(eml_bytes)
+        
         # User info
         import base64
         profile_pic = None
@@ -225,8 +231,11 @@ def GetForum():
 
     return jsonify({
     "success": True,
+    "status_code": 200,
+    "message": "Creation complete",
     "Forum": post,
     "user": user_info,
+    "email": email_display,
     "is_owner": is_owner,
     "discussion_id": post_id,
     "is_logged_in": bool(session.get("user_id"))

@@ -1,3 +1,20 @@
+// -------========-------    Utility Functions    -------========-------
+
+/**
+ * Escape HTML special characters to prevent XSS attacks
+ * @param {string} str - The string to escape
+ * @returns {string} - The escaped string safe for HTML insertion
+ */
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 // -------========------- Forum Tag Filter Dropdown =======--------
 document.addEventListener("DOMContentLoaded", function() {
   const tagFilter = document.getElementById("tag-filter");
@@ -2199,13 +2216,16 @@ async function ShowForum(e) {
       ? `data:image/png;base64,${user.profile_picture}` 
       : '/static/default_profile.png';
     
+    // Escape user-controlled data to prevent XSS
+    const safeUsername = escapeHtml(user.username);
+    
     const userInfoHTML = `
       <div class="discussion-user-info">
         <div class="user-avatar">
-          <img src="${profilePicSrc}" alt="${user.username}'s avatar">
+          <img src="${profilePicSrc}" alt="${safeUsername}'s avatar">
         </div>
         <div class="user-details">
-          <span class="user-name">${user.username}</span>
+          <span class="user-name">${safeUsername}</span>
           <span class="user-label">Author</span>
         </div>
       </div>
@@ -2222,23 +2242,95 @@ async function ShowForum(e) {
     const tagHTML = tag
       ? `<div class="discussion-tag"><span class="badge bg-secondary">${tag}</span></div>`
       : "";
+    
+    // Build email modal if email data exists
+    let viewEmailButtonHTML = '';
+    let emailModalHTML = '';
+    if (data["email"] && data["email"].valid) {
+      const email = data["email"];
+      
+      // Escape all email metadata to prevent XSS
+      const safeFromName = escapeHtml(email.from_name);
+      const safeFromEmail = escapeHtml(email.from_email);
+      const safeSubject = escapeHtml(email.subject);
+      const safeDate = escapeHtml(email.date);
+      
+      // Build the "From" display safely
+      const fromDisplay = safeFromName 
+        ? `${safeFromName} &lt;${safeFromEmail}&gt;` 
+        : (safeFromEmail || 'Unknown');
+      
+      // Button to open the email modal
+      viewEmailButtonHTML = `
+        <button class="view-email-btn" title="View the email being discussed">
+          <i class="bi bi-envelope"></i>
+          <span>View Email</span>
+        </button>
+      `;
+      
+      emailModalHTML = `
+        <div id="EmailModal" class="email-modal" style="display: none;">
+          <div class="email-modal-backdrop"></div>
+          <div class="email-modal-content">
+            <div class="email-modal-header">
+              <button class="email-modal-close" title="Close">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+            <div class="email-metadata">
+              <div class="email-meta-row">
+                <span class="email-meta-label">From:</span>
+                <span class="email-meta-value">${fromDisplay}</span>
+              </div>
+              <div class="email-meta-row">
+                <span class="email-meta-label">Subject:</span>
+                <span class="email-meta-value">${safeSubject || 'No Subject'}</span>
+              </div>
+              <div class="email-meta-row">
+                <span class="email-meta-label">Date:</span>
+                <span class="email-meta-value">${safeDate || 'Unknown'}</span>
+              </div>
+            </div>
+            <div class="email-body-container">
+              <iframe 
+                class="email-iframe"
+                sandbox="allow-same-origin"
+                srcdoc=""
+              ></iframe>
+            </div>
+            <div class="email-warning">
+              ⚠️ Links in this email have been disabled for your safety. Hover over links to see their original URLs.
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Store email body for later use
+      window.currentEmailBody = email.html_body;
+    }
+    
+    // Escape forum title and body text
+    const safeTitle = escapeHtml(data["Forum"][0]);
+    const safeBody = escapeHtml(data["Forum"][1]);
 
     Forum.children[0].innerHTML = `
       <div class="discussion-header">
         <div class="discussion-title-row">
           <div>
-            <h2>${data["Forum"][0]}</h2>
+            <h2>${safeTitle}</h2>
             ${tagHTML}
           </div>
           <div class="discussion-right-group">
+            ${viewEmailButtonHTML}
             ${userInfoHTML}
             ${deleteButtonHTML}
           </div>
         </div>
       </div>
       <div class="discussion-body">
-        <p>` + data["Forum"][1] + `</p>
+        <p>${safeBody}</p>
       </div>
+      ${emailModalHTML}
       <div class="comments-section">
   <h3 class="comments-title">Comments</h3>
 
@@ -2266,6 +2358,15 @@ async function ShowForum(e) {
     `;
 await loadComments(id);
 
+
+    // Setup email modal handlers
+    const viewEmailBtn = Forum.querySelector(".view-email-btn");
+    if (viewEmailBtn) {
+      viewEmailBtn.addEventListener("click", function(e) {
+        e.preventDefault();
+        openEmailModal();
+      });
+    }
 
     const delBtn = Forum.querySelector(".delete-discussion-btn");
     if (delBtn) {
@@ -2698,6 +2799,58 @@ document.addEventListener("input", function (e) {
     counter.classList.remove("over-limit");
   }
 });
+
+// -------========-------    Email Modal Functions    -------========-------
+
+function openEmailModal() {
+  const modal = document.getElementById("EmailModal");
+  if (!modal) return;
+  
+  modal.style.display = "flex";
+  
+  // Set up the iframe content when modal opens
+  const iframe = modal.querySelector('.email-iframe');
+  if (iframe && window.currentEmailBody) {
+    const linkStyles = `
+      <style>
+        .neutralized-link {
+          color: #0066cc;
+          text-decoration: underline;
+          cursor: default;
+        }
+        .neutralized-link:hover {
+          color: #004499;
+        }
+        body {
+          font-family: Arial, sans-serif;
+          padding: 10px;
+          margin: 0;
+          background: white;
+          color: #333;
+        }
+      </style>
+    `;
+    iframe.srcdoc = linkStyles + window.currentEmailBody;
+  }
+  
+  // Set up close handlers
+  const closeBtn = modal.querySelector('.email-modal-close');
+  const backdrop = modal.querySelector('.email-modal-backdrop');
+  
+  if (closeBtn) {
+    closeBtn.onclick = closeEmailModal;
+  }
+  if (backdrop) {
+    backdrop.onclick = closeEmailModal;
+  }
+}
+
+function closeEmailModal() {
+  const modal = document.getElementById("EmailModal");
+  if (modal) {
+    modal.style.display = "none";
+  }
+}
 
 // -------========-------    Delete Discussion Modal Functions    -------========-------
 let pendingDeleteDiscussionId = null;
