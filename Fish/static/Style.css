@@ -865,7 +865,7 @@ tbody tr:nth-child(odd) {
 /* Textarea */
 .textarea {
     min-height: 120px;
-    resize: vertical;
+    resize: none;
 }
 
 /* Submit button */
@@ -1010,9 +1010,70 @@ tbody tr:nth-child(odd) {
 }
 
 .discussion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
     margin-bottom: 2em;
     padding-bottom: 1.5em;
     border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    gap: 1.5em;
+}
+
+.discussion-header h2 {
+    margin: 0;
+    flex: 1;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--Text_Color);
+    line-height: 1.3;
+    padding-top: 0.8em;
+}
+
+/* User info section in discussion */
+.discussion-user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.8em;
+    padding: 0.8em 1.2em;
+    background: linear-gradient(135deg, rgba(110, 93, 198, 0.15), rgba(160, 81, 130, 0.15));
+    border: 1px solid rgba(110, 93, 198, 0.3);
+    border-radius: 0.8em;
+    flex-shrink: 0;
+    min-width: 150px;
+}
+
+.discussion-user-info .user-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid rgba(110, 93, 198, 0.5);
+    flex-shrink: 0;
+}
+
+.discussion-user-info .user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.discussion-user-info .user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2em;
+}
+
+.discussion-user-info .user-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--Text_Color);
+}
+
+.discussion-user-info .user-label {
+    font-size: 0.75rem;
+    color: rgba(238, 238, 238, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .discussion-title-large {

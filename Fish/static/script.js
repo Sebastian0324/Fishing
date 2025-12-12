@@ -2096,9 +2096,32 @@ async function ShowForum(e) {
 
     const data = await response.json();
     console.log(data["Forum"]);
+    
+    const user = data["user"];
+    const profilePicSrc = user.profile_picture 
+      ? `data:image/png;base64,${user.profile_picture}` 
+      : '/static/default_profile.png';
+    
+    const userInfoHTML = `
+      <div class="discussion-user-info">
+        <div class="user-avatar">
+          <img src="${profilePicSrc}" alt="${user.username}'s avatar">
+        </div>
+        <div class="user-details">
+          <span class="user-name">${user.username}</span>
+          <span class="user-label">Author</span>
+        </div>
+      </div>
+    `;
+    
     Forum.children[0].innerHTML = `
-    <h2>` + data["Forum"][0] + `</h2>
-    <p>` + data["Forum"][1] + `</p>
+      <div class="discussion-header">
+        <h2>` + data["Forum"][0] + `</h2>
+        ${userInfoHTML}
+      </div>
+      <div class="discussion-body">
+        <p>` + data["Forum"][1] + `</p>
+      </div>
     `;
     
   } catch (err) {

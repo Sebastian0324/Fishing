@@ -130,15 +130,30 @@ def GetForum():
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
+        # Get discussion details along with user info who uploaded the email
         cursor.execute("""SELECT Discussion.Title, Discussion.Text, Discussion.Created_At, 
-                       Discussion.Updated_At, Email.Eml_file FROM Discussion JOIN Email ON 
-                       Email.Email_ID = Discussion.Email_ID WHERE Discussion.Discussion_ID =?""",
+                       Discussion.Updated_At, Email.Eml_file, User.Username, User.Profile_picture, User.User_ID
+                       FROM Discussion 
+                       JOIN Email ON Email.Email_ID = Discussion.Email_ID 
+                       JOIN User ON User.User_ID = Email.User_ID
+                       WHERE Discussion.Discussion_ID = ?""",
                     (post_id, ))
 
         q = cursor.fetchone()
 
         post = [q[0], q[1], q[2], q[3]]
-        # eml = render_template(q[4])
+        
+        # User info
+        import base64
+        profile_pic = None
+        if q[6]:
+            profile_pic = base64.b64encode(q[6]).decode('utf-8')
+        
+        user_info = {
+            "username": q[5],
+            "profile_picture": profile_pic,
+            "user_id": q[7]
+        }
 
     except Exception as e:
         return jsonify({
@@ -153,6 +168,5 @@ def GetForum():
             "status_code": 200,
             "message": "Creation complet",
             "Forum": post,
-            # "eml": eml,
+            "user": user_info,
         }), 200
-
