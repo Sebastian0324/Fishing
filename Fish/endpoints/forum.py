@@ -110,7 +110,7 @@ def GetForumPosts():
             "message": "Failed due to server error"
         }), 500
     
-    return posts or [[0, "None", "--", 0]]
+    return posts
 
 @bp_forum.post('/Get_Forum')
 def GetForum():
@@ -154,6 +154,10 @@ def GetForum():
             "profile_picture": profile_pic,
             "user_id": q[7]
         }
+        
+        is_owner = False
+        if session.get("user_id") and session["user_id"] == q[7]:
+            is_owner = True
 
     except Exception as e:
         return jsonify({
@@ -169,4 +173,67 @@ def GetForum():
             "message": "Creation complet",
             "Forum": post,
             "user": user_info,
+            "is_owner": is_owner,
+            "discussion_id": post_id
         }), 200
+
+
+@bp_forum.delete('/Delete_Discussion/<int:discussion_id>')
+def DeleteDiscussion(discussion_id):
+    if not session.get("user_id"):
+        return jsonify({
+            "success": False,
+            "error": "Unauthorized",
+            "status_code": 401,
+            "message": "You must be logged in to delete a discussion"
+        }), 401
+    
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute("""SELECT Discussion.Discussion_ID, Email.User_ID 
+                         FROM Discussion 
+                         JOIN Email ON Email.Email_ID = Discussion.Email_ID 
+                         WHERE Discussion.Discussion_ID = ?""",
+                      (discussion_id,))
+        
+        result = cursor.fetchone()
+        
+        if not result:
+            return jsonify({
+                "success": False,
+                "error": "Not found",
+                "status_code": 404,
+                "message": "Discussion not found"
+            }), 404
+        
+        owner_id = result[1]
+        
+        if owner_id != session["user_id"]:
+            return jsonify({
+                "success": False,
+                "error": "Forbidden",
+                "status_code": 403,
+                "message": "You can only delete discussions you created"
+            }), 403
+        
+        cursor.execute("""DELETE FROM Comment WHERE Discussion_ID = ?""", (discussion_id,))
+        cursor.execute("""DELETE FROM Discussion WHERE Discussion_ID = ?""", (discussion_id,))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "status_code": 200,
+            "message": "Discussion deleted successfully"
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Database error: {str(e)}",
+            "status_code": 500,
+            "message": "Failed to delete discussion due to server error"
+        }), 500

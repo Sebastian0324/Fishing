@@ -97,4 +97,4 @@ VALUES (1, 'anonymous', '!!SYSTEM!!');
 
 INSERT OR IGNORE INTO User (User_ID, Username, Password_Hash)
 VALUES (2, 'admin', '$2b$12$g7Dudw0Bo9YK5aNhLzbVU.G921DkziQ71jEHBKEf49la42LrRUEda');
--- name: admin    pass: damin
+-- name: admin    pass: admin

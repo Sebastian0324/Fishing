@@ -2093,11 +2093,11 @@ if (newForum) {
       alert("An error occurred while conecting to the back end.");
     }
   });
+}
 
-  let ForumPosts = document.getElementsByClassName("topic-item")
-  for (let i = 0; i < ForumPosts.length; i++) {
-    ForumPosts[i].addEventListener("click", ShowForum);
-  }
+let ForumPosts = document.getElementsByClassName("topic-item");
+for (let i = 0; i < ForumPosts.length; i++) {
+  ForumPosts[i].addEventListener("click", ShowForum);
 }
 
 function DeletForumCreator() {
@@ -2156,21 +2156,128 @@ async function ShowForum(e) {
       </div>
     `;
     
+    const deleteButtonHTML = data.is_owner ? `
+      <button class="delete-discussion-btn" data-discussion-id="${data.discussion_id}" title="Delete this discussion">
+        <span class="delete-label">Delete</span>
+        <i class="bi bi-trash"></i>
+      </button>
+    ` : '';
+    
     Forum.children[0].innerHTML = `
       <div class="discussion-header">
-        <h2>` + data["Forum"][0] + `</h2>
-        ${userInfoHTML}
+        <div class="discussion-title-row">
+          <h2>${data["Forum"][0]}</h2>
+          <div class="discussion-right-group">
+            ${userInfoHTML}
+            ${deleteButtonHTML}
+          </div>
+        </div>
       </div>
       <div class="discussion-body">
         <p>` + data["Forum"][1] + `</p>
       </div>
     `;
-    
+
+    const delBtn = Forum.querySelector(".delete-discussion-btn");
+    if (delBtn) {
+      delBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        const discussionId = this.getAttribute("data-discussion-id");
+        openDeleteDiscussionModal(discussionId);
+      });
+    }
+
   } catch (err) {
     console.error(err);
     alert("An error occurred while conecting to the back end.");
   }
 }
+
+// -------========-------    Delete Discussion Modal Functions    -------========-------
+let pendingDeleteDiscussionId = null;
+
+function openDeleteDiscussionModal(discussionId) {
+  const modal = document.getElementById("DeleteDiscussionModal");
+  pendingDeleteDiscussionId = discussionId;
+  modal.style.display = "flex";
+}
+
+function closeDeleteDiscussionModal() {
+  const modal = document.getElementById("DeleteDiscussionModal");
+  modal.style.display = "none";
+  pendingDeleteDiscussionId = null;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+
+  const deleteDiscussionModal = document.getElementById("DeleteDiscussionModal");
+
+  if (deleteDiscussionModal) {
+    deleteDiscussionModal.addEventListener("click", function (event) {
+      if (event.target === deleteDiscussionModal) {
+        closeDeleteDiscussionModal();
+      }
+    });
+
+    const confirmDeleteDiscussionBtn = document.getElementById("confirmDeleteDiscussionBtn");
+
+    if (confirmDeleteDiscussionBtn) {
+      confirmDeleteDiscussionBtn.addEventListener("click", async function () {
+        if (!pendingDeleteDiscussionId) return;
+
+        confirmDeleteDiscussionBtn.disabled = true;
+        confirmDeleteDiscussionBtn.textContent = "Deleting...";
+
+        try {
+          const id = encodeURIComponent(pendingDeleteDiscussionId);
+          const resp = await fetch(`/Delete_Discussion/${id}`, {
+            method: "DELETE",
+            credentials: "same-origin"
+          });
+
+          let body;
+          try {
+            body = await resp.json();
+          } catch (err) {
+            console.error("Failed to parse delete response JSON", err);
+            alert("Failed to parse server response. See console for details.");
+            return;
+          }
+
+          if (resp.ok && body.success) {
+            closeDeleteDiscussionModal();
+            location.reload();
+          } else {
+            if (resp.status === 401) {
+              alert("You must be logged in to delete this discussion. Please log in and try again.");
+            } else if (resp.status === 404) {
+              alert("Discussion not found or you do not have permission to delete it.");
+            } else {
+              alert("Failed to delete discussion: " + (body.error || body.message || `status ${resp.status}`));
+            }
+          }
+
+        } catch (err) {
+          console.error("Delete discussion fetch error:", err);
+          alert("Network or server error while deleting discussion. See console for details.");
+        } finally {
+          confirmDeleteDiscussionBtn.disabled = false;
+          confirmDeleteDiscussionBtn.textContent = "Delete Discussion";
+        }
+      });
+    }
+  }
+
+  const deleteButtons = document.querySelectorAll(".delete-discussion-btn");
+  deleteButtons.forEach(btn => {
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      const discussionId = this.getAttribute("data-discussion-id");
+      openDeleteDiscussionModal(discussionId);
+    });
+  });
+
+});
 
 // -------========-------    Reanalyze Modal Functions    -------========-------
 let pendingReanalyzeId = null;
@@ -2394,7 +2501,6 @@ document.addEventListener("DOMContentLoaded", function() {
     console.error("Error handling reanalyze_payload:", e);
   }
 });
-
 
 // Download Logic
 document.addEventListener("DOMContentLoaded", () => {

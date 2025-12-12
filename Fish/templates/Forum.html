@@ -46,4 +46,23 @@
             </div>
         </div>
     </div>
+
+<!-- Delete Discussion Modal -->
+<div id="DeleteDiscussionModal" style="display: none;">
+    <div id="DeleteDiscussionContainer">
+        <div id="Close_DeleteDiscussion">
+            <h3 class="modal-title">Are you sure you wish to delete this discussion?</h3>
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteDiscussionModal()">X</button>
+        </div>
+        <div class="modal-content">
+            <ul style="line-height: 1.8; margin-top: 0.5rem; padding-left: 1.2rem;">
+                <li>The discussion will be permanently removed along with its comments</li>
+            </ul>
+            <div class="modal-actions" style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteDiscussionModal()">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteDiscussionBtn">Delete Discussion</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
