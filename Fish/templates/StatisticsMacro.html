@@ -1,0 +1,179 @@
+{# Reusable macro for general statistics cards #}
+{% macro stats_cards(stats) %}
+<div class="stats-grid">
+    <!-- Platform Activity -->
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+        <div class="stat-value">{{ stats.total_users }}</div>
+        <div class="stat-label">Registered Users</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-envelope-fill"></i></div>
+        <div class="stat-value">{{ stats.total_emails }}</div>
+        <div class="stat-label">Emails Uploaded</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-search"></i></div>
+        <div class="stat-value">{{ stats.total_analyses }}</div>
+        <div class="stat-label">Analyses Completed</div>
+    </div>
+    
+    <!-- Verdict Breakdown -->
+    <div class="stat-card stat-phishing">
+        <div class="stat-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="stat-value">{{ stats.phishing_count }}</div>
+        <div class="stat-label">Phishing Detected</div>
+    </div>
+    
+    <div class="stat-card stat-suspicious">
+        <div class="stat-icon"><i class="bi bi-question-circle-fill"></i></div>
+        <div class="stat-value">{{ stats.suspicious_count }}</div>
+        <div class="stat-label">Suspicious Emails</div>
+    </div>
+    
+    <div class="stat-card stat-benign">
+        <div class="stat-icon"><i class="bi bi-check-circle-fill"></i></div>
+        <div class="stat-value">{{ stats.benign_count }}</div>
+        <div class="stat-label">Benign Emails</div>
+    </div>
+    
+    <!-- Community Activity -->
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-chat-dots-fill"></i></div>
+        <div class="stat-value">{{ stats.total_discussions }}</div>
+        <div class="stat-label">Forum Discussions</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-chat-left-text-fill"></i></div>
+        <div class="stat-value">{{ stats.total_comments }}</div>
+        <div class="stat-label">Community Comments</div>
+    </div>
+</div>
+{% endmacro %}
+
+{# Reusable macro for frequent sender statistics #}
+{% macro frequent_sender_cards(frequent_senders) %}
+<div style="text-align:center;">
+  <h5>Email senders can be faked through relays. Do not solely rely on the displayed addresses.</h5>
+</div>
+<div class="stats-grid">
+    <!-- Summary Cards -->
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-globe"></i></div>
+        <div class="stat-value">{{ frequent_senders.total_unique_ips }}</div>
+        <div class="stat-label">Unique IPs Tracked</div>
+    </div>
+    
+    <div class="stat-card stat-phishing">
+        <div class="stat-icon"><i class="bi bi-shield-exclamation"></i></div>
+        <div class="stat-value">{{ frequent_senders.dangerous_ips }}</div>
+        <div class="stat-label">Dangerous IPs</div>
+    </div>
+</div>
+
+<!-- IP Lists Section -->
+<div class="stats-panel-three-col">
+    <!-- Top Phishing IPs -->
+    <div class="stats-column">
+        <div class="content-section ip-list-section">
+            <h4 class="section-header"><i class="bi bi-exclamation-triangle-fill text-danger"></i> Top Phishing IPs</h4>
+            <div class="small-data-list">
+                {% if frequent_senders.top_phishing_senders %}
+                    {% for ip, count in frequent_senders.top_phishing_senders %}
+                    <div class="small-data-item ip-item danger">
+                        <span class="small-label ip-address"><i class="bi bi-hdd-network"></i> {{ ip }}</span>
+                        <span class="small-value badge-danger">{{ count }} emails</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="small-data-item"><span class="small-label text-muted">No phishing IPs detected yet</span></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Top Suspicious IPs -->
+    <div class="stats-column">
+        <div class="content-section ip-list-section">
+            <h4 class="section-header"><i class="bi bi-question-circle-fill text-warning"></i> Top Suspicious IPs</h4>
+            <div class="small-data-list">
+                {% if frequent_senders.top_suspicious_senders %}
+                    {% for ip, count in frequent_senders.top_suspicious_senders %}
+                    <div class="small-data-item ip-item warning">
+                        <span class="small-label ip-address"><i class="bi bi-hdd-network"></i> {{ ip }}</span>
+                        <span class="small-value badge-warning">{{ count }} emails</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="small-data-item"><span class="small-label text-muted">No suspicious IPs detected yet</span></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- All Top Senders -->
+    <div class="stats-column">
+        <div class="content-section ip-list-section">
+            <h4 class="section-header"><i class="bi bi-bar-chart-fill"></i> Most Active IPs</h4>
+            <div class="small-data-list">
+                {% if frequent_senders.top_senders %}
+                    {% for ip, count in frequent_senders.top_senders %}
+                    <div class="small-data-item ip-item">
+                        <span class="small-label ip-address"><i class="bi bi-hdd-network"></i> {{ ip }}</span>
+                        <span class="small-value">{{ count }} emails</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="small-data-item"><span class="small-label text-muted">No sender IPs recorded yet</span></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{# Reusable macro to render Tag lists (Top + Historical) - used for Common Subject stats #}
+{% macro tag_cards(common_subjects) %}
+<div class="stats-panel-two-col">
+    <!-- Top Column -->
+    <div class="stats-column">
+        <div class="content-section">
+            <h4 class="section-header"><i class="bi bi-fire"></i> Top</h4>
+            <div class="small-data-list">
+                {% if common_subjects and common_subjects.top %}
+                    {% for item in common_subjects.top %}
+                    <div class="small-data-item">
+                        <span class="small-label">{{ item.tag }}</span>
+                        <span class="small-value">{{ item.count }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="small-data-item"><span class="small-label text-muted">No tags recorded yet</span></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Historical Column -->
+    <div class="stats-column">
+        <div class="content-section">
+            <h4 class="section-header"><i class="bi bi-clock-history"></i> Historical</h4>
+            <div class="small-data-list">
+                {% if common_subjects and common_subjects.historical %}
+                    {% for item in common_subjects.historical %}
+                    <div class="small-data-item">
+                        <span class="small-label">{{ item.tag }}</span>
+                        <span class="small-value">{{ item.count }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="small-data-item"><span class="small-label text-muted">No historical tags found</span></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}

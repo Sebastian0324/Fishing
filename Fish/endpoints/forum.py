@@ -80,8 +80,6 @@ def TimeDiff(date):
     now = datetime.now()
     diff = now - general_time - timedelta(hours=1)
 
-    print(datetime.now())
-
     if (diff.total_seconds() < 3600):
         diff = str(int(diff.total_seconds() / 60)) + " Minutes"
     elif (diff.total_seconds() < 86400):
@@ -98,10 +96,10 @@ def GetForumPosts():
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
-        cursor.execute("""SELECT Title, Created_At FROM Discussion""")
+        cursor.execute("""SELECT Discussion_ID, Title, Created_At FROM Discussion""")
 
         q = cursor.fetchall()
-        posts = [[t, TimeDiff(d), 0] for t, d in q]
+        posts = [[id, t, TimeDiff(d), 0] for id, t, d in q]
         posts.reverse()
 
     except Exception as e:
@@ -112,4 +110,49 @@ def GetForumPosts():
             "message": "Failed due to server error"
         }), 500
     
-    return posts or [["None", "--", 0]]
+    return posts or [[0, "None", "--", 0]]
+
+@bp_forum.post('/Get_Forum')
+def GetForum():
+    data = request.get_json(silent=True) or {}
+    if (data.get("post_id") == None):
+        return jsonify({
+            "success": False,
+            "error": "Missing required fields",
+            "status_code": 400,
+            "message": "Forum ID is required"
+        }), 400
+    
+    post_id = data.get("post_id")
+
+    try:
+        # Connect to database
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute("""SELECT Discussion.Title, Discussion.Text, Discussion.Created_At, 
+                       Discussion.Updated_At, Email.Eml_file FROM Discussion JOIN Email ON 
+                       Email.Email_ID = Discussion.Email_ID WHERE Discussion.Discussion_ID =?""",
+                    (post_id, ))
+
+        q = cursor.fetchone()
+
+        post = [q[0], q[1], q[2], q[3]]
+        # eml = render_template(q[4])
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Database error: {str(e)}",
+            "status_code": 500,
+            "message": "Failed due to server error"
+        }), 500
+
+    return jsonify({
+            "success": True,
+            "status_code": 200,
+            "message": "Creation complet",
+            "Forum": post,
+            # "eml": eml,
+        }), 200
+

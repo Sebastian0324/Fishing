@@ -1,61 +1,5 @@
 {% extends "form.html" %}
-
-{# Reusable macro for general statistics cards #}
-{% macro stats_cards(stats) %}
-<div class="stats-grid">
-    <!-- Platform Activity -->
-    <div class="stat-card">
-        <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
-        <div class="stat-value">{{ stats.total_users }}</div>
-        <div class="stat-label">Registered Users</div>
-    </div>
-    
-    <div class="stat-card">
-        <div class="stat-icon"><i class="bi bi-envelope-fill"></i></div>
-        <div class="stat-value">{{ stats.total_emails }}</div>
-        <div class="stat-label">Emails Uploaded</div>
-    </div>
-    
-    <div class="stat-card">
-        <div class="stat-icon"><i class="bi bi-search"></i></div>
-        <div class="stat-value">{{ stats.total_analyses }}</div>
-        <div class="stat-label">Analyses Completed</div>
-    </div>
-    
-    <!-- Verdict Breakdown -->
-    <div class="stat-card stat-phishing">
-        <div class="stat-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
-        <div class="stat-value">{{ stats.phishing_count }}</div>
-        <div class="stat-label">Phishing Detected</div>
-    </div>
-    
-    <div class="stat-card stat-suspicious">
-        <div class="stat-icon"><i class="bi bi-question-circle-fill"></i></div>
-        <div class="stat-value">{{ stats.suspicious_count }}</div>
-        <div class="stat-label">Suspicious Emails</div>
-    </div>
-    
-    <div class="stat-card stat-benign">
-        <div class="stat-icon"><i class="bi bi-check-circle-fill"></i></div>
-        <div class="stat-value">{{ stats.benign_count }}</div>
-        <div class="stat-label">Benign Emails</div>
-    </div>
-    
-    <!-- Community Activity -->
-    <div class="stat-card">
-        <div class="stat-icon"><i class="bi bi-chat-dots-fill"></i></div>
-        <div class="stat-value">{{ stats.total_discussions }}</div>
-        <div class="stat-label">Forum Discussions</div>
-    </div>
-    
-    <div class="stat-card">
-        <div class="stat-icon"><i class="bi bi-chat-left-text-fill"></i></div>
-        <div class="stat-value">{{ stats.total_comments }}</div>
-        <div class="stat-label">Community Comments</div>
-    </div>
-</div>
-{% endmacro %}
-
+{% from "StatisticsMacro.html" import stats_cards, frequent_sender_cards, tag_cards %}
 {% block content %}{% if session.name %}
      
 <div class="page-container">
@@ -66,28 +10,42 @@
             <!-- Left Column: Topics List -->
             <div class="statistics-sidebar">
                 <div class="content-section">
-
                     <h3 class="section-header">Sort By</h3>
+                    <!-- Admin Dashboard Button -->
+                    
+                     {% if session.name == 'admin' %}
+                        <button class="sort-btn" data-target="admin">
+                            <div class="btn-content">
+                                <div class="btn-header">
+                                    <i class="bi bi-shield-lock-fill"></i>
+                                    <span>Admin Dashboard</span>
+                                </div>
+                                <span class="button-description">Access administrative controls and system management</span>
+                            </div>
+                        </button>
+                        {% endif %}
 
                     <div class="sort-buttons">
                         <button class="sort-btn active" data-target="general">
                             <div class="btn-content">
                                 <div class="btn-header">
-                                    <i class="bi bi-clock"></i> 
+                                    <i class="bi bi-bar-chart-fill"></i> 
                                     <span>General</span>
-                                    <span class="badge"> test  12</span> 
                                 </div>
                                 <span class="button-description">View general statistics about the application</span>
                             </div>
                         </button>
 
-                        <button class="sort-btn" data-target="receivers">
+                        <button class="sort-btn" data-target="senders">
                             <div class="btn-content">
                                 <div class="btn-header">
-                                    <i class="bi bi-person-lines-fill"></i>
-                                    <span>Frequent Receiver</span>
+                                    <i class="bi bi-hdd-network-fill"></i>
+                                    <span>Frequent Sender</span>
+                                    {% if frequent_senders.dangerous_ips > 0 %}
+                                    <span class="badge badge-danger">{{ frequent_senders.dangerous_ips }}</span>
+                                    {% endif %}
                                 </div>
-                                <span class="button-description">Search for email addresses that have received the most phishing emails</span>
+                                <span class="button-description">View IP addresses that send the most emails - identify potential threats</span>
                             </div>
                         </button>
 
@@ -108,14 +66,16 @@
                                 </div>
                                 <span class="button-description">Search for forum post that have the most amount of comments</span>
                             </div>
-                        </button>    
+                        </button>
+                        
+                       
                     </div>
                 </div>
             </div>
 
             <!-- Vertical Divider Line -->
             <div class="column-divider"></div>
-            
+
             <!-- Right Column: Two Column Layout -->
             <div class="dashboard-main">
                 <div class="content-section uploads-container">
@@ -127,6 +87,126 @@
                     <div class="stats-panel active" data-panel="general">
                         {{ stats_cards(stats) }}
                     </div>
+
+                    <!-- Frequent Sender Panel -->
+                    <div class="stats-panel" data-panel="senders">
+                        {{ frequent_sender_cards(frequent_senders) }}
+                    </div>
+
+                    <!-- Admin Dashboard Panel -->
+                    {% if session.name == 'admin' %}
+                    <div class="stats-panel" data-panel="admin">
+                        <div class="content-section">
+                            <h4 class="section-header"><i class="bi bi-gear-fill"></i> Admin Overview & Controls</h4>
+                            <div class="stats-grid">
+                                <!-- User Statistics -->
+                                <div class="stat-card">
+                                    <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+                                    <div class="stat-value">{{ stats.total_users or 0 }}</div>
+                                    <div class="stat-label">Total Users</div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-icon"><i class="bi bi-person-check-fill"></i></div>
+                                    <div class="stat-value">{{ stats.active_sessions or 0 }}</div>
+                                    <div class="stat-label">Active Sessions</div>
+                                </div>
+                                
+                                <!-- Upload Statistics -->
+                                <div class="stat-card">
+                                    <div class="stat-icon"><i class="bi bi-upload"></i></div>
+                                    <div class="stat-value">{{ stats.total_uploads or 0 }}</div>
+                                    <div class="stat-label">Total Uploads</div>
+                                </div>
+                                
+                                <div class="stat-card stat-phishing">
+                                    <div class="stat-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                                    <div class="stat-value">{{ stats.phishing_detected or 0 }}</div>
+                                    <div class="stat-label">Phishing Detected</div>
+                                </div>
+                                
+                                <!-- Forum Statistics -->
+                                <div class="stat-card">
+                                    <div class="stat-icon"><i class="bi bi-chat-dots-fill"></i></div>
+                                    <div class="stat-value">{{ stats.total_posts or 0 }}</div>
+                                    <div class="stat-label">Forum Posts</div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-icon"><i class="bi bi-chat-left-text-fill"></i></div>
+                                    <div class="stat-value">{{ stats.total_comments or 0 }}</div>
+                                    <div class="stat-label">Total Comments</div>
+                                </div>
+                                
+                                <!-- Moderation Statistics -->
+                                <div class="stat-card stat-suspicious">
+                                    <div class="stat-icon"><i class="bi bi-flag-fill"></i></div>
+                                    <div class="stat-value">{{ stats.pending_moderations or 0 }}</div>
+                                    <div class="stat-label">Pending Moderations</div>
+                                </div>
+                                
+                                <div class="stat-card stat-phishing">
+                                    <div class="stat-icon"><i class="bi bi-shield-exclamation"></i></div>
+                                    <div class="stat-value">{{ stats.flagged_ips or 0 }}</div>
+                                    <div class="stat-label">Flagged IPs</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="content-section" style="margin-top: 1.5rem;">
+                            <h4 class="section-header"><i class="bi bi-activity"></i> System Status</h4>
+                            <div class="stats-grid">
+                                <div class="stat-card {% if stats.server_status == 'Online' %}stat-benign{% elif stats.server_status == 'Error' %}stat-phishing{% else %}stat-suspicious{% endif %}">
+                                    <div class="stat-icon"><i class="bi bi-server"></i></div>
+                                    <div class="stat-value" style="font-size: 1.2rem;">{{ stats.server_status or 'Unknown' }}</div>
+                                    <div class="stat-label">Server Status</div>
+                                </div>
+                                
+                                <div class="stat-card {% if stats.database_status == 'Connected' %}stat-benign{% elif stats.database_status == 'Error' %}stat-phishing{% else %}stat-suspicious{% endif %}">
+                                    <div class="stat-icon"><i class="bi bi-database-fill"></i></div>
+                                    <div class="stat-value" style="font-size: 1.2rem;">{{ stats.database_status or 'Unknown' }}</div>
+                                    <div class="stat-label">Database Status</div>
+                                </div>
+                                
+                                <div class="stat-card {% if stats.api_services_status == 'Active' %}stat-benign{% elif stats.api_services_status == 'Error' %}stat-phishing{% else %}stat-suspicious{% endif %}">
+                                    <div class="stat-icon"><i class="bi bi-cloud-check-fill"></i></div>
+                                    <div class="stat-value" style="font-size: 1.2rem;">{{ stats.api_services_status or 'Unknown' }}</div>
+                                    <div class="stat-label">API Services</div>
+                                </div>
+                                
+                                <div class="stat-card {% if stats.virustotal_status == 'Connected' %}stat-benign{% elif stats.virustotal_status in ['Error', 'Disconnected'] %}stat-phishing{% else %}stat-suspicious{% endif %}">
+                                    <div class="stat-icon"><i class="bi bi-shield-check"></i></div>
+                                    <div class="stat-value" style="font-size: 1rem;">{{ stats.virustotal_status or 'Unknown' }}</div>
+                                    <div class="stat-label">VirusTotal API</div>
+                                </div>
+                                
+                                <div class="stat-card {% if stats.abuseipdb_status == 'Connected' %}stat-benign{% elif stats.abuseipdb_status in ['Error', 'Disconnected'] %}stat-phishing{% else %}stat-suspicious{% endif %}">
+                                    <div class="stat-icon"><i class="bi bi-shield-fill-check"></i></div>
+                                    <div class="stat-value" style="font-size: 1rem;">{{ stats.abuseipdb_status or 'Unknown' }}</div>
+                                    <div class="stat-label">AbuseIPDB API</div>
+                                </div>
+                                
+                                <div class="stat-card {% if stats.llm_status == 'Running' %}stat-benign{% elif stats.llm_status in ['Error', 'Disconnected'] %}stat-phishing{% else %}stat-suspicious{% endif %}">
+                                    <div class="stat-icon"><i class="bi bi-cpu-fill"></i></div>
+                                    <div class="stat-value" style="font-size: 1rem;">{{ stats.llm_status or 'Unknown' }}</div>
+                                    <div class="stat-label">LLM Service</div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-icon"><i class="bi bi-hdd-fill"></i></div>
+                                    <div class="stat-value">{{ stats.storage_available or 'N/A' }}</div>
+                                    <div class="stat-label">Storage Used</div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
+                                    <div class="stat-value" style="font-size: 0.9rem;">{{ stats.last_backup or 'Never' }}</div>
+                                    <div class="stat-label">Last Activity</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
 
                     <!-- Frequent Receiver Panel -->
                     <div class="stats-panel" data-panel="receivers">
@@ -157,27 +237,7 @@
 
                     <!-- Common Subject Panel -->
                     <div class="stats-panel" data-panel="subjects">
-                        <div class="stats-panel-two-col">
-                            <!-- Top Column -->
-                            <div class="stats-column">
-                                <div class="content-section">
-                                    <h4 class="section-header"><i class="bi bi-fire"></i> Top</h4>
-                                    <div class="small-data-list">
-                                        <div class="small-data-item"><span class="small-label">"Action Required"</span><span class="small-value">54</span></div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Historical Uploaded Column -->
-                            <div class="stats-column">
-                                <div class="content-section">
-                                    <h4 class="section-header"><i class="bi bi-clock-history"></i> Historical</h4>
-                                    <div class="small-data-list">
-                                        <div class="small-data-item"><span class="small-label">"Update Payment"</span><span class="small-value">47</span></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        {{ tag_cards(common_subjects) }}
                     </div>
 
                     <!-- Most Commented Panel -->

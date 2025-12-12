@@ -775,10 +775,6 @@ tbody tr:nth-child(odd) {
 
 
 /* Right main area for discussion */
-.forum-main {
-    min-height: 500px;
-}
-
 #new-forum {
     position: absolute;
     bottom: 3em;
@@ -1261,6 +1257,66 @@ main h1 {
 .modal-actions .btn-primary {
     background: linear-gradient(135deg, #6E5DC6, #a05182);
     border-color: #6E5DC6;
+}
+
+/* Delete Email Modal Styles */
+#DeleteEmailModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000000cc;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+#DeleteEmailContainer {
+    position: relative;
+    width: 44em;
+    max-width: 90vw;
+    background: linear-gradient(color-mix(in srgb, var(--BC), #000000cc), color-mix(in srgb, var(--BC), #000000cc)) padding-box,
+                var(--BG_IMG) border-box;
+    border-radius: 2em;
+    border: 3px solid transparent;
+    padding: 3em;
+    z-index: 10001;
+}
+
+#Close_DeleteEmail {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5em;
+    padding-bottom: 1em;
+    border-bottom: 2px solid rgba(255, 77, 77, 0.3);
+}
+
+#Close_DeleteEmail .modal-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #e02e2e;
+}
+
+#Close_DeleteEmail .btn-secondary {
+    padding: 0.25rem 0.75rem;
+    font-size: 1.2rem;
+}
+
+#DeleteEmailModal .modal-actions .btn-danger {
+    background: linear-gradient(135deg, #d61c1cc2, #410000ce);
+    border-color: #ff4d4d;
+    color: white;
+}
+
+#DeleteEmailModal .modal-actions .btn-danger:hover {
+    background: linear-gradient(135deg, #ff6b6b, #ff1f1f);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 77, 77, 0.4);
 }
 
 /* ################################## */
@@ -1759,6 +1815,138 @@ main h1 {
 
 @media (max-width: 480px) {
     .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ################################## */
+/* ###  Frequent Sender Statistics ### */
+/* ################################## */
+
+.stats-panel-three-col {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5em;
+    margin-top: 1.5em;
+}
+
+.ip-list-section {
+    padding: 1em;
+    min-height: 200px;
+}
+
+.ip-list-section .section-header {
+    font-size: 1.1rem;
+    margin-bottom: 1em;
+    padding-bottom: 0.5em;
+}
+
+.small-data-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+}
+
+.small-data-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6em 0.8em;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 0.5em;
+    transition: all 0.2s ease;
+}
+
+.small-data-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateX(3px);
+}
+
+.small-label {
+    font-size: 0.95rem;
+    color: var(--Text_Color);
+}
+
+.small-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: rgba(238, 238, 238, 0.8);
+    padding: 0.2em 0.6em;
+    background: rgba(110, 93, 198, 0.2);
+    border-radius: 0.3em;
+}
+
+.ip-item {
+    border-left: 3px solid transparent;
+}
+
+.ip-item.danger {
+    border-left-color: #ff4d4d;
+    background: rgba(255, 77, 77, 0.08);
+}
+
+.ip-item.danger:hover {
+    background: rgba(255, 77, 77, 0.15);
+}
+
+.ip-item.warning {
+    border-left-color: #ffc107;
+    background: rgba(255, 193, 7, 0.08);
+}
+
+.ip-item.warning:hover {
+    background: rgba(255, 193, 7, 0.15);
+}
+
+.ip-address {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+}
+
+.ip-address i {
+    margin-right: 0.5em;
+    opacity: 0.7;
+}
+
+.badge-danger {
+    background: rgba(255, 77, 77, 0.3);
+    color: #ff6b6b;
+    padding: 0.2em 0.6em;
+    border-radius: 0.3em;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.badge-warning {
+    background: rgba(255, 193, 7, 0.3);
+    color: #ffc107;
+    padding: 0.2em 0.6em;
+    border-radius: 0.3em;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.text-danger {
+    color: #ff4d4d !important;
+}
+
+.text-warning {
+    color: #ffc107 !important;
+}
+
+.text-muted {
+    color: rgba(238, 238, 238, 0.5) !important;
+    font-style: italic;
+}
+
+@media (max-width: 1200px) {
+    .stats-panel-three-col {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .stats-panel-three-col {
         grid-template-columns: 1fr;
     }
 }

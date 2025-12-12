@@ -250,6 +250,28 @@
     </div>
 </div>
 
+<!-- Delete Email Modal -->
+<div id="DeleteEmailModal" style="display: none;">
+    <div id="DeleteEmailContainer">
+        <div id="Close_DeleteEmail">
+            <h3 class="modal-title">Are you sure you wish to delete this email?</h3>
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteEmailModal()">X</button>
+        </div>
+        <div class="modal-content">
+            <ul style="line-height: 1.8; margin-top: 0.5rem; padding-left: 1.2rem;">
+                <li>The email file (.eml) will be permanently removed</li>
+                <li>All analysis results associated with this email will be deleted</li>
+                <li>Forum discussions linked to this email may be affected</li>
+            </ul>
+
+            <div class="modal-actions" style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteEmailModal()">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteEmailBtn">Delete Email</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 </div>
 {% else %}
 <div class="page-container">    

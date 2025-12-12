@@ -2,6 +2,7 @@ import sqlite3
 from flask import Blueprint, jsonify, render_template, session, request, redirect, send_file
 import json
 from io import BytesIO
+from datetime import datetime, timedelta
 
 from static.Helper_eml import DB_PATH
 from endpoints.forum import GetForumPosts
@@ -19,9 +20,137 @@ def Forum():
 
 @bp_ui.route('/Statistics')
 def admin():
-    # Fetch general statistics for all users (including non-logged-in)
     stats = get_general_statistics()
-    return render_template('Statistics.html', stats=stats)
+        # Add admin-specific statistics if user is admin
+    if session.get('name') == 'admin':
+        admin_stats = get_admin_statistics()
+        stats.update(admin_stats)
+    frequent_senders = get_frequent_sender_statistics()
+    common_subjects = get_common_subjects_statistics()  # aggregates by Email.Tag (categories)
+    return render_template('Statistics.html', stats=stats, frequent_senders=frequent_senders, common_subjects=common_subjects)
+
+def get_frequent_sender_statistics():
+    """Get frequent sender IP statistics from the database"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Top sender IPs by email (all time)
+        cursor.execute("""
+            SELECT Sender_IP, COUNT(*) as count
+            FROM Email 
+            WHERE Sender_IP IS NOT NULL AND Sender_IP != ''
+            GROUP BY Sender_IP
+            ORDER BY count DESC
+            LIMIT 10
+        """)
+        top_senders = cursor.fetchall()
+        
+        # Top sender IPs with phishing emails
+        cursor.execute("""
+            SELECT e.Sender_IP, COUNT(*) as count
+            FROM Email e
+            JOIN Analysis a ON e.Email_ID = a.Email_ID
+            WHERE e.Sender_IP IS NOT NULL AND e.Sender_IP != ''
+            AND a.Verdict = 'Phishing'
+            GROUP BY e.Sender_IP
+            ORDER BY count DESC
+            LIMIT 10
+        """)
+        top_phishing_senders = cursor.fetchall()
+        
+        # Top sender IPs that are suspicious
+        cursor.execute("""
+            SELECT e.Sender_IP, COUNT(*) as count
+            FROM Email e
+            JOIN Analysis a ON e.Email_ID = a.Email_ID
+            WHERE e.Sender_IP IS NOT NULL AND e.Sender_IP != ''
+            AND a.Verdict = 'Suspicious'
+            GROUP BY e.Sender_IP
+            ORDER BY count DESC
+            LIMIT 10
+        """)
+        top_suspicious_senders = cursor.fetchall()
+        
+        # Total unique sender IPs
+        cursor.execute("""
+            SELECT COUNT(DISTINCT Sender_IP)
+            FROM Email 
+            WHERE Sender_IP IS NOT NULL AND Sender_IP != ''
+        """)
+        total_unique_ips = cursor.fetchone()[0]
+        
+        # IPs flagged as dangerous (phishing or suspicious)
+        cursor.execute("""
+            SELECT COUNT(DISTINCT e.Sender_IP)
+            FROM Email e
+            JOIN Analysis a ON e.Email_ID = a.Email_ID
+            WHERE e.Sender_IP IS NOT NULL AND e.Sender_IP != ''
+            AND a.Verdict IN ('Phishing', 'Suspicious')
+        """)
+        dangerous_ips = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        return {
+            "top_senders": top_senders,
+            "top_phishing_senders": top_phishing_senders,
+            "top_suspicious_senders": top_suspicious_senders,
+            "total_unique_ips": total_unique_ips,
+            "dangerous_ips": dangerous_ips
+        }
+    except Exception as e:
+        print(f"Error fetching frequent sender statistics: {e}")
+        return {
+            "top_senders": [],
+            "top_phishing_senders": [],
+            "top_suspicious_senders": [],
+            "total_unique_ips": 0,
+            "dangerous_ips": 0
+        }
+
+
+def get_common_subjects_statistics(limit=10, days=30):
+    """Aggregate by Email.Tag (whitelisted categories). Return top and historical lists.
+    This function replaces raw subject grouping with categorized Tag statistics.
+    """
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        # Top overall tags
+        cursor.execute("""
+            SELECT Tag AS tag, COUNT(*) as count
+            FROM Email
+            WHERE Tag IS NOT NULL AND TRIM(Tag) != ''
+            GROUP BY Tag
+            ORDER BY count DESC
+            LIMIT ?
+        """, (limit,))
+        top = cursor.fetchall()
+
+        # Top tags in the last `days` days using Received_At timestamp
+        cutoff = (datetime.utcnow() - timedelta(days=days)).replace(microsecond=0).isoformat() + 'Z'
+        cursor.execute("""
+            SELECT Tag AS tag, COUNT(*) as count
+            FROM Email
+            WHERE Received_At >= ? AND Tag IS NOT NULL AND TRIM(Tag) != ''
+            GROUP BY Tag
+            ORDER BY count DESC
+            LIMIT ?
+        """, (cutoff, limit))
+        historical = cursor.fetchall()
+
+        conn.close()
+        # Return lists of dicts for easy template use (key names match macro expectations)
+        return {
+            "top": [{"tag": t, "count": c} for t, c in top],
+            "historical": [{"tag": t, "count": c} for t, c in historical]
+        }
+    except Exception as e:
+        print(f"Error fetching tag statistics: {e}")
+        return {"top": [], "historical": []}
+
 
 def get_general_statistics():
     """Get general statistics from the database for public display"""
@@ -81,6 +210,155 @@ def get_general_statistics():
             "benign_count": 0,
             "total_discussions": 0,
             "total_comments": 0
+        }
+
+def get_admin_statistics():
+    """Get admin-specific statistics including system status and moderation data"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Total uploads (emails)
+        cursor.execute("SELECT COUNT(*) FROM Email")
+        total_uploads = cursor.fetchone()[0]
+        
+        # Active sessions (approximate - count unique users with recent activity)
+        cursor.execute("SELECT COUNT(DISTINCT User_ID) FROM Email WHERE datetime(Received_At) > datetime('now', '-24 hours')")
+        active_sessions = cursor.fetchone()[0]
+        
+        # Phishing emails detected
+        cursor.execute("SELECT COUNT(*) FROM Analysis WHERE Verdict = 'Phishing'")
+        phishing_detected = cursor.fetchone()[0]
+        
+        # Total forum posts
+        cursor.execute("SELECT COUNT(*) FROM Discussion")
+        total_posts = cursor.fetchone()[0]
+        
+        # Total comments
+        cursor.execute("SELECT COUNT(*) FROM Comment")
+        total_comments = cursor.fetchone()[0]
+        
+        # Pending moderations (discussions without any comments could be pending review)
+        cursor.execute("""
+            SELECT COUNT(*) FROM Discussion d
+            LEFT JOIN Comment c ON d.Discussion_ID = c.Discussion_ID
+            WHERE c.Comment_ID IS NULL
+        """)
+        pending_moderations = cursor.fetchone()[0]
+        
+        # Flagged IPs (IPs with phishing or suspicious emails)
+        cursor.execute("""
+            SELECT COUNT(DISTINCT e.Sender_IP)
+            FROM Email e
+            JOIN Analysis a ON e.Email_ID = a.Email_ID
+            WHERE e.Sender_IP IS NOT NULL AND e.Sender_IP != ''
+            AND a.Verdict IN ('Phishing', 'Suspicious')
+        """)
+        flagged_ips = cursor.fetchone()[0]
+        
+        # Get database file size for storage info
+        cursor.execute("SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()")
+        db_size_bytes = cursor.fetchone()[0]
+        db_size_mb = round(db_size_bytes / (1024 * 1024), 2)
+        
+        # Get last analysis timestamp
+        cursor.execute("SELECT MAX(Analyzed_At) FROM Analysis WHERE Analyzed = 1")
+        last_backup = cursor.fetchone()[0]
+        if last_backup:
+            from datetime import datetime
+            try:
+                last_backup_dt = datetime.fromisoformat(last_backup)
+                now = datetime.now()
+                diff = now - last_backup_dt
+                if diff.days > 0:
+                    last_backup = f"{diff.days} days ago"
+                elif diff.seconds > 3600:
+                    last_backup = f"{diff.seconds // 3600} hours ago"
+                else:
+                    last_backup = f"{diff.seconds // 60} minutes ago"
+            except:
+                last_backup = "Recently"
+        else:
+            last_backup = "Never"
+        
+        conn.close()
+        
+        # Check API service status
+        server_status = "Online"  # If this code runs, server is online
+        database_status = "Connected"  # If we got here, DB is connected
+        
+        # Check VirusTotal API
+        virustotal_status = "Disconnected"
+        try:
+            from api.VirusTotal import VirusTotal
+            vt = VirusTotal()
+            if vt.api_key:
+                virustotal_status = "Connected"
+        except:
+            virustotal_status = "Not Configured"
+        
+        # Check AbuseIPDB API
+        abuseipdb_status = "Disconnected"
+        try:
+            from api.AbuseIp import AbuseIPDB
+            abuse = AbuseIPDB()
+            if abuse.api_key:
+                abuseipdb_status = "Connected"
+        except:
+            abuseipdb_status = "Not Configured"
+        
+        # Check LLM Service
+        llm_status = "Disconnected"
+        try:
+            import os
+            llm_key = os.getenv('API_KEY') or os.getenv('API_KEY')
+            if llm_key:
+                llm_status = "Running"
+        except:
+            llm_status = "Not Configured"
+        
+        # API Services status (general)
+        api_services_status = "Active" if any([
+            virustotal_status == "Connected",
+            abuseipdb_status == "Connected",
+            llm_status == "Running"
+        ]) else "Limited"
+        
+        return {
+            "total_uploads": total_uploads,
+            "active_sessions": active_sessions,
+            "phishing_detected": phishing_detected,
+            "total_posts": total_posts,
+            "total_comments": total_comments,
+            "pending_moderations": pending_moderations,
+            "flagged_ips": flagged_ips,
+            "storage_available": f"{db_size_mb} MB",
+            "last_backup": last_backup,
+            "server_status": server_status,
+            "database_status": database_status,
+            "api_services_status": api_services_status,
+            "virustotal_status": virustotal_status,
+            "abuseipdb_status": abuseipdb_status,
+            "llm_status": llm_status
+        }
+    except Exception as e:
+        print(f"Error fetching admin statistics: {e}")
+        return {
+            "total_uploads": 0,
+            "active_sessions": 0,
+            "phishing_detected": 0,
+            "total_posts": 0,
+            "total_comments": 0,
+            "pending_moderations": 0,
+            "flagged_ips": 0,
+            "storage_available": "Unknown",
+            "last_backup": "Unknown",
+            "server_status": "Error",
+            "database_status": "Error",
+            "api_services_status": "Error",
+            "virustotal_status": "Error",
+            "abuseipdb_status": "Error",
+            "llm_status": "Error"
         }
 
 @bp_ui.route('/Account')
@@ -184,3 +462,78 @@ def get_profile_picture(user_id):
     return send_file(
         BytesIO(picture_bytes),
         mimetype="image/png")
+
+
+@bp_ui.delete('/api/email/<int:email_id>')
+def delete_email_api(email_id):
+    """Delete an email and all its associated data (analysis, etc.)"""
+    try:
+        # Check authentication
+        if "user_id" not in session or not session.get("user_id"):
+            return jsonify({
+                "success": False,
+                "error": "Not authenticated",
+                "status_code": 401
+            }), 401
+        
+        user_id = session["user_id"]
+        conn = sqlite3.connect(DB_PATH)
+        try:
+            conn.execute("PRAGMA foreign_keys = ON;")
+            cursor = conn.cursor()
+            
+            # First verify the email belongs to the current user
+            cursor.execute("""
+                SELECT Email_ID FROM Email 
+                WHERE Email_ID = ? AND User_ID = ?
+            """, (email_id, user_id))
+            result = cursor.fetchone()
+            
+            if not result:
+                return jsonify({
+                    "success": False,
+                    "error": "Email not found or you do not have permission to delete it",
+                    "status_code": 404
+                }), 404
+            
+            cursor.execute("""
+                DELETE FROM Analysis WHERE Email_ID = ?
+            """, (email_id,))
+            
+            # Check if there are any discussions linked to this email
+            cursor.execute("""
+                SELECT Discussion_ID FROM Discussion WHERE Email_ID = ?
+            """, (email_id,))
+            discussions = cursor.fetchall()
+            
+            for (discussion_id,) in discussions:
+                cursor.execute("""
+                    DELETE FROM Comment WHERE Discussion_ID = ?
+                """, (discussion_id,))
+            
+            # Delete discussions linked to this email
+            cursor.execute("""
+                DELETE FROM Discussion WHERE Email_ID = ?
+            """, (email_id,))
+            
+            cursor.execute("""
+                DELETE FROM Email WHERE Email_ID = ? AND User_ID = ?
+            """, (email_id, user_id))
+            
+            conn.commit()
+            
+            return jsonify({
+                "success": True,
+                "message": "Email and all associated data deleted successfully",
+                "status_code": 200
+            }), 200
+            
+        finally:
+            conn.close()
+            
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Server error: {str(e)}",
+            "status_code": 500
+        }), 500

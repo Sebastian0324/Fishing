@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS "Discussion" (
 
 CREATE INDEX IF NOT EXISTS idx_discussion_email   ON "Discussion"(Email_ID);
 CREATE INDEX IF NOT EXISTS idx_discussion_created ON "Discussion"(Created_At);
+CREATE INDEX IF NOT EXISTS idx_discussion_Updated ON "Discussion"(Updated_At);
 
 CREATE TRIGGER IF NOT EXISTS trg_discussion_set_updated
 AFTER UPDATE ON "Discussion"
@@ -89,10 +90,10 @@ CREATE INDEX IF NOT EXISTS idx_comment_user       ON "Comment"(User_ID);
 CREATE INDEX IF NOT EXISTS idx_comment_created    ON "Comment"(Created_At);
 
 INSERT OR IGNORE INTO User (User_ID, Username, Password_Hash)
-VALUES (1, 'anonymous', '!!SYSTEM!!');
+VALUES (0, 'deleted user', '!!SYSTEM!!');
 
 INSERT OR IGNORE INTO User (User_ID, Username, Password_Hash)
-VALUES (0, 'deleted user', '!!SYSTEM!!');
+VALUES (1, 'anonymous', '!!SYSTEM!!');
 
 INSERT OR IGNORE INTO User (User_ID, Username, Password_Hash)
 VALUES (2, 'admin', '$2b$12$g7Dudw0Bo9YK5aNhLzbVU.G921DkziQ71jEHBKEf49la42LrRUEda');

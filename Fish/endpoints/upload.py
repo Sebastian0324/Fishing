@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 from static.Helper_eml import parse_eml_bytes, generate_llm_body, DB_PATH
+from endpoints.tags import is_valid_tag, normalize_tag, suggest_tag_from_parsed
 
 bp_upload = Blueprint('upload', __name__)
 
@@ -55,7 +56,34 @@ def upload():
                     "message": f"Failed to parse email file '{file.filename}'. The file may be corrupted or not a valid .eml file."
                 }), 400
             title = file.filename[:-4]
+            # Support optional per-file tags submitted as 'tags[]' or single 'tag'
+            tags = request.form.getlist('tags[]') or request.form.getlist('tag') or []
+            tag_value = None
+            try:
+                # support single tag value in form as well
+                if not tags:
+                    single_tag = request.form.get('tag')
+                    if single_tag:
+                        tags = [single_tag]
+                tag_value = (tags[idx] if idx < len(tags) else None) or None
+                if tag_value is not None:
+                    tag_value = normalize_tag(tag_value)
+                    if not is_valid_tag(tag_value):
+                        return jsonify({
+                            "success": False,
+                            "error": "Invalid tag",
+                            "status_code": 400,
+                            "message": f"Tag '{tag_value}' is not in the allowed taxonomy"
+                        }), 400
+            except Exception:
+                tag_value = None
             llm_body_text = generate_llm_body(parsed)
+            # compute an automatic suggestion (do not persist unless user provided a valid tag)
+            suggested_tag = None
+            try:
+                suggested_tag = suggest_tag_from_parsed(parsed)
+            except Exception:
+                suggested_tag = None
             urls_json = json.dumps(parsed['urls'])
             uid = session.get("user_id") or 1
             conn = sqlite3.connect(DB_PATH)
@@ -72,8 +100,8 @@ def upload():
                 cursor.execute("""
                     INSERT INTO Email (
                         User_ID, Eml_file, SHA256, Size_Bytes, Received_At,
-                        From_Addr, Sender_IP, Title, Body_Text, Extracted_URLs, Email_Description
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        From_Addr, Tag, Sender_IP, Title, Body_Text, Extracted_URLs, Email_Description
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     uid,
                     file_content,
@@ -81,6 +109,7 @@ def upload():
                     len(file_content),
                     parsed['received_at'],
                     parsed['sender']['email'],
+                    tag_value,
                     parsed['sender']['ip'],
                     title,
                     llm_body_text,
@@ -98,6 +127,7 @@ def upload():
                 "data": {
                     "sender_ip": parsed['sender']['ip'],
                     "sender_email": parsed['sender']['email'],
+                    "suggested_tag": suggested_tag,
                     "body_text": body_text,
                     "body_preview": body_text[:200] + "..." if len(body_text) > 200 else body_text,
                     "comment": comment_text,

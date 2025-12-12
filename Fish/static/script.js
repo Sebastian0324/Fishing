@@ -199,6 +199,15 @@ if (UpForm != null) {
       
       const prevComments = fileInput._preservedComments ?? Array.from(selectedFilesBox.querySelectorAll('.comment-input')).map(t => t.value || '');
       if (fileInput._preservedComments) delete fileInput._preservedComments;
+      
+      // Tag options for dropdowns
+      const tagOptions = [
+        "Account Notice", "Payment/Invoice", "Security Alert", "Password Reset", "Shipping/Delivery",
+        "Subscription", "Promotion/Offer", "Job Alert", "Social Notification", "Banking",
+        "Legal/Policy", "System Alert", "Survey/Feedback", "News/Newsletter", "Authentication",
+        "Two-Factor", "Travel/Booking", "Support/Ticket", "Confirmation/Receipt", "Other"
+      ];
+      
       const items = files.map((f, idx) => {
         const fileNumber = idx + 1;
         const isTooLarge = f.size > MAX_FILE_SIZE;
@@ -235,6 +244,17 @@ if (UpForm != null) {
             </button>
           </div>
           ${isTooLarge ? '<small class="text-danger">File exceeds max size</small>' : ''}
+            </div>
+          </div>
+
+          <div class="mt-2">
+            <label for="tag-${idx}" class="form-label small mb-1" style="color: rgba(238,238,238,0.8);">Category:</label>
+            <div class="d-flex gap-2 align-items-center">
+              <select name="tags[]" id="tag-${idx}" class="form-control form-control-sm flex-grow-1">
+                <option value="">-- Select a category --</option>
+                ${tagOptions.map(tag => `<option value="${tag.replace(/"/g, '&quot;')}">${tag}</option>`).join('')}
+              </select>
+              <span class="suggest-tag-hint small text-muted" data-index="${idx}" style="white-space: nowrap;"></span>
             </div>
           </div>
 
@@ -306,6 +326,20 @@ if (UpForm != null) {
             });
             });
         }
+
+        // Helper: display suggested tag from upload response
+        function displayTagSuggestion(fileIndex, suggestedTag) {
+          const hint = document.querySelector(`.suggest-tag-hint[data-index="${fileIndex}"]`);
+          if (!hint || !suggestedTag) return;
+          hint.textContent = `Suggested: ${suggestedTag}`;
+          hint.style.color = 'rgba(200,220,255,0.9)';
+          // Optionally auto-select the suggested tag in the dropdown
+          const select = document.getElementById(`tag-${fileIndex}`);
+          if (select) {
+            select.value = suggestedTag;
+          }
+        }
+
 
 
   UpForm.onsubmit = async (e) => {
@@ -459,9 +493,34 @@ if (UpForm != null) {
     // Store AI preference globally so it can be accessed by analysis functions
     window.useAI = useAI;
     
+    // Collect tag selections from dropdowns
+    const tagSelects = document.querySelectorAll('select[name="tags[]"]');
+    const selectedTags = Array.from(tagSelects).map(select => select.value || '');
+    
     // Now initiate the upload
     let formData = new FormData(e.target);
-    let respons = await fetch("/upload", { method: "POST", body: formData });
+    // Remove any existing tags[] entries and re-add with selected values
+    // (FormData doesn't let us easily update, so we reconstruct)
+    const files = fileInput.files;
+    const comments = Array.from(document.querySelectorAll('.comment-input')).map(inp => inp.value || '');
+    const useAIVal = useAICheckbox ? useAICheckbox.checked : false;
+    
+    // Create a new FormData with explicit ordering
+    const newFormData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      newFormData.append('file', files[i]);
+    }
+    for (let i = 0; i < comments.length; i++) {
+      newFormData.append('comments[]', comments[i]);
+    }
+    for (let i = 0; i < selectedTags.length; i++) {
+      newFormData.append('tags[]', selectedTags[i]);
+    }
+    if (useAIVal) {
+      newFormData.append('use_ai', '1');
+    }
+    
+    let respons = await fetch("/upload", { method: "POST", body: newFormData });
     let data = await respons.json();
     
     // Handle error response
@@ -476,6 +535,15 @@ if (UpForm != null) {
     window.uploadedFiles = (data.data && data.data.files) || [];
     window.currentFileIndex = 0;
     window.fileAnalysisResults = {}; // Store analysis results per file
+    
+    // Display suggested tags from the upload response (after server processes)
+    if (data.data && data.data.files && Array.isArray(data.data.files)) {
+      data.data.files.forEach((file, idx) => {
+        if (file.data && file.data.suggested_tag) {
+          displayTagSuggestion(idx, file.data.suggested_tag);
+        }
+      });
+    }
     
     // Update the header to show success - render first file and start its analysis
     if (data.success && window.uploadedFiles.length > 0) {
@@ -948,11 +1016,11 @@ function reconstructAnalysisFromBackend(fileIndex, backendData) {
     let riskClass = "success";
     let riskIcon = "[OK]";
     
-    if (abuseScore >= 75) {
+    if (abuseScore >= 50) {
       riskLevel = "High";
       riskClass = "danger";
       riskIcon = "[!]";
-    } else if (abuseScore >= 50) {
+    } else if (abuseScore >= 25) {
       riskLevel = "Medium";
       riskClass = "warning";
       riskIcon = "[!]";
@@ -1963,6 +2031,7 @@ function toggleSettings() {
 // -------========-------    Forum Page    -------========-------
 
 const newForum = document.getElementById("new-forum");
+const Forum = document.getElementById("forum-main");
 if (newForum) {
   newForum.addEventListener("click", async function(e) {
     try {
@@ -1982,6 +2051,11 @@ if (newForum) {
       alert("An error occurred while conecting to the back end.");
     }
   });
+
+  let ForumPosts = document.getElementsByClassName("topic-item")
+  for (let i = 0; i < ForumPosts.length; i++) {
+    ForumPosts[i].addEventListener("click", ShowForum);
+  }
 }
 
 function DeletForumCreator() {
@@ -2005,34 +2079,29 @@ async function CreateForum(e) {
   }
 }
 
-// Forum Page (placeholder data)
-const discussions = { /* ... unchanged ... */ };
-const topicItems = document.querySelectorAll(".topic-item");
-topicItems.forEach((item) => {
-  item.addEventListener("click", function () {
-    topicItems.forEach((i) => i.classList.remove("active"));
-    this.classList.add("active");
-    const title = this.querySelector(".discussion-title").textContent;
-    const discussion = discussions[title];
-    if (discussion) {
-      const discussionHTML = `
-        <div class="discussion-header">
-          <h2 class="discussion-title-large">${title}</h2>
-          <p class="topic-meta">Posted by ${discussion.author} • ${discussion.time}</p>
-          <div class="discussion-stats">
-            <span class="stat-item"> ${discussion.replies} replies</span>
-            <span class="stat-item"> ${discussion.likes} likes</span>
-          </div>
-        </div>
-        <div class="discussion-body">${discussion.content}</div>
-        <div class="reply-section">
-          <h3>Replies</h3>
-          <p class="placeholder-text">Discussion replies would appear here...</p>
-        </div>`;
-      document.getElementById("discussion-content").innerHTML = discussionHTML;
-    }
-  });
-});
+async function ShowForum(e) {
+  e.preventDefault()
+
+  id = this.value;
+  try {
+    const response = await fetch("/Get_Forum", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ post_id: id })
+    });
+
+    const data = await response.json();
+    console.log(data["Forum"]);
+    Forum.children[0].innerHTML = `
+    <h2>` + data["Forum"][0] + `</h2>
+    <p>` + data["Forum"][1] + `</p>
+    `;
+    
+  } catch (err) {
+    console.error(err);
+    alert("An error occurred while conecting to the back end.");
+  }
+}
 
 // -------========-------    Reanalyze Modal Functions    -------========-------
 let pendingReanalyzeId = null;
@@ -2047,6 +2116,21 @@ function closeReanalyzeModal() {
   const modal = document.getElementById("ReanalyzeModal");
   modal.style.display = "none";
   pendingReanalyzeId = null;
+}
+
+// -------========-------    Delete Email Modal Functions    -------========-------
+let pendingDeleteEmailId = null;
+
+function openDeleteEmailModal(emailId) {
+  const modal = document.getElementById("DeleteEmailModal");
+  pendingDeleteEmailId = emailId;
+  modal.style.display = "flex";
+}
+
+function closeDeleteEmailModal() {
+  const modal = document.getElementById("DeleteEmailModal");
+  modal.style.display = "none";
+  pendingDeleteEmailId = null;
 }
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -2129,6 +2213,77 @@ document.addEventListener("DOMContentLoaded", function() {
       e.preventDefault();
       const emailId = this.getAttribute("data-id");
       openReanalyzeModal(emailId);
+    });
+  });
+
+  // -------========-------    Delete Email Modal Event Listeners    -------========-------
+  const deleteEmailModal = document.getElementById("DeleteEmailModal");
+  if (deleteEmailModal) {
+    // Close modal when clicking outside
+    deleteEmailModal.addEventListener("click", function(event) {
+      if (event.target === deleteEmailModal) {
+        closeDeleteEmailModal();
+      }
+    });
+
+    // Handle confirm delete button
+    const confirmDeleteEmailBtn = document.getElementById("confirmDeleteEmailBtn");
+    if (confirmDeleteEmailBtn) {
+      confirmDeleteEmailBtn.addEventListener("click", async function() {
+        if (!pendingDeleteEmailId) return;
+
+        confirmDeleteEmailBtn.disabled = true;
+        confirmDeleteEmailBtn.textContent = "Deleting...";
+
+        try {
+          const id = encodeURIComponent(pendingDeleteEmailId);
+          const resp = await fetch(`/api/email/${id}`, { 
+            method: 'DELETE', 
+            credentials: 'same-origin' 
+          });
+
+          let body;
+          try {
+            body = await resp.json();
+          } catch (err) {
+            console.error('Failed to parse delete response JSON', err);
+            alert('Failed to parse server response. See console for details.');
+            return;
+          }
+
+          if (resp.ok && body.success) {
+            const row = document.querySelector(`button.delete-btn[data-id="${pendingDeleteEmailId}"]`)?.closest('tr');
+            if (row) {
+              row.remove();
+            }
+            closeDeleteEmailModal();
+          } else {
+            if (resp.status === 401) {
+              alert('You must be logged in to delete this email. Please log in and try again.');
+            } else if (resp.status === 404) {
+              alert('Email not found or you do not have permission to delete it.');
+            } else {
+              alert('Failed to delete email: ' + (body.error || body.message || `status ${resp.status}`));
+            }
+          }
+        } catch (err) {
+          console.error("Delete email fetch error:", err);
+          alert("Network or server error while deleting email. See console for details.");
+        } finally {
+          confirmDeleteEmailBtn.disabled = false;
+          confirmDeleteEmailBtn.textContent = "Delete Email";
+        }
+      });
+    }
+  }
+
+  // Attach click handlers to all delete buttons
+  const deleteButtons = document.querySelectorAll(".delete-btn");
+  deleteButtons.forEach(btn => {
+    btn.addEventListener("click", function(e) {
+      e.preventDefault();
+      const emailId = this.getAttribute("data-id");
+      openDeleteEmailModal(emailId);
     });
   });
 
@@ -2220,5 +2375,5 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!data.hasAnalysis) return showMessage("No analyses to download.");
             window.location.href = "/download/both";
         });
-    }
+  }
 });
