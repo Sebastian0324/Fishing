@@ -1039,6 +1039,7 @@ tbody tr:nth-child(odd) {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 0.1em;
     padding: 0.3em 0.8em;
     background: rgba(255, 77, 77, 0.15);
@@ -1054,6 +1055,8 @@ tbody tr:nth-child(odd) {
     min-width: 0;
     max-width: 70px;
     line-height: 1.1;
+    align-self: stretch;
+    min-height: 45px;
 }
 
 .delete-discussion-btn:hover {
@@ -1088,8 +1091,9 @@ tbody tr:nth-child(odd) {
 
 .discussion-right-group {
     display: flex;
-    align-items: center;
+    align-items: stretch; /* Make children the same height */
     gap: 1em;
+    height: 100%;
 }
 
 
@@ -1859,9 +1863,17 @@ main h1 {
     align-self: stretch;
 }
 
-
-
-
+.discussion-tag {
+    margin-top: 0.5em;
+}
+.discussion-tag .badge {
+    font-size: 1rem;
+    font-weight: 500;
+    background: #6E5DC6;
+    color: #fff;
+    padding: 0.3em 0.9em;
+    letter-spacing: 0.02em;
+}
 
 /* Statistics Cards Styling */
 .stats-cards-grid {

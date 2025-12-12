@@ -2162,11 +2162,19 @@ async function ShowForum(e) {
         <i class="bi bi-trash"></i>
       </button>
     ` : '';
-    
+
+    const tag = data["Forum"][4];
+    const tagHTML = tag
+      ? `<div class="discussion-tag"><span class="badge bg-secondary">${tag}</span></div>`
+      : "";
+
     Forum.children[0].innerHTML = `
       <div class="discussion-header">
         <div class="discussion-title-row">
-          <h2>${data["Forum"][0]}</h2>
+          <div>
+            <h2>${data["Forum"][0]}</h2>
+            ${tagHTML}
+          </div>
           <div class="discussion-right-group">
             ${userInfoHTML}
             ${deleteButtonHTML}

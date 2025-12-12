@@ -130,9 +130,9 @@ def GetForum():
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
-        # Get discussion details along with user info who uploaded the email
+        # Get discussion details along with user info who uploaded the email and the tag
         cursor.execute("""SELECT Discussion.Title, Discussion.Text, Discussion.Created_At, 
-                       Discussion.Updated_At, Email.Eml_file, User.Username, User.Profile_picture, User.User_ID
+                       Discussion.Updated_At, Email.Tag, Email.Eml_file, User.Username, User.Profile_picture, User.User_ID
                        FROM Discussion 
                        JOIN Email ON Email.Email_ID = Discussion.Email_ID 
                        JOIN User ON User.User_ID = Email.User_ID
@@ -141,22 +141,22 @@ def GetForum():
 
         q = cursor.fetchone()
 
-        post = [q[0], q[1], q[2], q[3]]
+        post = [q[0], q[1], q[2], q[3], q[4]]
         
         # User info
         import base64
         profile_pic = None
-        if q[6]:
-            profile_pic = base64.b64encode(q[6]).decode('utf-8')
+        if q[7]:
+            profile_pic = base64.b64encode(q[7]).decode('utf-8')
         
         user_info = {
-            "username": q[5],
+            "username": q[6],
             "profile_picture": profile_pic,
-            "user_id": q[7]
+            "user_id": q[8]
         }
         
         is_owner = False
-        if session.get("user_id") and session["user_id"] == q[7]:
+        if session.get("user_id") and session["user_id"] == q[8]:
             is_owner = True
 
     except Exception as e:
