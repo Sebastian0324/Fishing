@@ -266,19 +266,18 @@ def get_admin_statistics():
         cursor.execute("SELECT MAX(Analyzed_At) FROM Analysis WHERE Analyzed = 1")
         last_backup = cursor.fetchone()[0]
         if last_backup:
-            from datetime import datetime
+         
             try:
                 last_backup_dt = datetime.fromisoformat(last_backup)
                 now = datetime.now()
                 diff = now - last_backup_dt
                 if diff.days > 0:
                     last_backup = f"{diff.days} days ago"
-                elif diff.seconds > 3600:
-                    last_backup = f"{diff.seconds // 3600} hours ago"
                 else:
-                    last_backup = f"{diff.seconds // 60} minutes ago"
+                    last_backup = f"{diff.seconds // 3600} hours and {(diff.seconds // 60) % 60} minutes ago"
             except:
                 last_backup = "Recently"
+
         else:
             last_backup = "Never"
         

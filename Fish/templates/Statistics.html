@@ -1,5 +1,5 @@
 {% extends "form.html" %}
-{% from "StatisticsMacro.html" import stats_cards, frequent_sender_cards, tag_cards, most_commented_cards %}
+{% from "StatisticsMacro.html" import stats_cards, frequent_sender_cards, tag_cards, most_commented_cards, admin_info_cards %}
 {% block content %}{% if session.name %}
      
 <div class="page-container">
@@ -20,7 +20,7 @@
                                     <i class="bi bi-shield-lock-fill"></i>
                                     <span>Admin Dashboard</span>
                                 </div>
-                                <span class="button-description">Access administrative controls and system management</span>
+                                <span class="button-description">Access administrative Overview and system management</span>
                             </div>
                         </button>
                         {% endif %}
@@ -96,115 +96,7 @@
                     <!-- Admin Dashboard Panel -->
                     {% if session.name == 'admin' %}
                     <div class="stats-panel" data-panel="admin">
-                        <div class="content-section">
-                            <h4 class="section-header"><i class="bi bi-gear-fill"></i> Admin Overview & Controls</h4>
-                            <div class="stats-grid">
-                                <!-- User Statistics -->
-                                <div class="stat-card">
-                                    <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
-                                    <div class="stat-value">{{ stats.total_users or 0 }}</div>
-                                    <div class="stat-label">Total Users</div>
-                                </div>
-                                
-                                <div class="stat-card">
-                                    <div class="stat-icon"><i class="bi bi-person-check-fill"></i></div>
-                                    <div class="stat-value">{{ stats.active_sessions or 0 }}</div>
-                                    <div class="stat-label">Active Sessions</div>
-                                </div>
-                                
-                                <!-- Upload Statistics -->
-                                <div class="stat-card">
-                                    <div class="stat-icon"><i class="bi bi-upload"></i></div>
-                                    <div class="stat-value">{{ stats.total_uploads or 0 }}</div>
-                                    <div class="stat-label">Total Uploads</div>
-                                </div>
-                                
-                                <div class="stat-card stat-phishing">
-                                    <div class="stat-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
-                                    <div class="stat-value">{{ stats.phishing_detected or 0 }}</div>
-                                    <div class="stat-label">Phishing Detected</div>
-                                </div>
-                                
-                                <!-- Forum Statistics -->
-                                <div class="stat-card">
-                                    <div class="stat-icon"><i class="bi bi-chat-dots-fill"></i></div>
-                                    <div class="stat-value">{{ stats.total_posts or 0 }}</div>
-                                    <div class="stat-label">Forum Posts</div>
-                                </div>
-                                
-                                <div class="stat-card">
-                                    <div class="stat-icon"><i class="bi bi-chat-left-text-fill"></i></div>
-                                    <div class="stat-value">{{ stats.total_comments or 0 }}</div>
-                                    <div class="stat-label">Total Comments</div>
-                                </div>
-                                
-                                <!-- Moderation Statistics -->
-                                <div class="stat-card stat-suspicious">
-                                    <div class="stat-icon"><i class="bi bi-flag-fill"></i></div>
-                                    <div class="stat-value">{{ stats.pending_moderations or 0 }}</div>
-                                    <div class="stat-label">Pending Moderations</div>
-                                </div>
-                                
-                                <div class="stat-card stat-phishing">
-                                    <div class="stat-icon"><i class="bi bi-shield-exclamation"></i></div>
-                                    <div class="stat-value">{{ stats.flagged_ips or 0 }}</div>
-                                    <div class="stat-label">Flagged IPs</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="content-section" style="margin-top: 1.5rem;">
-                            <h4 class="section-header"><i class="bi bi-activity"></i> System Status</h4>
-                            <div class="stats-grid">
-                                <div class="stat-card {% if stats.server_status == 'Online' %}stat-benign{% elif stats.server_status == 'Error' %}stat-phishing{% else %}stat-suspicious{% endif %}">
-                                    <div class="stat-icon"><i class="bi bi-server"></i></div>
-                                    <div class="stat-value" style="font-size: 1.2rem;">{{ stats.server_status or 'Unknown' }}</div>
-                                    <div class="stat-label">Server Status</div>
-                                </div>
-                                
-                                <div class="stat-card {% if stats.database_status == 'Connected' %}stat-benign{% elif stats.database_status == 'Error' %}stat-phishing{% else %}stat-suspicious{% endif %}">
-                                    <div class="stat-icon"><i class="bi bi-database-fill"></i></div>
-                                    <div class="stat-value" style="font-size: 1.2rem;">{{ stats.database_status or 'Unknown' }}</div>
-                                    <div class="stat-label">Database Status</div>
-                                </div>
-                                
-                                <div class="stat-card {% if stats.api_services_status == 'Active' %}stat-benign{% elif stats.api_services_status == 'Error' %}stat-phishing{% else %}stat-suspicious{% endif %}">
-                                    <div class="stat-icon"><i class="bi bi-cloud-check-fill"></i></div>
-                                    <div class="stat-value" style="font-size: 1.2rem;">{{ stats.api_services_status or 'Unknown' }}</div>
-                                    <div class="stat-label">API Services</div>
-                                </div>
-                                
-                                <div class="stat-card {% if stats.virustotal_status == 'Connected' %}stat-benign{% elif stats.virustotal_status in ['Error', 'Disconnected'] %}stat-phishing{% else %}stat-suspicious{% endif %}">
-                                    <div class="stat-icon"><i class="bi bi-shield-check"></i></div>
-                                    <div class="stat-value" style="font-size: 1rem;">{{ stats.virustotal_status or 'Unknown' }}</div>
-                                    <div class="stat-label">VirusTotal API</div>
-                                </div>
-                                
-                                <div class="stat-card {% if stats.abuseipdb_status == 'Connected' %}stat-benign{% elif stats.abuseipdb_status in ['Error', 'Disconnected'] %}stat-phishing{% else %}stat-suspicious{% endif %}">
-                                    <div class="stat-icon"><i class="bi bi-shield-fill-check"></i></div>
-                                    <div class="stat-value" style="font-size: 1rem;">{{ stats.abuseipdb_status or 'Unknown' }}</div>
-                                    <div class="stat-label">AbuseIPDB API</div>
-                                </div>
-                                
-                                <div class="stat-card {% if stats.llm_status == 'Running' %}stat-benign{% elif stats.llm_status in ['Error', 'Disconnected'] %}stat-phishing{% else %}stat-suspicious{% endif %}">
-                                    <div class="stat-icon"><i class="bi bi-cpu-fill"></i></div>
-                                    <div class="stat-value" style="font-size: 1rem;">{{ stats.llm_status or 'Unknown' }}</div>
-                                    <div class="stat-label">LLM Service</div>
-                                </div>
-                                
-                                <div class="stat-card">
-                                    <div class="stat-icon"><i class="bi bi-hdd-fill"></i></div>
-                                    <div class="stat-value">{{ stats.storage_available or 'N/A' }}</div>
-                                    <div class="stat-label">Storage Used</div>
-                                </div>
-                                
-                                <div class="stat-card">
-                                    <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
-                                    <div class="stat-value" style="font-size: 0.9rem;">{{ stats.last_backup or 'Never' }}</div>
-                                    <div class="stat-label">Last Activity</div>
-                                </div>
-                            </div>
-                        </div>
+                        {{ admin_info_cards(stats) }}
                     </div>
                     {% endif %}
 

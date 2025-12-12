@@ -91,7 +91,6 @@ div#Login {
     padding-bottom: 0.5em;
     color: var(--Text_Color);
     border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-    display: flex;
     justify-content: space-between;
     align-items: center;
 }
