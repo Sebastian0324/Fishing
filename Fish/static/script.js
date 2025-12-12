@@ -367,10 +367,14 @@ if (UpForm != null) {
       }
       return;
     }
+
+    // Ask about forum creation
+    askAboutForum = []
     
     // Validate file type and size
     for (let i = 0; i < fileInput.files.length; i++) {
       const file = fileInput.files[i];
+      askAboutForum.push(true)
       
       // Check file extension
       if (!file.name.endsWith('.eml')) {
@@ -548,7 +552,9 @@ if (UpForm != null) {
     // Update the header to show success - render first file and start its analysis
     if (data.success && window.uploadedFiles.length > 0) {
       renderFileAnalysis(0);
-      runFileAnalyses(0);
+      for (let i = 0; i < fileInput.files.length; i++) {
+        await runFileAnalyses(i);
+      }
     }
   };
 }
@@ -703,6 +709,9 @@ function displayCachedResults(fileIndex) {
   
   // Update the content area with cached results AND progress bars
   const contentArea = document.getElementById("analysisContent");
+  if (askAboutForum[fileIndex]) {
+    AskToCreateForum(fileIndex);
+  }
   if (contentArea) {
     contentArea.innerHTML = `
       <div class="row">
@@ -791,6 +800,7 @@ function renderFileAnalysis(fileIndex) {
 
     resultDiv.innerHTML = tabsHTML + `<div id="analysisContent"></div>`;
   }
+  AskToCreateForum(0)
 
   // Update only the content area
   const contentArea = document.getElementById("analysisContent");
@@ -1116,6 +1126,38 @@ function reconstructAnalysisFromBackend(fileIndex, backendData) {
   
   // Display the reconstructed results
   displayCachedResults(fileIndex);
+}
+
+function AskToCreateForum(fileIndex) {
+  askAboutForum[fileIndex] = false;
+
+  const container = document.getElementById("result");
+  html = `<div id="AskCreateForum" class="centered backdrop">
+      <div id="AskForForumForm" class="centered colored-border">
+        <button id="CloseQuestion" type="button" class="close-btn">✕</button>
+        <h1 class="page-title">This is a test!</h1>
+        <p>Would you like to shear your email wiht the comunity?</p>
+        <p>To get a better understanding of what threats you might be facing, there is no place better our Forum</p>
+        <p>Create a Forum post to see what to community has to say about your situation</p>
+        <form>
+          <p>Create a Forum post?</p>
+          <div class="form-check form-switch">
+            <input type="radio" id="Yes" value="Yes" name="CreateForum" class="form-check-input">
+            <label for="Yes">Yes</label>
+          </div>
+          <div class="form-check form-switch">
+            <input type="radio" id="No" value="No" name="CreateForum" class="form-check-input">
+            <label for="No">No</label>
+          </div>
+          <button type="submit" class="submit-btn">Submitt</button>
+        </form>
+      </div>
+    </div>`;
+  container.insertAdjacentHTML("beforebegin", html);
+
+  document.getElementById("CloseQuestion").addEventListener("click", function() {
+    document.getElementById("AskCreateForum").remove();
+  });
 }
 
 // -------========-------    Run File Analyses    -------========-------

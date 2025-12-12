@@ -259,6 +259,13 @@ div#Login {
     transform: translateX(5px);
 }
 
+/* Asking form for forum creation */
+#AskForForumForm {
+    position: relative;
+    width: 80%;
+    height: 70%;
+    padding: 3em 2em;
+}
 /* Error Container */
 .error-container {
     margin-bottom: 1.5em;
@@ -341,7 +348,7 @@ div#Login {
     top: 50%;
 }
 
-.colored-boarder {
+.colored-border {
     border-radius: 2em;
     border: 3px solid transparent;
     background: linear-gradient(color-mix(in srgb, var(--BC), #000000cc), color-mix(in srgb, var(--BC), #000000cc)) padding-box,
@@ -773,12 +780,6 @@ tbody tr:nth-child(odd) {
     top: 2em;
 }
 
-#CreateForum {
-    width: 75%;
-    height: 80%;
-    padding: 4em 5em;
-}
-
 /* Topics list */
 .topic-list {
     list-style: none;
@@ -804,12 +805,11 @@ tbody tr:nth-child(odd) {
 
 /* Modal */
 #CreateForum {
-    width: 70%;
+    width: 75%;
+    height: 80%;
+    padding: 4em 5em;
     max-width: 700px;
     padding: 3em 4em;
-    background: linear-gradient(color-mix(in srgb, var(--BC), #000000cc), color-mix(in srgb, var(--BC), #000000cc)) padding-box, var(--BG_IMG) border-box;
-    border-radius: 1em;
-    border: 2px solid rgba(110, 93, 198, 0.5);
     box-shadow: 0 8px 25px rgba(0,0,0,0.4);
     position: relative;
     justify-content: space-between;
