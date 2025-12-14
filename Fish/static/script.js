@@ -2071,6 +2071,7 @@ function toggleSettings() {
 }
 
 // -------========-------    Forum Page    -------========-------
+const MAX_COMMENT_LENGTH = 2000;
 
 const newForum = document.getElementById("new-forum");
 const Forum = document.getElementById("forum-main");
@@ -2128,6 +2129,11 @@ async function CreateForum(e) {
 async function ShowForum(e) {
   e.preventDefault()
 
+  document.querySelectorAll(".topic-item")
+  .forEach(i => i.classList.remove("active"));
+
+  this.classList.add("active");
+
   id = this.value;
   try {
     const response = await fetch("/Get_Forum", {
@@ -2184,7 +2190,33 @@ async function ShowForum(e) {
       <div class="discussion-body">
         <p>` + data["Forum"][1] + `</p>
       </div>
+      <div class="comments-section">
+  <h3 class="comments-title">Comments</h3>
+
+  <div id="comments-root"></div>
+
+    ${data.is_logged_in ? `
+      <div class="new-comment-box">
+        <textarea
+          id="new-comment-text"
+          placeholder="Write a comment…"
+          rows="3"
+          maxlength="2000"
+        ></textarea>
+
+        <div class="comment-meta">
+          <span id="char-counter">0 / 2000</span>
+        </div>
+
+        <button id="post-comment-btn">Comment</button>
+      </div>
+    ` : `
+      <p class="login-hint">Log in to comment.</p>
+    `}
+</div>
     `;
+await loadComments(id);
+
 
     const delBtn = Forum.querySelector(".delete-discussion-btn");
     if (delBtn) {
@@ -2200,6 +2232,371 @@ async function ShowForum(e) {
     alert("An error occurred while conecting to the back end.");
   }
 }
+
+async function loadComments(discussionId) {
+const res = await fetch(`/comments/${discussionId}`, {
+  credentials: "same-origin"
+});
+  const data = await res.json();
+
+  if (!data.success) {
+    console.error("Failed to load comments");
+    return;
+  }
+
+  const tree = buildCommentTree(data.comments);
+  window.IS_LOGGED_IN = data.is_logged_in;
+
+  document.getElementById("comments-root").innerHTML = `
+    ${renderComments(tree)}
+  `;
+}
+
+function renderComments(comments, depth = 0) {
+  return comments.map(comment => `
+    <div class="comment" style="margin-left: ${depth * 24}px">
+
+      <img class="comment-avatar"
+           src="/profile-picture/${comment.user.id}">
+
+      <div class="comment-body">
+        <div class="comment-header">
+          <span class="comment-author">${comment.user.username}</span>
+          <span class="comment-time">${comment.created_at}</span>
+        </div>
+
+        <p class="comment-text" data-id="${comment.id}">
+          ${comment.text}
+        </p>
+
+        <textarea
+          class="edit-textarea"
+          data-id="${comment.id}"
+          style="display: none;"
+        >${comment.text}</textarea>
+
+
+        <div class="comment-actions">
+          ${window.IS_LOGGED_IN ? `
+            <button class="reply-btn" data-id="${comment.id}">Reply</button>
+          ` : ""}
+          ${comment.is_owner ? `
+            <button class="edit-comment-btn" data-id="${comment.id}">Edit</button>
+            <button class="delete-comment-btn" data-id="${comment.id}">Delete</button>
+
+            <button class="save-comment-btn" data-id="${comment.id}" style="display:none;">Save</button>
+            <button class="cancel-edit-btn" data-id="${comment.id}" style="display:none;">Cancel</button>
+          ` : ""}
+        </div>
+
+        <div class="reply-form-container"
+             id="reply-form-${comment.id}"></div>
+
+        ${comment.children?.length
+          ? renderComments(comment.children, depth + 1)
+          : ""}
+
+        
+      </div>
+    </div>
+  `).join("");
+}
+
+document.addEventListener("click", function (e) {
+  if (!e.target.classList.contains("reply-btn")) return;
+
+  const id = e.target.dataset.id;
+  const container = document.getElementById(`reply-form-${id}`);
+
+  if (container.innerHTML !== "") {
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = `
+    <form class="reply-form">
+      <textarea
+        placeholder="Write a reply..."
+        maxlength="2000"
+        required></textarea>
+      <div class="comment-meta">
+        <span class="reply-char-counter">0 / 2000</span>
+      </div>
+
+      <button type="submit">Reply</button>
+    </form>
+  `;
+});
+
+document.addEventListener("click", async function (e) {
+  if (e.target.id !== "post-comment-btn") return;
+
+  const textEl = document.getElementById("new-comment-text");
+  if (!textEl) return;
+
+  const text = textEl.value.trim();
+
+  if (!text) return;
+
+  if (text.length > MAX_COMMENT_LENGTH) {
+    alert(`Your comment is too long. Maximum is ${MAX_COMMENT_LENGTH} characters.`);
+    return;
+  }
+
+  const discussionId = document
+    .querySelector(".topic-item.active")?.value;
+
+  if (!discussionId) return;
+
+  await fetch("/comment/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({
+      discussion_id: discussionId,
+      text: textEl.value,
+      parent_id: null
+    })
+  });
+
+  textEl.value = "";
+  await loadComments(discussionId);
+});
+
+document.addEventListener("submit", async function (e) {
+  if (!e.target.classList.contains("reply-form")) return;
+
+  e.preventDefault();
+
+  const textarea = e.target.querySelector("textarea");
+  const text = textarea.value.trim();
+  if (!text) return;
+
+  if (text.length > MAX_COMMENT_LENGTH) {
+    alert(`Reply is too long. Maximum is ${MAX_COMMENT_LENGTH} characters.`);
+  return;
+  }
+
+  const parentId = e.target.closest(".comment")
+    ?.querySelector(".reply-btn")?.dataset.id;
+
+  const discussionId = document
+    .querySelector(".topic-item.active")?.value;
+
+  if (!discussionId || !parentId) return;
+
+  await fetch("/comment/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({
+      discussion_id: discussionId,
+      parent_id: parentId,
+      text
+    })
+  });
+
+  textarea.value = "";
+  await loadComments(discussionId);
+});
+
+document.addEventListener("click", async function (e) {
+  if (!e.target.classList.contains("edit-comment-btn")) return;
+
+  const commentEl = e.target.closest(".comment");
+  if (!commentEl) return;
+
+  // prevent multiple edit forms
+  if (document.querySelector(".comment.editing")) return;
+
+  commentEl.classList.add("editing");
+
+  const textEl = commentEl.querySelector(".comment-text");
+  const originalText = textEl.textContent;
+
+  textEl.dataset.original = originalText;
+  textEl.innerHTML = `
+    <textarea
+      class="edit-textarea"
+      maxlength="${MAX_COMMENT_LENGTH}"
+    >${originalText}</textarea>
+
+    <div class="comment-meta">
+      <span class="edit-char-counter">
+        ${originalText.length} / ${MAX_COMMENT_LENGTH}
+      </span>
+    </div>
+
+    <div class="edit-actions">
+      <button class="save-edit-btn">Save</button>
+      <button class="cancel-edit-btn">Cancel</button>
+    </div>
+  `;
+});
+
+document.addEventListener("click", function (e) {
+  if (!e.target.classList.contains("cancel-edit-btn")) return;
+
+  const commentEl = e.target.closest(".comment");
+  if (!commentEl) return;
+
+  const textEl = commentEl.querySelector(".comment-text");
+  const originalText = textEl.dataset.original;
+  textEl.innerHTML = originalText;
+  delete textEl.dataset.original;
+  commentEl.classList.remove("editing");
+});
+
+document.addEventListener("click", async function (e) {
+  if (!e.target.classList.contains("save-edit-btn")) return;
+
+  const commentEl = e.target.closest(".comment");
+  if (!commentEl) return;
+
+  const textarea = commentEl.querySelector(".edit-textarea");
+  if (!textarea) return;
+
+  const newText = textarea.value.trim();
+  if (!newText) return;
+  if (newText.length > MAX_COMMENT_LENGTH) {
+  alert(`Edited comment is too long. Maximum is ${MAX_COMMENT_LENGTH} characters.`);
+  return;
+  }
+
+  const commentId = commentEl.querySelector(".edit-comment-btn")?.dataset.id;
+  if (!commentId) return;
+
+  const res = await fetch("/comment/edit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({
+      comment_id: commentId,
+      text: newText
+    })
+  });
+
+  const data = await res.json();
+  if (!data.success) {
+    alert("Failed to edit comment");
+    return;
+  }
+
+  // reload comments to stay in sync with DB
+  const discussionId = document
+    .querySelector(".topic-item.active")?.value;
+
+  if (discussionId) {
+    await loadComments(discussionId);
+  }
+});
+
+document.addEventListener("click", async function (e) {
+  if (!e.target.classList.contains("delete-comment-btn")) return;
+
+  const commentId = e.target.dataset.id;
+  if (!commentId) return;
+
+  const confirmDelete = confirm(
+    "Are you sure you want to delete this comment?"
+  );
+  if (!confirmDelete) return;
+
+  const res = await fetch("/comment/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ comment_id: commentId })
+  });
+
+  const data = await res.json();
+  if (!data.success) {
+    alert("Failed to delete comment");
+    return;
+  }
+
+  const discussionId = document
+    .querySelector(".topic-item.active")?.value;
+
+  if (discussionId) {
+    await loadComments(discussionId);
+  }
+});
+
+
+function buildCommentTree(flatComments) {
+  const map = {};
+  const roots = [];
+
+  flatComments.forEach(c => {
+    c.children = [];
+    map[c.id] = c;
+  });
+
+  flatComments.forEach(c => {
+    if (c.parent_id) {
+      map[c.parent_id]?.children.push(c);
+    } else {
+      roots.push(c);
+    }
+  });
+
+  return roots;
+}
+
+document.addEventListener("input", function (e) {
+  if (e.target.id !== "new-comment-text") return;
+
+  const counter = document.getElementById("char-counter");
+  if (!counter) return;
+
+  const len = e.target.value.length;
+  counter.textContent = `${len} / 2000`;
+
+  if (len > 2000) {
+    counter.classList.add("over-limit");
+  } else {
+    counter.classList.remove("over-limit");
+  }
+});
+
+document.addEventListener("input", function (e) {
+  if (!e.target.closest(".reply-form")) return;
+
+  const counter = e.target
+    .closest(".reply-form")
+    ?.querySelector(".reply-char-counter");
+
+  if (!counter) return;
+
+  const len = e.target.value.length;
+  counter.textContent = `${len} / ${MAX_COMMENT_LENGTH}`;
+
+  if (len > MAX_COMMENT_LENGTH) {
+    counter.classList.add("over-limit");
+  } else {
+    counter.classList.remove("over-limit");
+  }
+});
+
+document.addEventListener("input", function (e) {
+  if (!e.target.classList.contains("edit-textarea")) return;
+
+  const counter = e.target
+    .closest(".comment-text")
+    ?.querySelector(".edit-char-counter");
+
+  if (!counter) return;
+
+  const len = e.target.value.length;
+  counter.textContent = `${len} / ${MAX_COMMENT_LENGTH}`;
+
+  if (len > MAX_COMMENT_LENGTH) {
+    counter.classList.add("over-limit");
+  } else {
+    counter.classList.remove("over-limit");
+  }
+});
 
 // -------========-------    Delete Discussion Modal Functions    -------========-------
 let pendingDeleteDiscussionId = null;

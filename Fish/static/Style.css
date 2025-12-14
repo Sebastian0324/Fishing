@@ -1291,6 +1291,96 @@ tbody tr:nth-child(odd) {
     }
 }
 
+.comment {
+  border-left: 2px solid rgba(255,255,255,0.08);
+  padding-left: 10px;
+}
+
+.comment-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.comment-body {
+  flex: 1;
+}
+
+.comment-header {
+  font-size: 0.85rem;
+  color: #aaa;
+}
+
+.comment-author {
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+.reply-btn {
+  background: none;
+  border: none;
+  color: #4ea1ff;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.comment-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.edit-comment-btn,
+.delete-comment-btn {
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: #777;
+}
+
+.edit-comment-btn:hover {
+  color: #0056b3;
+}
+
+.delete-comment-btn:hover {
+  color: #b30000;
+}
+
+.comment.editing {
+  background-color: rgba(0,0,0,0.03);
+}
+
+.comment-meta {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 4px;
+}
+
+.over-limit {
+  color: red;
+  font-weight: bold;
+}
+
+.edit-textarea {
+  width: 100%;
+  min-height: 60px;
+}
+
+.edit-actions {
+  margin-top: 6px;
+  display: flex;
+  gap: 8px;
+}
+
+.new-comment-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+
 /* ################################## */
 /* #########    About Us    ######### */
 /* ################################## */

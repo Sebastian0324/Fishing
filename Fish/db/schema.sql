@@ -70,6 +70,7 @@ END;
 -- ===== COMMENT =====
 CREATE TABLE IF NOT EXISTS "Comment" (
   Comment_ID     INTEGER PRIMARY KEY,
+  Parent_ID      INTEGER,
   Discussion_ID  INTEGER NOT NULL,
   User_ID        INTEGER NOT NULL,
   Reference      TEXT,
@@ -77,6 +78,10 @@ CREATE TABLE IF NOT EXISTS "Comment" (
   Created_At     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (Discussion_ID)
     REFERENCES "Discussion"(Discussion_ID)
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT,
+  FOREIGN KEY (Parent_ID)
+    REFERENCES "Comment"(Comment_ID)
     ON UPDATE CASCADE
     ON DELETE RESTRICT,
   FOREIGN KEY (User_ID)
