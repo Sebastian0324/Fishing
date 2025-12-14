@@ -1,34 +1,36 @@
-<div id="CreateForumBackdrop" class="backdrop">
-    <div id="CreateForum" class="centered colored-border">
+<div id="CreateForumBackdrop" class="sticky-wrapper">
+    <div class="backdrop">
+        <div id="CreateForum" class="centered colored-border">
 
-        <button id="Close" type="button" class="close-btn">✕</button>
-        <h1 class="page-title">Create a Discussion</h1>
+            <button id="Close" type="button" class="close-btn">✕</button>
+            <h1 class="page-title">Create a Discussion</h1>
 
-        <form method="POST" enctype="multipart/form-data" id="SubmitForum" action="/Forum_Creation">
+            <form method="POST" enctype="multipart/form-data" id="SubmitForum" action="/Forum_Creation">
 
-            <!-- SELECT EMAIL -->
-            <label for="Selected-email" class="input-label">Select an Email for the Forum Post</label>
-            <select name="Selected-email" id="Selected-email" class="forum-input" required>
-                <option value="" disabled selected>Select an email</option>
-                {% for eml_id, title in emails %}
-                    <option value="{{ eml_id }}">{{ title }}</option>
-                {% endfor %}
-            </select>
+                <!-- SELECT EMAIL -->
+                <label for="Selected-email" class="input-label">Select an Email for the Forum Post</label>
+                <select name="Selected-email" id="Selected-email" class="forum-input" required>
+                    <option value="" disabled selected>Select an email</option>
+                    {% for eml_id, title in emails %}
+                        <option value="{{ eml_id }}">{{ title }}</option>
+                    {% endfor %}
+                </select>
 
-            <!-- TITLE -->
-            <label for="forum-title" class="input-label">Forum Title</label>
-            <input type="text" id="forum-title" name="title"
-                   class="forum-input"
-                   placeholder="Give the post a title" required>
+                <!-- TITLE -->
+                <label for="forum-title" class="input-label">Forum Title</label>
+                <input type="text" id="forum-title" name="title"
+                    class="forum-input"
+                    placeholder="Give the post a title" required>
 
-            <!-- DESCRIPTION -->
-            <label for="forum-description" class="input-label">Forum Description</label>
-            <textarea id="forum-description" name="description"
-                      class="forum-input textarea"
-                      placeholder="Write something for the forum…" required></textarea>
+                <!-- DESCRIPTION -->
+                <label for="forum-description" class="input-label">Forum Description</label>
+                <textarea id="forum-description" name="description"
+                        class="forum-input textarea"
+                        placeholder="Write something for the forum…" required></textarea>
 
-            <!-- SUBMIT -->
-            <button type="submit" class="submit-btn">Submit</button>
-        </form>
+                <!-- SUBMIT -->
+                <button type="submit" class="submit-btn">Submit</button>
+            </form>
+        </div>
     </div>
 </div>

@@ -1135,19 +1135,18 @@ function AskToCreateForum(fileIndex) {
   html = `<div id="AskCreateForum" class="centered backdrop">
       <div id="AskForForumForm" class="centered colored-border">
         <button id="CloseQuestion" type="button" class="close-btn">✕</button>
-        <h1 class="page-title">This is a test!</h1>
+        <h1 class="page-title">Get Community Feedback</h1>
         <p>Would you like to shear your email wiht the comunity?</p>
-        <p>To get a better understanding of what threats you might be facing, there is no place better our Forum</p>
-        <p>Create a Forum post to see what to community has to say about your situation</p>
+        <p>To get a better understanding of what threats you might be facing, there is no place better our Forum.</p>
+        <p>Create a Forum post to see what to community has to say about your situation.</p>
         <form>
-          <p>Create a Forum post?</p>
-          <div class="form-check form-switch">
-            <input type="radio" id="Yes" value="Yes" name="CreateForum" class="form-check-input">
-            <label for="Yes">Yes</label>
-          </div>
-          <div class="form-check form-switch">
-            <input type="radio" id="No" value="No" name="CreateForum" class="form-check-input">
-            <label for="No">No</label>
+          <h3 class="section-header">Do You Want to Create a Forum post?</h2>
+          <div id="forumForm" class="form-check form-switch">
+            <label for="Yes"><input type="radio" id="Yes" value="Yes" name="CreateForum" class="form-check-input" required>
+            Yes</label>
+
+            <label for="No"><input type="radio" id="No" value="No" name="CreateForum" class="form-check-input" required>
+            No</label>
           </div>
           <button type="submit" class="submit-btn">Submitt</button>
         </form>
@@ -1158,6 +1157,19 @@ function AskToCreateForum(fileIndex) {
   document.getElementById("CloseQuestion").addEventListener("click", function() {
     document.getElementById("AskCreateForum").remove();
   });
+  document.getElementById("AskCreateForum").getElementsByTagName("form")[0].onsubmit = async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const answer = formData.get("CreateForum");
+
+    if (answer == "Yes") {
+      Forum_Creator(e);
+      document.getElementById("AskCreateForum").remove();
+    } else {
+      document.getElementById("AskCreateForum").remove();
+    }
+  };
 }
 
 // -------========-------    Run File Analyses    -------========-------
@@ -2076,24 +2088,26 @@ const MAX_COMMENT_LENGTH = 2000;
 const newForum = document.getElementById("new-forum");
 const Forum = document.getElementById("forum-main");
 if (newForum) {
-  newForum.addEventListener("click", async function(e) {
-    try {
-      e.preventDefault();
-      const response = await fetch("/Forum_Creator", {
-        method: "POST"
-      });
-      const data = await response.json();
-      const page = document.body;
+  newForum.addEventListener("click", Forum_Creator);
+}
 
-      page.insertAdjacentHTML("afterbegin", data.obj);
-      document.getElementById("Close").addEventListener("click", DeletForumCreator);
-      document.getElementById("SubmitForum").onsubmit = CreateForum;
-      
-    } catch (err) {
-      console.error(err);
-      alert("An error occurred while conecting to the back end.");
-    }
-  });
+async function Forum_Creator(e) {
+  try {
+    e.preventDefault();
+    const response = await fetch("/Forum_Creator", {
+      method: "POST"
+    });
+    const data = await response.json();
+    const page = document.body;
+
+    page.insertAdjacentHTML("afterbegin", data.obj);
+    document.getElementById("Close").addEventListener("click", DeletForumCreator);
+    document.getElementById("SubmitForum").onsubmit = CreateForum;
+    
+  } catch (err) {
+    console.error(err);
+    alert("An error occurred while conecting to the back end.");
+  }
 }
 
 let ForumPosts = document.getElementsByClassName("topic-item");
@@ -2117,7 +2131,9 @@ async function CreateForum(e) {
     const data = await response.json();
 
     DeletForumCreator();
-    location.reload();
+    if (window.location.pathname === "/Forum") {
+      location.reload();
+    }
 
   } catch (err) {
     console.error(err);
@@ -2143,7 +2159,6 @@ async function ShowForum(e) {
     });
 
     const data = await response.json();
-    console.log(data["Forum"]);
     
     const user = data["user"];
     const profilePicSrc = user.profile_picture 

@@ -262,9 +262,23 @@ div#Login {
 #AskForForumForm {
     position: relative;
     width: 80%;
-    height: 70%;
     padding: 3em 2em;
 }
+#AskForForumForm p {
+    margin: 1em auto;
+    width: 70%;
+    text-align: center;
+}
+#AskForForumForm form {
+    gap: 0;
+}
+
+#forumForm {
+    width: 10em;
+    display: flex;
+    justify-content: space-between;
+}
+
 /* Error Container */
 .error-container {
     margin-bottom: 1.5em;
@@ -803,6 +817,16 @@ tbody tr:nth-child(odd) {
 }
 
 /* Modal */
+.sticky-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 10000;
+}
+
+#CreateForumBackdrop .backdrop {
+    height: 100vh;
+}
+
 #CreateForum {
     width: 75%;
     height: 80%;
