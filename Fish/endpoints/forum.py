@@ -50,8 +50,11 @@ def ForumCreation():
         }), 400
     
     eml_id = request.form.get("Selected-email")
-    title = request.form.get("title")
-    text = request.form.get("description")
+    raw_title = request.form.get("title")
+    raw_text = request.form.get("description")
+
+    title = html.escape(raw_title)
+    text = html.escape(raw_text)
 
     try:
         # Connect to database
@@ -99,10 +102,23 @@ def GetForumPosts():
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
-        cursor.execute("""SELECT Discussion_ID, Title, Created_At FROM Discussion""")
+        cursor.execute("""
+            SELECT
+                d.Discussion_ID,
+                d.Title,
+                d.Created_At,
+                COUNT(c.Comment_ID) AS comment_count
+            FROM Discussion d
+            LEFT JOIN Comment c
+                ON c.Discussion_ID = d.Discussion_ID
+            GROUP BY d.Discussion_ID
+            ORDER BY d.Created_At DESC
+        """)
 
         q = cursor.fetchall()
-        posts = [[id, t, TimeDiff(d), 0] for id, t, d in q]
+        posts = [[id, title, TimeDiff(created), count]
+            for id, title, created, count in q]
+
         posts.reverse()
 
     except Exception as e:
