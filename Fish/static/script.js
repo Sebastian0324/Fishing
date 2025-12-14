@@ -2268,8 +2268,9 @@ const res = await fetch(`/comments/${discussionId}`, {
 }
 
 function renderComments(comments, depth = 0) {
+  const indent = depth > 0 ? 24 : 0;
   return comments.map(comment => `
-    <div class="comment" style="margin-left: ${depth * 24}px">
+    <div class="comment" style="margin-left: ${indent}px">
 
       <img class="comment-avatar"
            src="/profile-picture/${comment.user.id}">
@@ -2297,10 +2298,11 @@ function renderComments(comments, depth = 0) {
           ` : ""}
           ${comment.is_owner ? `
             <button class="edit-comment-btn" data-id="${comment.id}">Edit</button>
-            <button class="delete-comment-btn" data-id="${comment.id}">Delete</button>
-
             <button class="save-comment-btn" data-id="${comment.id}" style="display:none;">Save</button>
             <button class="cancel-edit-btn" data-id="${comment.id}" style="display:none;">Cancel</button>
+          ` : ""}
+          ${comment.can_delete ? `
+            <button class="delete-comment-btn" data-id="${comment.id}">Delete</button>
           ` : ""}
         </div>
 
@@ -2308,7 +2310,10 @@ function renderComments(comments, depth = 0) {
              id="reply-form-${comment.id}"></div>
 
         ${comment.children?.length
-          ? renderComments(comment.children, depth + 1)
+          ? `<div class="comment-children">
+               <div class="thread-connector"></div>
+               ${renderComments(comment.children, depth + 1)}
+             </div>`
           : ""}
 
         

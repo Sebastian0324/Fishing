@@ -325,6 +325,9 @@ def get_comments(discussion_id):
         rows = cursor.fetchall()
         conn.close()
 
+        # Check if current user is admin
+        is_admin = session.get("name") == "admin"
+
         # create flat comments
         comments = []
         for r in rows:
@@ -337,9 +340,10 @@ def get_comments(discussion_id):
                     "id": r[4],
                     "username": r[5],
                 },
-                "is_owner": session.get("user_id") == r[4]
+                "is_owner": session.get("user_id") == r[4],
+                "can_delete": (session.get("user_id") == r[4]) or is_admin
             })
-        return jsonify({"success": True, "comments": comments, "is_logged_in": bool(session.get("user_id"))}), 200
+        return jsonify({"success": True, "comments": comments, "is_logged_in": bool(session.get("user_id")), "is_admin": is_admin}), 200
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -401,6 +405,28 @@ def delete_comment():
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
+        # Check if current user is the comment owner
+        cursor.execute("""
+            SELECT User_ID FROM Comment
+            WHERE Comment_ID = ?
+        """, (comment_id,))
+        
+        result = cursor.fetchone()
+        if not result:
+            conn.close()
+            return jsonify({"success": False, "error": "Comment not found"}), 404
+        
+        comment_user_id = result[0]
+        is_owner = comment_user_id == session["user_id"]
+        
+        # Check if current user is admin
+        is_admin = session.get("name") == "admin"
+        
+        # Only owner or admin can delete
+        if not is_owner and not is_admin:
+            conn.close()
+            return jsonify({"success": False, "error": "Not allowed"}), 403
+
         # soft delete if comment has children otherwise hard delete
         cursor.execute("""
             SELECT COUNT(*) FROM Comment
@@ -412,18 +438,14 @@ def delete_comment():
             cursor.execute("""
                 UPDATE Comment
                 SET Text = '[deleted]', User_ID = 0
-                WHERE Comment_ID = ? AND User_ID = ?
-            """, (comment_id, session["user_id"]))
+                WHERE Comment_ID = ?
+            """, (comment_id,))
         else:
             # Hard delete
             cursor.execute("""
                 DELETE FROM Comment
-                WHERE Comment_ID = ? AND User_ID = ?
-            """, (comment_id, session["user_id"]))
-
-        if cursor.rowcount == 0:
-            conn.close()
-            return jsonify({"success": False, "error": "Not allowed"}), 403
+                WHERE Comment_ID = ?
+            """, (comment_id,))
 
         conn.commit()
         conn.close()
