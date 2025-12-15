@@ -1820,17 +1820,17 @@ main h1 {
 /* Verdict-specific row colors */
 .uploads-table tbody tr.Phishing:hover {
     box-shadow: 0 14px 36px rgba(255, 77, 77, 0.35);
-    background: linear-gradient(135deg, rgba(255, 77, 77, 0.28), rgba(255, 77, 77, 0.12));
+    border: 1px solid rgba(255, 77, 77, 0.2);
 }
 
 .uploads-table tbody tr.Suspicious:hover {
     box-shadow: 0 14px 36px rgba(255, 193, 7, 0.35);
-    background: linear-gradient(135deg, rgba(255, 193, 7, 0.28), rgba(255, 193, 7, 0.12));
+    border: 1px solid rgba(255, 193, 7, 0.2);
 }
 
 .uploads-table tbody tr.Benign:hover {
     box-shadow: 0 14px 36px rgba(40, 167, 69, 0.35);
-    background: linear-gradient(135deg, rgba(40, 167, 69, 0.28), rgba(40, 167, 69, 0.12));
+    border: 1px solid rgba(40, 167, 69, 0.2);
 }
 
 /* Verdict text styling in table cells */

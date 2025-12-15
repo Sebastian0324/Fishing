@@ -15,6 +15,15 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+// Check if returning from forum dialog login
+if (sessionStorage.getItem('returnToForumDialog')) {
+  const fileIndex = sessionStorage.getItem('forumDialogFileIndex');
+  sessionStorage.removeItem('returnToForumDialog');
+  sessionStorage.removeItem('forumDialogFileIndex');
+  window.returnToForumAfterPageLoad = true;
+  window.forumDialogFileIndexAfterPageLoad = parseInt(fileIndex, 10);
+}
+
 // -------========------- Forum Tag Filter Dropdown =======--------
 document.addEventListener("DOMContentLoaded", function() {
   const tagFilter = document.getElementById("tag-filter");
@@ -47,6 +56,12 @@ document.addEventListener("DOMContentLoaded", function() {
         topicList.innerHTML = '<li class="topic-item"><em>Error loading discussions.</em></li>';
       }
     });
+  }
+  
+  // Check if returning from forum dialog login
+  if (window.returnToForumAfterPageLoad) {
+    window.returnToForumAfterPageLoad = false;
+    AskToCreateForum(window.forumDialogFileIndexAfterPageLoad);
   }
 });
 // -------========-------    Sign Up    -------========-------
@@ -209,7 +224,16 @@ if (Sign && SignIn && SignUp) {
     let SignInData = await SignInResponse.json();
 
     if (SignInData.success) {
-      window.open(window.location.href, "_self");
+      // Check if user is returning from forum dialog
+      if (window.returnToForumDialog) {
+        // Store in sessionStorage so it persists across page reload
+        sessionStorage.setItem('returnToForumDialog', 'true');
+        sessionStorage.setItem('forumDialogFileIndex', window.forumDialogFileIndex);
+        // Reload the page to update login state
+        window.location.reload();
+      } else {
+        window.open(window.location.href, "_self");
+      }
     } else {
       signinErrorDiv.innerHTML = `<strong>Error:</strong> ${SignInData.error || SignInData.message || "Incorect username or password"}`;
       signinErrorDiv.style.display = "block";
@@ -1185,6 +1209,9 @@ function AskToCreateForum(fileIndex) {
   askAboutForum[fileIndex] = false;
 
   const container = document.getElementById("result");
+  const isLoggedIn = !!document.getElementById("Logout_btn");
+  const yesDisabled = isLoggedIn ? '' : 'disabled';
+  
   html = `<div id="AskCreateForum" class="centered backdrop">
       <div id="AskForForumForm" class="centered colored-border">
         <button id="CloseQuestion" type="button" class="close-btn">✕</button>
@@ -1195,13 +1222,14 @@ function AskToCreateForum(fileIndex) {
         <form>
           <h3 class="section-header">Do You Want to Create a Forum post?</h2>
           <div id="forumForm" class="form-check form-switch">
-            <label for="Yes"><input type="radio" id="Yes" value="Yes" name="CreateForum" class="form-check-input" required>
+            <label for="Yes"><input type="radio" id="Yes" value="Yes" name="CreateForum" class="form-check-input" ${yesDisabled} required>
             Yes</label>
 
             <label for="No"><input type="radio" id="No" value="No" name="CreateForum" class="form-check-input" required>
             No</label>
           </div>
-          <button type="submit" class="submit-btn">Submit</button>
+          ${!isLoggedIn ? '<p id="LoginWarning" style="color: #ff6b6b; margin-top: 1rem;"><strong>Note:</strong> You must be logged in to create a forum post. <a href="#" id="LoginLink" style="color: #ff6b6b; text-decoration: underline;">Log in here</a>.</p>' : ''}
+          <button type="submit" class="submit-btn" id="ForumSubmitBtn">Submit</button>
         </form>
       </div>
     </div>`;
@@ -1214,6 +1242,24 @@ function AskToCreateForum(fileIndex) {
     document.getElementById("AskCreateForum").remove();
     document.body.style.overflow = '';
   });
+  
+  // Add login link handler if user is not logged in
+  if (!isLoggedIn) {
+    const loginLink = document.getElementById("LoginLink");
+    if (loginLink) {
+      loginLink.addEventListener("click", function(e) {
+        e.preventDefault();
+        // Set flags to return to forum dialog after login
+        window.returnToForumDialog = true;
+        window.forumDialogFileIndex = fileIndex;
+        // Close the forum question and show login modal
+        document.getElementById("AskCreateForum").remove();
+        document.body.style.overflow = '';
+        document.getElementById("Login_btn").click();
+      });
+    }
+  }
+  
   document.getElementById("AskCreateForum").getElementsByTagName("form")[0].onsubmit = async (e) => {
     e.preventDefault();
 
@@ -1221,6 +1267,10 @@ function AskToCreateForum(fileIndex) {
     const answer = formData.get("CreateForum");
 
     if (answer == "Yes") {
+      if (!isLoggedIn) {
+        alert("You must be logged in to create a forum post.");
+        return;
+      }
       Forum_Creator(e);
       document.getElementById("AskCreateForum").remove();
       document.body.style.overflow = '';
