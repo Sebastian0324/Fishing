@@ -2261,6 +2261,7 @@ const res = await fetch(`/comments/${discussionId}`, {
 
   const tree = buildCommentTree(data.comments);
   window.IS_LOGGED_IN = data.is_logged_in;
+  window.IS_ADMIN = data.is_admin;
 
   document.getElementById("comments-root").innerHTML = `
     ${renderComments(tree)}
@@ -2279,6 +2280,7 @@ function renderComments(comments, depth = 0) {
         <div class="comment-header">
           <span class="comment-author">${comment.user.username}</span>
           <span class="comment-time">${comment.created_at}</span>
+          ${!comment.user.can_post ? `<span class="banned-badge">🚫 Banned from commenting</span>` : ""}
         </div>
 
         <p class="comment-text" data-id="${comment.id}">
@@ -2303,6 +2305,11 @@ function renderComments(comments, depth = 0) {
           ` : ""}
           ${comment.can_delete ? `
             <button class="delete-comment-btn" data-id="${comment.id}">Delete</button>
+          ` : ""}
+          ${window.IS_ADMIN && !comment.is_owner ? `
+            <button class="ban-user-btn" data-user-id="${comment.user.id}" data-username="${comment.user.username}" data-can-post="${comment.user.can_post}">
+              ${comment.user.can_post ? '🚫 Ban User' : '✅ Unban User'}
+            </button>
           ` : ""}
         </div>
 
@@ -2535,6 +2542,46 @@ document.addEventListener("click", async function (e) {
     return;
   }
 
+  const discussionId = document
+    .querySelector(".topic-item.active")?.value;
+
+  if (discussionId) {
+    await loadComments(discussionId);
+  }
+});
+
+// Admin: Ban/Unban user from posting
+document.addEventListener("click", async function (e) {
+  if (!e.target.classList.contains("ban-user-btn")) return;
+
+  const userId = e.target.dataset.userId;
+  const username = e.target.dataset.username;
+  const canPost = e.target.dataset.canPost === "true";
+
+  if (!userId) return;
+
+  const action = canPost ? "ban" : "unban";
+  const confirmAction = confirm(
+    `Are you sure you want to ${action} ${username} from posting?`
+  );
+  if (!confirmAction) return;
+
+  const res = await fetch("/admin/toggle-user-posting", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ user_id: parseInt(userId) })
+  });
+
+  const data = await res.json();
+  if (!data.success) {
+    alert(data.error || "Failed to update user posting permission");
+    return;
+  }
+
+  alert(data.message);
+
+  // Reload comments to reflect the change
   const discussionId = document
     .querySelector(".topic-item.active")?.value;
 

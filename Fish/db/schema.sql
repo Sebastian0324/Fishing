@@ -2,7 +2,8 @@ CREATE TABLE IF NOT EXISTS User(
     User_ID INTEGER PRIMARY KEY AUTOINCREMENT,
     Username TEXT NOT NULL,
     Password_Hash TEXT NOT NULL,
-    Profile_picture BLOB
+    Profile_picture BLOB,
+    can_post INTEGER DEFAULT 1 CHECK(can_post IN (0, 1))
 );
 
 

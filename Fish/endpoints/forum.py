@@ -265,6 +265,22 @@ def create_comment():
             "error": "Not authenticated"
         }), 401
 
+    # Check if user is allowed to post
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("""SELECT can_post FROM User WHERE User_ID = ?""", (session["user_id"],))
+        result = cursor.fetchone()
+        conn.close()
+        
+        if not result or not result[0]:
+            return jsonify({
+                "success": False,
+                "error": "You have been restricted from posting by an administrator"
+            }), 403
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Database error: {str(e)}"}), 500
+
     data = request.get_json(silent=True)
     if not data:
         return jsonify({"success": False, "error": "Invalid request"}), 400
@@ -315,7 +331,8 @@ def get_comments(discussion_id):
                 Comment.Text,
                 Comment.Created_At,
                 User.User_ID,
-                User.Username
+                User.Username,
+                User.can_post
             FROM Comment
             JOIN User ON User.User_ID = Comment.User_ID
             WHERE Comment.Discussion_ID = ?
@@ -339,6 +356,7 @@ def get_comments(discussion_id):
                 "user": {
                     "id": r[4],
                     "username": r[5],
+                    "can_post": bool(r[6])
                 },
                 "is_owner": session.get("user_id") == r[4],
                 "can_delete": (session.get("user_id") == r[4]) or is_admin
@@ -456,5 +474,58 @@ def delete_comment():
             "message": "Comment deleted successfully"
         }), 200
 
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@bp_forum.post("/admin/toggle-user-posting")
+def toggle_user_posting():
+    """Admin endpoint to ban/unban a user from posting"""
+    if not session.get("user_id"):
+        return jsonify({"success": False, "error": "Not authenticated"}), 401
+    
+    # Check if current user is admin
+    if session.get("name") != "admin":
+        return jsonify({"success": False, "error": "Admin access required"}), 403
+    
+    data = request.get_json(silent=True) or {}
+    target_user_id = data.get("user_id")
+    
+    if not target_user_id:
+        return jsonify({"success": False, "error": "Missing user_id"}), 400
+    
+    # Prevent admin from banning themselves
+    if target_user_id == session["user_id"]:
+        return jsonify({"success": False, "error": "Cannot ban yourself"}), 400
+    
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Get current can_post status
+        cursor.execute("""SELECT can_post, Username FROM User WHERE User_ID = ?""", (target_user_id,))
+        result = cursor.fetchone()
+        
+        if not result:
+            conn.close()
+            return jsonify({"success": False, "error": "User not found"}), 404
+        
+        current_status = result[0]
+        username = result[1]
+        new_status = 0 if current_status else 1
+        
+        # Toggle can_post status
+        cursor.execute("""UPDATE User SET can_post = ? WHERE User_ID = ?""", (new_status, target_user_id))
+        conn.commit()
+        conn.close()
+        
+        action = "unbanned" if new_status else "banned"
+        return jsonify({
+            "success": True,
+            "status_code": 200,
+            "message": f"User {username} has been {action} from posting",
+            "can_post": bool(new_status)
+        }), 200
+    
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
