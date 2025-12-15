@@ -851,8 +851,10 @@ function renderFileAnalysis(fileIndex) {
 
     resultDiv.innerHTML = tabsHTML + `<div id="analysisContent"></div>`;
   }
-  AskToCreateForum(0)
-
+  
+  if (askAboutForum[0]) {
+    AskToCreateForum(0);
+  }
   // Update only the content area
   const contentArea = document.getElementById("analysisContent");
   if (contentArea) {
@@ -3168,6 +3170,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if (downloadSection) downloadSection.classList.add("hidden");
 
         // Start analysis for the single email
+        askAboutForum = [false];
         renderFileAnalysis(0);
         runFileAnalyses(0);
       }
