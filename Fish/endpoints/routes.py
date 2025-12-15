@@ -368,17 +368,16 @@ def get_most_commented_statistics():
     cursor = conn.cursor()
     try:
         cursor.execute("""
-            SELECT e.Title, COUNT(c.Comment_ID) AS comment_count
-            FROM Email e
-            JOIN Discussion d ON e.Email_ID = d.Email_ID
+            SELECT d.Discussion_ID, d.Title, COUNT(c.Comment_ID) AS comment_count
+            FROM Discussion d
             JOIN Comment c ON d.Discussion_ID = c.Discussion_ID
-            GROUP BY e.Email_ID, e.Title
+            GROUP BY d.Discussion_ID, d.Title
             ORDER BY comment_count DESC
             LIMIT 10
         """)
         rows = cursor.fetchall()
         return {
-            "top_commented_emails": [(title, count) for (title, count) in rows]
+            "top_commented_emails": [(discussion_id, title, count) for (discussion_id, title, count) in rows]
         }
 
     except Exception as e:

@@ -347,15 +347,16 @@ div#Login {
 /* ################################## */
 
 #LoginContainer, .backdrop {
-    position: absolute;
+    position: fixed;
     top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     background: #000000cc;
     z-index: 10000;
 }
 .centered {
-    position: absolute;
+    position: fixed;
     transform: translate(-50%, -50%);
     left: 50%;
     top: 50%;
@@ -2715,6 +2716,13 @@ main h1 {
         font-size: 1rem;
     }
 }
+
+.login-hint {
+    font-size: 1.3rem;
+    font-weight: bold;
+    padding: 1rem 0;
+}
+
 /* ################################## */
 /* #########    End of File   ######### */
 /* ################################## */

@@ -136,6 +136,11 @@
                 });
             });
         })();
+
+        function viewForumPost(discussionId) {
+            // Navigate to Forum page with post_id parameter
+            window.location.href = `/Forum?post_id=${discussionId}`;
+        }
     </script>
 
 {% else %}

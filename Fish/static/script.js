@@ -1187,7 +1187,7 @@ function AskToCreateForum(fileIndex) {
       <div id="AskForForumForm" class="centered colored-border">
         <button id="CloseQuestion" type="button" class="close-btn">✕</button>
         <h1 class="page-title">Get Community Feedback</h1>
-        <p>Would you like to shear your email wiht the comunity?</p>
+        <p>Would you like to share your email with the community?</p>
         <p>To get a better understanding of what threats you might be facing, there is no place better our Forum.</p>
         <p>Create a Forum post to see what to community has to say about your situation.</p>
         <form>
@@ -1199,14 +1199,18 @@ function AskToCreateForum(fileIndex) {
             <label for="No"><input type="radio" id="No" value="No" name="CreateForum" class="form-check-input" required>
             No</label>
           </div>
-          <button type="submit" class="submit-btn">Submitt</button>
+          <button type="submit" class="submit-btn">Submit</button>
         </form>
       </div>
     </div>`;
   container.insertAdjacentHTML("beforebegin", html);
 
+  // Disable background scrolling
+  document.body.style.overflow = 'hidden';
+
   document.getElementById("CloseQuestion").addEventListener("click", function() {
     document.getElementById("AskCreateForum").remove();
+    document.body.style.overflow = '';
   });
   document.getElementById("AskCreateForum").getElementsByTagName("form")[0].onsubmit = async (e) => {
     e.preventDefault();
@@ -1217,8 +1221,10 @@ function AskToCreateForum(fileIndex) {
     if (answer == "Yes") {
       Forum_Creator(e);
       document.getElementById("AskCreateForum").remove();
+      document.body.style.overflow = '';
     } else {
       document.getElementById("AskCreateForum").remove();
+      document.body.style.overflow = '';
     }
   };
 }
@@ -2166,6 +2172,16 @@ for (let i = 0; i < ForumPosts.length; i++) {
   ForumPosts[i].addEventListener("click", ShowForum);
 }
 
+// Check if there's a post_id parameter in the URL and auto-select it
+const urlParams = new URLSearchParams(window.location.search);
+const postIdParam = urlParams.get('post_id');
+if (postIdParam) {
+  const postElement = document.querySelector(`.topic-item[value="${postIdParam}"]`);
+  if (postElement) {
+    postElement.click();
+  }
+}
+
 function DeletForumCreator() {
   document.getElementById("CreateForumBackdrop").remove();
 }
@@ -2352,7 +2368,7 @@ async function ShowForum(e) {
         <button id="post-comment-btn">Comment</button>
       </div>
     ` : `
-      <p class="login-hint">Log in to comment.</p>
+      <p class="login-hint">Log in to comment!</p>
     `}
 </div>
     `;

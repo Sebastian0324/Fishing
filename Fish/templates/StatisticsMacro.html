@@ -185,13 +185,15 @@
 </div>
 <div class="most-commented-list">
     {% if most_commented.top_commented_emails %}
-        {% for subject, count in most_commented.top_commented_emails %}
-        <div class="most-commented-item {% if count >= 5 %}high-comment{% endif %}">
-            <div style="flex: 1;">
-                <div class="discussion-title"><i class="bi bi-envelope-fill" style="margin-right: 0.5em; color: #6E5DC6;"></i>{{ subject }}</div>
-                <span class="comment-count"><i class="bi bi-chat-dots-fill"></i>{{ count }} comments</span>
+        {% for discussion_id, subject, count in most_commented.top_commented_emails %}
+        <a href="#" onclick="viewForumPost({{ discussion_id }}); return false;" style="text-decoration: none; color: inherit; cursor: pointer;">
+            <div class="most-commented-item {% if count >= 5 %}high-comment{% endif %}">
+                <div style="flex: 1;">
+                    <div class="discussion-title"><i class="bi bi-envelope-fill" style="margin-right: 0.5em; color: #6E5DC6;"></i>{{ subject }}</div>
+                    <span class="comment-count"><i class="bi bi-chat-dots-fill"></i>{{ count }} comments</span>
+                </div>
             </div>
-        </div>
+        </a>
         {% endfor %}
     {% else %}
         <div class="most-commented-item">
@@ -240,7 +242,7 @@
         <div class="stat-card stat-suspicious">
             <div class="stat-icon"><i class="bi bi-flag-fill"></i></div>
             <div class="stat-value">{{ admin_stats.pending_moderations or 0 }}</div>
-            <div class="stat-label">Pending Moderations</div>
+            <div class="stat-label">Empty Discussions</div>
         </div>
         <div class="stat-card stat-phishing">
             <div class="stat-icon"><i class="bi bi-shield-exclamation"></i></div>
