@@ -396,12 +396,12 @@ def account():
             conn = sqlite3.connect(DB_PATH)
             cursor = conn.cursor()
 
-            cursor.execute("""SELECT Email.Email_ID, Analysis.Analyzed_At, Email.Title FROM Email 
+            cursor.execute("""SELECT Email.Email_ID, Analysis.verdict, Analysis.Analyzed_At, Email.Title FROM Email 
                            LEFT JOIN Analysis ON Email.Email_ID = Analysis.Email_ID WHERE User_ID = ?""",
                        (session["user_id"], ))
             
             q = cursor.fetchall()
-            emails = [(id, str(title).strip('"'), str(time).split('T')[0]) for id, time, title in q]
+            emails = [(id, verdict, str(title).strip('"'), str(time).split('T')[0]) for id, verdict, time, title in q]
 
         except Exception as e:
             return jsonify({

@@ -1813,6 +1813,38 @@ main h1 {
 .uploads-table tbody tr td:first-child { border-top-left-radius: 0.6rem; border-bottom-left-radius: 0.6rem; }
 .uploads-table tbody tr td:last-child { border-top-right-radius: 0.6rem; border-bottom-right-radius: 0.6rem; }
 
+/* Verdict-specific row colors */
+.uploads-table tbody tr.Phishing:hover {
+    box-shadow: 0 14px 36px rgba(255, 77, 77, 0.35);
+    background: linear-gradient(135deg, rgba(255, 77, 77, 0.28), rgba(255, 77, 77, 0.12));
+}
+
+.uploads-table tbody tr.Suspicious:hover {
+    box-shadow: 0 14px 36px rgba(255, 193, 7, 0.35);
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.28), rgba(255, 193, 7, 0.12));
+}
+
+.uploads-table tbody tr.Benign:hover {
+    box-shadow: 0 14px 36px rgba(40, 167, 69, 0.35);
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.28), rgba(40, 167, 69, 0.12));
+}
+
+/* Verdict text styling in table cells */
+.uploads-table tbody tr.Phishing td:nth-child(2) {
+    color: #ff4d4d;
+    font-weight: 600;
+}
+
+.uploads-table tbody tr.Suspicious td:nth-child(2) {
+    color: #ffc107;
+    font-weight: 600;
+}
+
+.uploads-table tbody tr.Benign td:nth-child(2) {
+    color: #28a745;
+    font-weight: 600;
+}
+
 /* Responsive: stack rows on small screens */
 @media (max-width: 720px) {
     .uploads-table thead { display: none; }

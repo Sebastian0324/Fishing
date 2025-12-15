@@ -87,11 +87,8 @@ def ForumCreation():
         }), 400
     
     eml_id = request.form.get("Selected-email")
-    raw_title = request.form.get("title")
-    raw_text = request.form.get("description")
-
-    title = html.escape(raw_title)
-    text = html.escape(raw_text)
+    title = request.form.get("title")
+    text = request.form.get("description")
 
     try:
         # Connect to database
