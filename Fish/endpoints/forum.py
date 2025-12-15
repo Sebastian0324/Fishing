@@ -217,6 +217,8 @@ def GetForum():
         is_owner = False
         if session.get("user_id") and session["user_id"] == q[8]:
             is_owner = True
+        
+        is_admin = session.get("name") == "admin"
 
     except Exception as e:
         return jsonify({
@@ -234,6 +236,7 @@ def GetForum():
     "user": user_info,
     "email": email_display,
     "is_owner": is_owner,
+    "is_admin": is_admin,
     "discussion_id": post_id,
     "is_logged_in": bool(session.get("user_id"))
     }), 200
@@ -271,8 +274,10 @@ def DeleteDiscussion(discussion_id):
             }), 404
         
         owner_id = result[1]
+        is_admin = session.get("name") == "admin"
         
-        if owner_id != session["user_id"]:
+        # Allow deletion if user is the owner OR if user is admin
+        if owner_id != session["user_id"] and not is_admin:
             return jsonify({
                 "success": False,
                 "error": "Forbidden",

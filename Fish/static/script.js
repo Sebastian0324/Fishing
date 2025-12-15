@@ -2299,7 +2299,7 @@ async function ShowForum(e) {
       </div>
     `;
     
-    const deleteButtonHTML = data.is_owner ? `
+    const deleteButtonHTML = (data.is_owner || data.is_admin) ? `
       <button class="delete-discussion-btn" data-discussion-id="${data.discussion_id}" title="Delete this discussion">
         <span class="delete-label">Delete</span>
         <i class="bi bi-trash"></i>
