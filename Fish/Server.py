@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from flask import Flask, jsonify, send_file
+from flask import Flask, jsonify, send_file, request
 from flask_session import Session
 from static.Helper_eml import init_db
 import zipfile 
@@ -139,6 +139,70 @@ def download_both():
         download_name="angler_phishing_emails_and_analysis.zip",
         as_attachment=True
     )
+
+@app.route('/download/email/<int:email_id>')
+def download_single(email_id):
+    """Download individual email, analysis, or both depending on query parameters."""
+    want_eml = request.args.get("eml") == "1"
+    want_analysis = request.args.get("analysis") == "1"
+
+    if not want_eml and not want_analysis:
+        return "No download option selected.", 400
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT e.Eml_file, e.Title, a.Details_json
+        FROM Email e
+        LEFT JOIN Analysis a ON e.Email_ID = a.Email_ID
+        WHERE e.Email_ID = ?
+    """, (email_id,))
+    row = cursor.fetchone()
+    conn.close()
+
+    if not row:
+        return "Email not found", 404
+
+    eml_blob, title, details_json = row
+
+    # Sanitize title for filenames
+    safe_title = "".join(c for c in title if c.isalnum() or c in [' ', '-', '_']).rstrip().replace(" ", "_")
+
+    # CASE 1: Only .eml
+    if want_eml and not want_analysis:
+        return send_file(
+            BytesIO(eml_blob),
+            mimetype="message/rfc822",
+            download_name=f"{safe_title}.eml",
+            as_attachment=True
+        )
+
+    # CASE 2: Only analysis
+    if want_analysis and not want_eml:
+        return send_file(
+            BytesIO(details_json.encode("utf-8") if details_json else b"{}"),
+            mimetype="application/json",
+            download_name=f"{safe_title}-analysis.json",
+            as_attachment=True
+        )
+
+    # CASE 3: Both 
+    zip_buffer = BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as z:
+        if eml_blob:
+            z.writestr(f"{safe_title}.eml", eml_blob)
+        if details_json:
+            z.writestr(f"{safe_title}-analysis.json", details_json.encode("utf-8") if details_json else b"{}")
+
+    zip_buffer.seek(0)
+
+    return send_file(
+        zip_buffer,
+        mimetype="application/zip",
+        download_name=f"{safe_title}_bundle.zip",
+        as_attachment=True
+    )
+
 
 
 
