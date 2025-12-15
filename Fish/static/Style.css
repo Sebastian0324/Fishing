@@ -1502,108 +1502,112 @@ tbody tr:nth-child(odd) {
     }
 }
 
-.comment {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px;
-    margin: 8px 0;
-    border-radius: 12px;
-    background: linear-gradient(135deg, rgba(110, 93, 198, 0.10), rgba(160, 81, 130, 0.10));
+ .comment {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px;
+        margin: 8px 0;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(110, 93, 198, 0.02), rgba(160, 81, 130, 0.009));
      
      
 }
 
 .comment-children {
-    position: relative;
-    margin-top: 8px;
-    padding-left: 16px;
+        position: relative;
+        margin-top: 8px;
 }
 
 .thread-connector {
-    position: absolute;
-    top: 0;
-    left: 6px;
-    width: 2px;
-    height: calc(100% - 4px);
-    background: linear-gradient(180deg, rgba(110,93,198,0.5), rgba(160,81,130,0.5));
-    border-radius: 2px;
+        position: absolute;
+        top: 0;
+        left: 6px;
+        width: 2px;
+        height: calc(100% - 4px);
+        background: linear-gradient(180deg, rgba(110,93,198,0.5), rgba(160,81,130,0.5));
+        border-radius: 2px;
 }
 
 .comment-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  margin-right: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 10px;
 }
 
 .comment-body {
-  flex: 1;
+    flex: 1;
 }
 
 .comment-header {
-  font-size: 0.85rem;
-  color: #aaa;
+    font-size: 0.85rem;
+    color: #aaa;
 }
 
 .comment-author {
-  font-weight: 600;
-  margin-right: 6px;
+    font-weight: 600;
+    margin-right: 6px;
+}
+
+.comment-text.deleted-comment {
+    color: #ff4d4d;
+    font-style: italic;
 }
 
 .reply-btn {
-  background: none;
-  border: none;
-  color: #4ea1ff;
-  cursor: pointer;
-  font-size: 0.85rem;
+    background: none;
+    border: none;
+    color: #4ea1ff;
+    cursor: pointer;
+    font-size: 0.85rem;
 }
 .comment-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 4px;
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
 }
 
 .edit-comment-btn,
 .delete-comment-btn {
-  background: none;
-  border: none;
-  font-size: 0.85rem;
-  cursor: pointer;
-  color: #777;
+    background: none;
+    border: none;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: #777;
 }
 
 .edit-comment-btn:hover {
-  color: #0056b3;
+    color: #0056b3;
 }
 
 .delete-comment-btn:hover {
-  color: #b30000;
+    color: #b30000;
 }
 
 .ban-user-btn {
-  background: none;
-  border: none;
-  font-size: 0.85rem;
-  cursor: pointer;
-  color: #ff6b35;
-  font-weight: 500;
+    background: none;
+    border: none;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: #ff6b35;
+    font-weight: 500;
 }
 
 .ban-user-btn:hover {
-  color: #ff4500;
-  text-decoration: underline;
+    color: #ff4500;
+    text-decoration: underline;
 }
 
 .banned-badge {
-  background: rgba(255, 69, 0, 0.15);
-  color: #ff6b35;
-  padding: 2px 8px;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  margin-left: 8px;
-  border: 1px solid rgba(255, 107, 53, 0.3);
+    background: rgba(255, 69, 0, 0.15);
+    color: #ff6b35;
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 8px;
+    border: 1px solid rgba(255, 107, 53, 0.3);
 }
 
 .comment.editing {

@@ -209,7 +209,7 @@ def GetForum():
             profile_pic = base64.b64encode(q[7]).decode('utf-8')
         
         user_info = {
-            "username": q[6],
+            "username": q[6].capitalize(),
             "profile_picture": profile_pic,
             "user_id": q[8]
         }
@@ -398,7 +398,7 @@ def get_comments(discussion_id):
                 "created_at": r[3],
                 "user": {
                     "id": r[4],
-                    "username": r[5],
+                    "username": r[5].capitalize(),
                     "can_post": bool(r[6])
                 },
                 "is_owner": session.get("user_id") == r[4],
@@ -498,7 +498,7 @@ def delete_comment():
             # Soft delete
             cursor.execute("""
                 UPDATE Comment
-                SET Text = '[deleted]', User_ID = 0
+                SET Text = '[Deleted comment]'
                 WHERE Comment_ID = ?
             """, (comment_id,))
         else:
