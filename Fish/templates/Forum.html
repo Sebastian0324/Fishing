@@ -13,13 +13,22 @@
                         <div class="topic-header">
                             <div class="header-with-close">
                                 <h3 class="section-header">Discussions</h3>
-
                                 {% if session.name %}
                                 <button id="new-forum" class="new-discussion-btn">
                                     <i class="bi bi-plus-circle"></i> New
                                 </button>
                                 {% endif %}
                             </div>
+                        </div>
+                        <!-- Tag/Topic Dropdown for Sorting -->
+                        <div style="margin: 1rem 0;">
+                            <label for="tag-filter" class="form-label">Sort by Topic/Tag:</label>
+                            <select id="tag-filter" class="form-select">
+                                <option value="">All Topics</option>
+                                {% for tag in tags %}
+                                    <option value="{{ tag }}">{{ tag }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                         <ul class="topic-list">
                             {% for id, title, Created, nr_comments in post %}

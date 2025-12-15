@@ -1,3 +1,37 @@
+// -------========------- Forum Tag Filter Dropdown =======--------
+document.addEventListener("DOMContentLoaded", function() {
+  const tagFilter = document.getElementById("tag-filter");
+  const topicList = document.querySelector(".topic-list");
+  if (tagFilter && topicList) {
+    tagFilter.addEventListener("change", async function() {
+      const tag = tagFilter.value;
+      let url = "/Forum_Posts_By_Tag";
+      if (tag) url += `?tag=${encodeURIComponent(tag)}`;
+      try {
+        const resp = await fetch(url);
+        const data = await resp.json();
+        if (data.success) {
+          // Clear and repopulate topic list
+          topicList.innerHTML = "";
+          if (data.posts.length === 0) {
+            topicList.innerHTML = '<li class="topic-item"><em>No discussions found for this tag.</em></li>';
+          } else {
+            for (const [id, title, created, nr_comments] of data.posts) {
+              const li = document.createElement("li");
+              li.className = "topic-item";
+              li.value = id;
+              li.innerHTML = `<h2 class="discussion-title">${title}</h2><p class="topic-meta">Posted ${created} ago • ${nr_comments} replies</p>`;
+              li.addEventListener("click", ShowForum);
+              topicList.appendChild(li);
+            }
+          }
+        }
+      } catch (err) {
+        topicList.innerHTML = '<li class="topic-item"><em>Error loading discussions.</em></li>';
+      }
+    });
+  }
+});
 // -------========-------    Sign Up    -------========-------
 
 let login = document.getElementById("LoginContainer");

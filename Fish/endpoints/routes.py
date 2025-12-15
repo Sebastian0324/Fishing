@@ -16,7 +16,9 @@ def form():
 @bp_ui.route('/Forum')
 def Forum():
     posts = GetForumPosts()
-    return render_template('Forum.html', post=posts)
+    tag_stats = get_common_subjects_statistics(limit=50)
+    tags = [t['tag'] for t in tag_stats['top']]
+    return render_template('Forum.html', post=posts, tags=tags)
 
 @bp_ui.route('/Statistics')
 def admin():

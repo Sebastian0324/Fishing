@@ -7,6 +7,43 @@ from static.Helper_eml import DB_PATH
 
 bp_forum = Blueprint('bp_forum', __name__)
 
+@bp_forum.get('/Forum_Posts_By_Tag')
+def ForumPostsByTag():
+    tag = request.args.get('tag', '').strip()
+    posts = []
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        if tag:
+            cursor.execute('''
+                SELECT d.Discussion_ID, d.Title, d.Created_At, COUNT(c.Comment_ID) AS comment_count
+                FROM Discussion d
+                LEFT JOIN Comment c ON c.Discussion_ID = d.Discussion_ID
+                JOIN Email e ON d.Email_ID = e.Email_ID
+                WHERE e.Tag = ?
+                GROUP BY d.Discussion_ID
+                ORDER BY d.Created_At DESC
+            ''', (tag,))
+        else:
+            cursor.execute('''
+                SELECT d.Discussion_ID, d.Title, d.Created_At, COUNT(c.Comment_ID) AS comment_count
+                FROM Discussion d
+                LEFT JOIN Comment c ON c.Discussion_ID = d.Discussion_ID
+                GROUP BY d.Discussion_ID
+                ORDER BY d.Created_At DESC
+            ''')
+        q = cursor.fetchall()
+        posts = [[id, title, TimeDiff(created), count] for id, title, created, count in q]
+        posts.reverse()
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Database error: {str(e)}",
+            "status_code": 500,
+            "message": "Failed due to server error"
+        }), 500
+    return jsonify({"success": True, "posts": posts})
+
 MAX_COMMENT_LENGTH = 2000
 
 @bp_forum.post('/Forum_Creator')
