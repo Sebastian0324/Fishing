@@ -169,6 +169,61 @@ def extract_urls(text: str | None) -> list[str]:
             seen.add(u); out.append(u)
     return out
 
+def anonymize_email_content(content: str | None) -> str:
+    """
+    Anonymize personal information in email content for privacy/GDPR compliance.
+    Replaces emails, phone numbers, and IP addresses with generic placeholders.
+    Used for both LLM analysis and forum display to ensure consistency.
+    
+    Args:
+        content: The original email content (plain text or text extracted from HTML)
+    
+    Returns:
+        Anonymized email content
+    """
+    if not content:
+        return content
+    
+    anonymized = content
+    
+    # Anonymize email addresses
+    anonymized = re.sub(
+        r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
+        '[EMAIL_REDACTED]',
+        anonymized
+    )
+    
+    # Anonymize phone numbers (various formats)
+    # International format: +1-234-567-8900, +1 (234) 567-8900
+    anonymized = re.sub(
+        r'\+?\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}',
+        '[PHONE_REDACTED]',
+        anonymized
+    )
+    
+    # US/Common format: (123) 456-7890, 123-456-7890, 123.456.7890
+    anonymized = re.sub(
+        r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}',
+        '[PHONE_REDACTED]',
+        anonymized
+    )
+    
+    # Anonymize IP addresses (IPv4)
+    anonymized = re.sub(
+        r'\b(?:\d{1,3}\.){3}\d{1,3}\b',
+        '[IP_REDACTED]',
+        anonymized
+    )
+    
+    # Anonymize IPv6 addresses
+    anonymized = re.sub(
+        r'\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b',
+        '[IP_REDACTED]',
+        anonymized
+    )
+    
+    return anonymized
+
 def clean_text(text: str | None) -> str:
     if not text:
         return ""
@@ -361,7 +416,10 @@ def sanitize_html_for_display(html: str) -> str:
 def extract_email_for_display(eml_bytes: bytes) -> dict:
     """
     Extract email content for safe display in forum.
-    Returns metadata + sanitized HTML body.
+    Returns metadata + sanitized, anonymized HTML body.
+    
+    The email is anonymized the same way as when sent to the LLM,
+    ensuring consistency in what information is redacted.
     """
     try:
         msg = _parse_message(eml_bytes)
@@ -379,14 +437,25 @@ def extract_email_for_display(eml_bytes: bytes) -> dict:
     # Sanitize HTML (neutralize links, remove scripts)
     raw_html = body.get("raw_html")
     if raw_html:
+        # First, extract plain text from HTML for anonymization
+        plain_text_for_anonymization = _html_to_text(raw_html) if raw_html else ""
+        # Anonymize the plain text version to get anonymization replacements
+        anonymized_plain = anonymize_email_content(plain_text_for_anonymization)
+        
+        # Now sanitize and anonymize the HTML
         sanitized_html = sanitize_html_for_display(raw_html)
+        
+        # Apply anonymization patterns to the sanitized HTML
+        anonymized_html = anonymize_email_content(sanitized_html)
     else:
         # Fallback: wrap plain text in pre tag
         plain_text = body.get("text", "")
-        # Escape HTML entities in plain text
+        # Anonymize plain text first
+        anonymized_text = anonymize_email_content(plain_text)
+        # Escape HTML entities in anonymized text
         import html
-        escaped = html.escape(plain_text)
-        sanitized_html = f"<pre style='white-space: pre-wrap; font-family: inherit;'>{escaped}</pre>"
+        escaped = html.escape(anonymized_text)
+        anonymized_html = f"<pre style='white-space: pre-wrap; font-family: inherit;'>{escaped}</pre>"
     
     return {
         "valid": True,
@@ -394,7 +463,7 @@ def extract_email_for_display(eml_bytes: bytes) -> dict:
         "from_name": sender.get("name"),
         "subject": subject,
         "date": date,
-        "html_body": sanitized_html,
+        "html_body": anonymized_html,
         "is_html": raw_html is not None
     }
 
