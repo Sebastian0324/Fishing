@@ -271,7 +271,7 @@ def get_admin_statistics():
          
             try:
                 last_backup_dt = datetime.fromisoformat(last_backup)
-                now = datetime.now()
+                now = datetime.now() + timedelta(hours=-1)
                 diff = now - last_backup_dt
                 if diff.days > 0:
                     last_backup = f"{diff.days} days ago"
