@@ -2481,7 +2481,7 @@ function renderComments(comments, depth = 0) {
 
       <div class="comment-body">
         <div class="comment-header">
-          <span class="comment-author">${comment.user.username}</span>
+          <span class="comment-author">${escapeHtml( comment.user.username )}</span>
           <span class="comment-time">${comment.created_at}</span>
           ${!comment.user.can_post ? `<span class="banned-badge">🚫 Banned from commenting</span>` : ""}
         </div>
