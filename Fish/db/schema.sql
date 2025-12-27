@@ -2,7 +2,8 @@ CREATE TABLE IF NOT EXISTS User(
     User_ID INTEGER PRIMARY KEY AUTOINCREMENT,
     Username TEXT NOT NULL,
     Password_Hash TEXT NOT NULL,
-    Profile_picture BLOB
+    Profile_picture BLOB,
+    can_post INTEGER DEFAULT 1 CHECK(can_post IN (0, 1))
 );
 
 
@@ -70,6 +71,7 @@ END;
 -- ===== COMMENT =====
 CREATE TABLE IF NOT EXISTS "Comment" (
   Comment_ID     INTEGER PRIMARY KEY,
+  Parent_ID      INTEGER,
   Discussion_ID  INTEGER NOT NULL,
   User_ID        INTEGER NOT NULL,
   Reference      TEXT,
@@ -77,6 +79,10 @@ CREATE TABLE IF NOT EXISTS "Comment" (
   Created_At     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (Discussion_ID)
     REFERENCES "Discussion"(Discussion_ID)
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT,
+  FOREIGN KEY (Parent_ID)
+    REFERENCES "Comment"(Comment_ID)
     ON UPDATE CASCADE
     ON DELETE RESTRICT,
   FOREIGN KEY (User_ID)
@@ -97,4 +103,4 @@ VALUES (1, 'anonymous', '!!SYSTEM!!');
 
 INSERT OR IGNORE INTO User (User_ID, Username, Password_Hash)
 VALUES (2, 'admin', '$2b$12$g7Dudw0Bo9YK5aNhLzbVU.G921DkziQ71jEHBKEf49la42LrRUEda');
--- name: admin    pass: damin
+-- name: admin    pass: admin

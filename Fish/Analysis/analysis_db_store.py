@@ -30,7 +30,8 @@ class AnalysisStore:
         score = 0
         factors = []
         
-        # VirusTotal analysis (0-40 points)
+        # VirusTotal analysis (0-60 points)
+        # Malicious vendor flags are weighted heavily in the verdict
         if vt_result and not vt_result.get('error'):
             stats = vt_result.get('stats', {})
             if stats:
@@ -38,19 +39,27 @@ class AnalysisStore:
                 suspicious = stats.get('suspicious', 0)
                 total_scans = stats.get('total_scans', 1)
                 
-                # Calculate percentage of detections
-                detection_rate = (malicious + suspicious) / max(total_scans, 1) * 100
-                vt_score = min(40, int(detection_rate * 0.4))
-                score += vt_score
-                
+                # If ANY vendors flag as malicious, give high score
+                # Malicious verdicts are treated much more seriously than suspicious
                 if malicious > 0:
-                    factors.append(f"VirusTotal: {malicious}/{total_scans} engines flagged as malicious")
-                elif suspicious > 0:
-                    factors.append(f"VirusTotal: {suspicious}/{total_scans} engines flagged as suspicious")
+                    # Base score for having malicious detections
+                    malicious_ratio = malicious / max(total_scans, 1)
+                    # Even 1 malicious flag out of many gets 45 points (high confidence indicator)
+                    # Multiple malicious flags get progressively higher scores up to 60
+                    vt_score = min(60, int(45 + (malicious_ratio * 15)))
+                    factors.append(f"VirusTotal: {malicious}/{total_scans} engines flagged as malicious - HIGH RISK")
+                else:
+                    # For suspicious-only detections, use moderate scoring
+                    detection_rate = suspicious / max(total_scans, 1) * 100
+                    vt_score = min(30, int(detection_rate * 0.3))
+                    if suspicious > 0:
+                        factors.append(f"VirusTotal: {suspicious}/{total_scans} engines flagged as suspicious")
+                
+                score += vt_score
             elif vt_result.get('is_malicious'):
                 # Binary result if available
-                score += 35
-                factors.append("VirusTotal: File flagged as malicious")
+                score += 50
+                factors.append("VirusTotal: File flagged as malicious - HIGH RISK")
         
         # AbuseIPDB analysis (0-40 points)
         if abuseip_result and not abuseip_result.get('error'):
@@ -82,9 +91,13 @@ class AnalysisStore:
                 factors.append(f"LLM Analysis: Identified {keyword_count} phishing indicators")
         
         # Determine verdict based on score
-        if score >= 70:
+        # Aggressive thresholds (with higher VirusTotal weight):
+        # - Phishing: Score 50+ (malicious VT detection alone triggers phishing)
+        # - Suspicious: Score 20+ (any concern from vendors)
+        # - Benign: Score <20
+        if score >= 50:
             verdict = "Phishing"
-        elif score >= 30:
+        elif score >= 20:
             verdict = "Suspicious"
         else:
             verdict = "Benign"

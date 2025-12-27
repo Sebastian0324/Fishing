@@ -9,39 +9,37 @@
             <!-- Left Column: Topics List -->
             <div class="forum-sidebar">
                 <div class="content-section">
-                    <h3 class="section-header">Topics</h3>
                     <div class="placeholder-content">
+                        <div class="topic-header">
+                            <div class="header-with-close">
+                                <h2 class="section-header">Discussions</h2>
+
+                                {% if session.name %}
+                                <button id="new-forum" class="new-discussion-btn">
+                                    <i class="bi bi-plus-circle"></i> New
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <!-- Tag/Topic Dropdown for Sorting -->
+                        <div style="margin: 1rem 0;">
+                            <label for="tag-filter" class="form-label">Sort by Topic/Tag:</label>
+                            <select id="tag-filter" class="form-select">
+                                <option value="">All Topics</option>
+                                {% for tag in tags %}
+                                    <option value="{{ tag }}">{{ tag }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
                         <ul class="topic-list">
-                            <!-- for each disc in Query -->
                             {% for id, title, Created, nr_comments in post %}
                             <li class="topic-item" value="{{ id }}">
                                 <h2 class="discussion-title">{{ title }}</h2>
                                 <p class="topic-meta">Posted {{ Created }} ago • {{ nr_comments }} replies</p>
                             </li>
                             {% endfor %}
-                            <!-- <li class="topic-item">
-                                <h2 class="discussion-title">Discussion 1</h2>
-                                <p class="topic-meta">Posted (x) time ago • (x) replies</p>
-                            </li>
-                            <li class="topic-item">
-                                <h2 class="discussion-title">Discussion 2</h2>
-                                <p class="topic-meta">Posted (x) time ago • (x) replies</p>
-                            </li>
-                            <li class="topic-item">
-                                <h2 class="discussion-title">Discussion 3</h2>
-                                <p class="topic-meta">Posted (x) time ago • (x) replies</p>
-                            </li>
-                            <li class="topic-item">
-                                <h2 class="discussion-title">Discussion 4</h2>
-                                <p class="topic-meta">Posted (x) time ago • (x) replies</p>
-                            </li>
-                            <li class="topic-item">
-                                <h2 class="discussion-title">Discussion 5</h2>
-                                <p class="topic-meta">Posted (x) time ago • (x) replies</p>
-                            </li> -->
                         </ul>
                     </div>
-                    <button id="new-forum">+</button>
                 </div>
             </div>
             
@@ -51,6 +49,8 @@
                 <div class="content-section discussion-view">
                     <div id="discussion-content">
                         <div class="placeholder-content">
+                            <div id="comments-root">
+                            </div>
                             <p class="placeholder-text">Select a discussion from the list to view its content</p>
                         </div>
                     </div>
@@ -58,4 +58,23 @@
             </div>
         </div>
     </div>
+
+<!-- Delete Discussion Modal -->
+<div id="DeleteDiscussionModal" style="display: none;">
+    <div id="DeleteDiscussionContainer">
+        <div id="Close_DeleteDiscussion">
+            <h3 class="modal-title">Are you sure you wish to delete this discussion?</h3>
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteDiscussionModal()">X</button>
+        </div>
+        <div class="modal-content">
+            <ul style="line-height: 1.8; margin-top: 0.5rem; padding-left: 1.2rem;">
+                <li>The discussion will be permanently removed along with its comments</li>
+            </ul>
+            <div class="modal-actions" style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteDiscussionModal()">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteDiscussionBtn">Delete Discussion</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

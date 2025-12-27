@@ -215,10 +215,30 @@ def delete_account():
 
         # handle option2
         elif option == "delete":
+            # to delete all discussions, first find all email_ids associated with user
+            cursor.execute("""
+                SELECT Email_ID FROM Email WHERE User_ID = ?
+            """, (user_id,))
+            email_ids = [row[0] for row in cursor.fetchall()]
+            # now we can start deleting
             cursor.execute("""DELETE FROM Comment WHERE User_ID = ?""", (user_id,))
-            cursor.execute("""DELETE FROM Email WHERE User_ID = ?""", (user_id,))
+            for email_id in email_ids:
+                # delete comments under those discussions
+                cursor.execute("""
+                    DELETE FROM Comment
+                    WHERE Discussion_ID IN (
+                        SELECT Discussion_ID FROM Discussion WHERE Email_ID = ?
+                    )""", (email_id,))
+
+                # delete discussions
+                cursor.execute("""
+                    DELETE FROM Discussion WHERE Email_ID = ?""", (email_id,))
+                
             # ska vi ta bort analysis också? om inte ta bort följande del
-            cursor.execute("""DELETE FROM Analysis WHERE Email_ID NOT IN (SELECT Email_ID FROM Email)""")
+            for email_id in email_ids:
+                cursor.execute("""DELETE FROM Analysis WHERE Email_ID = ?""", (email_id,))
+            # finally we can delete the emails
+            cursor.execute("""DELETE FROM Email WHERE User_ID = ?""", (user_id,))
         
         # remove the user entirely
         cursor.execute("""DELETE FROM User WHERE User_ID = ?""", (user_id,))

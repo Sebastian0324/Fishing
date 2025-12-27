@@ -16,7 +16,9 @@ def form():
 @bp_ui.route('/Forum')
 def Forum():
     posts = GetForumPosts()
-    return render_template('Forum.html', post=posts)
+    tag_stats = get_common_subjects_statistics(limit=50)
+    tags = [t['tag'] for t in tag_stats['top']]
+    return render_template('Forum.html', post=posts, tags=tags)
 
 @bp_ui.route('/Statistics')
 def admin():
@@ -27,7 +29,8 @@ def admin():
         stats.update(admin_stats)
     frequent_senders = get_frequent_sender_statistics()
     common_subjects = get_common_subjects_statistics()  # aggregates by Email.Tag (categories)
-    return render_template('Statistics.html', stats=stats, frequent_senders=frequent_senders, common_subjects=common_subjects)
+    most_commented = get_most_commented_statistics()
+    return render_template('Statistics.html', stats=stats, frequent_senders=frequent_senders, common_subjects=common_subjects, most_commented=most_commented)
 
 def get_frequent_sender_statistics():
     """Get frequent sender IP statistics from the database"""
@@ -265,19 +268,18 @@ def get_admin_statistics():
         cursor.execute("SELECT MAX(Analyzed_At) FROM Analysis WHERE Analyzed = 1")
         last_backup = cursor.fetchone()[0]
         if last_backup:
-            from datetime import datetime
+         
             try:
                 last_backup_dt = datetime.fromisoformat(last_backup)
-                now = datetime.now()
+                now = datetime.now() + timedelta(hours=-1)
                 diff = now - last_backup_dt
                 if diff.days > 0:
                     last_backup = f"{diff.days} days ago"
-                elif diff.seconds > 3600:
-                    last_backup = f"{diff.seconds // 3600} hours ago"
                 else:
-                    last_backup = f"{diff.seconds // 60} minutes ago"
+                    last_backup = f"{diff.seconds // 3600} hours and {(diff.seconds // 60) % 60} minutes ago"
             except:
                 last_backup = "Recently"
+
         else:
             last_backup = "Never"
         
@@ -361,6 +363,30 @@ def get_admin_statistics():
             "llm_status": "Error"
         }
 
+def get_most_commented_statistics():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            SELECT d.Discussion_ID, d.Title, COUNT(c.Comment_ID) AS comment_count
+            FROM Discussion d
+            JOIN Comment c ON d.Discussion_ID = c.Discussion_ID
+            GROUP BY d.Discussion_ID, d.Title
+            ORDER BY comment_count DESC
+            LIMIT 10
+        """)
+        rows = cursor.fetchall()
+        return {
+            "top_commented_emails": [(discussion_id, title, count) for (discussion_id, title, count) in rows]
+        }
+
+    except Exception as e:
+        print(f"Error fetching most commented statistics: {e}")
+        return {"top_commented_emails": []}
+
+    finally:
+        conn.close()
+
 @bp_ui.route('/Account')
 def account():
     emails = ''
@@ -370,12 +396,12 @@ def account():
             conn = sqlite3.connect(DB_PATH)
             cursor = conn.cursor()
 
-            cursor.execute("""SELECT Email.Email_ID, Analysis.Analyzed_At, Email.Title FROM Email 
+            cursor.execute("""SELECT Email.Email_ID, Analysis.verdict, Analysis.Analyzed_At, Email.Title FROM Email 
                            LEFT JOIN Analysis ON Email.Email_ID = Analysis.Email_ID WHERE User_ID = ?""",
                        (session["user_id"], ))
             
             q = cursor.fetchall()
-            emails = [(id, str(title).strip('"'), str(time).split('T')[0]) for id, time, title in q]
+            emails = [(id, verdict, str(title).strip('"'), str(time).split('T')[0]) for id, verdict, time, title in q]
 
         except Exception as e:
             return jsonify({

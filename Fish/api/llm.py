@@ -4,66 +4,12 @@ import dotenv
 import os
 import time
 import threading
-import re
+from static.Helper_eml import anonymize_email_content
 
 dotenv.load_dotenv()
 
 # Concurrency limiter: max 2 simultaneous LLM requests
 _llm_semaphore = threading.Semaphore(2)
-
-def anonymize_email_content(content):
-    """
-    Anonymize personal information in email content for GDPR compliance.
-    Replaces emails, phone numbers, and IP addresses with generic placeholders.
-    
-    Args:
-        content (str): The original email content
-    
-    Returns:
-        str: Anonymized email content
-    """
-    if not content:
-        return content
-    
-    anonymized = content
-    
-    # Anonymize email addresses
-    anonymized = re.sub(
-        r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
-        '[EMAIL_REDACTED]',
-        anonymized
-    )
-    
-    # Anonymize phone numbers (various formats)
-    # International format: +1-234-567-8900, +1 (234) 567-8900
-    anonymized = re.sub(
-        r'\+?\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}',
-        '[PHONE_REDACTED]',
-        anonymized
-    )
-    
-    # US/Common format: (123) 456-7890, 123-456-7890, 123.456.7890
-    anonymized = re.sub(
-        r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}',
-        '[PHONE_REDACTED]',
-        anonymized
-    )
-    
-    # Anonymize IP addresses (IPv4)
-    anonymized = re.sub(
-        r'\b(?:\d{1,3}\.){3}\d{1,3}\b',
-        '[IP_REDACTED]',
-        anonymized
-    )
-    
-    # Anonymize IPv6 addresses
-    anonymized = re.sub(
-        r'\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b',
-        '[IP_REDACTED]',
-        anonymized
-    )
-    
-    return anonymized
 
 def query_llm(message):
     """
