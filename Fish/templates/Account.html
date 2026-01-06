@@ -9,9 +9,10 @@
     <div class="account-header-left">
         <img src="/profile-picture/{{ session.user_id }}" 
             class="profile-preview"
-            style="width:120px;height:120px;border-radius:50%;object-fit:cover;">
+            style="width:120px;height:120px;border-radius:50%;object-fit:cover;"
+            alt="user profile img">
 
-        <h1 class="page-title">{{ session.name }}</h1>
+        <h1 class="page-title">{{ session.name|capitalize }}</h1>
     </div>
 
     <button class="settings-cogwheel" onclick="toggleSettings()" aria-label="Open Settings">
@@ -21,10 +22,11 @@
 
     <!-- Uploaded Emails Section -->
     <div class="account-section uploaded-emails-section" id="emailsSection">
-        <h3 class="section-header">Uploaded Emails</h3>
+        <h2 class="section-header">Uploaded Emails</h2>
         <table class="uploads-table">
             <thead>
                 <th>Title</th>
+                <th>Verdict</th>
                 <th>Last Analyzed</th>
                 <th>Options</th>
                 <th>Download</th>
@@ -33,9 +35,10 @@
             </tr>
         </thead>
         <tbody>
-        {% for eml_id, title, last_update in emails %}
-            <tr>
+        {% for eml_id, verdict, title, last_update in emails %}
+            <tr class="{{ verdict }}">
                 <td>{{ title }}</td>
+                <td>{{ verdict }}</td>
                 <td>{{ last_update }}</td>
                 <td>
                     <form id="eml-form-{{eml_id}}">

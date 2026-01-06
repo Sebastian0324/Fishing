@@ -1,5 +1,7 @@
-{# Reusable macro for general statistics cards #}
 {% macro stats_cards(stats) %}
+<div style="text-align:center;">
+  <h4>General Metrics about Angler</h4>
+</div>
 <div class="stats-grid">
     <!-- Platform Activity -->
     <div class="stat-card">
@@ -54,10 +56,9 @@
 </div>
 {% endmacro %}
 
-{# Reusable macro for frequent sender statistics #}
 {% macro frequent_sender_cards(frequent_senders) %}
 <div style="text-align:center;">
-  <h5>Email senders can be faked through relays. Do not solely rely on the displayed addresses.</h5>
+  <h4>Email senders can be faked through relays. Do not solely rely on the displayed addresses</h4>
 </div>
 <div class="stats-grid">
     <!-- Summary Cards -->
@@ -175,5 +176,127 @@
             </div>
         </div>
     </div>
+</div>
+{% endmacro %}
+
+{% macro most_commented_cards(most_commented) %}
+<div style="text-align:center;">
+  <h4>Which phishing emails have the most comments?</h4>
+</div>
+<div class="most-commented-list">
+    {% if most_commented.top_commented_emails %}
+        {% for discussion_id, subject, count in most_commented.top_commented_emails %}
+        <a href="#" onclick="viewForumPost({{ discussion_id }}); return false;" style="text-decoration: none; color: inherit; cursor: pointer;">
+            <div class="most-commented-item {% if count >= 5 %}high-comment{% endif %}">
+                <div style="flex: 1;">
+                    <div class="discussion-title"><i class="bi bi-envelope-fill" style="margin-right: 0.5em; color: #6E5DC6;"></i>{{ subject }}</div>
+                    <span class="comment-count"><i class="bi bi-chat-dots-fill"></i>{{ count }} comments</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    {% else %}
+        <div class="most-commented-item">
+            <span class="text-muted">No comments recorded yet</span>
+        </div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro admin_info_cards(admin_stats) %}
+
+    <div style="text-align:center;">
+        <h4> Overview & Controls</h4>
+    </div>
+    <div class="stats-grid">
+        <!-- User Statistics -->
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-value">{{ admin_stats.total_users or 0 }}</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+    
+        <!-- Upload Statistics -->
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-upload"></i></div>
+            <div class="stat-value">{{ admin_stats.total_uploads or 0 }}</div>
+            <div class="stat-label">Total Uploads</div>
+        </div>
+        <div class="stat-card stat-phishing">
+            <div class="stat-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+            <div class="stat-value">{{ admin_stats.phishing_detected or 0 }}</div>
+            <div class="stat-label">Phishing Detected</div>
+        </div>
+        <!-- Forum Statistics -->
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-chat-dots-fill"></i></div>
+            <div class="stat-value">{{ admin_stats.total_posts or 0 }}</div>
+            <div class="stat-label">Forum Posts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-chat-left-text-fill"></i></div>
+            <div class="stat-value">{{ admin_stats.total_comments or 0 }}</div>
+            <div class="stat-label">Total Comments</div>
+        </div>
+        <!-- Moderation Statistics -->
+        <div class="stat-card stat-suspicious">
+            <div class="stat-icon"><i class="bi bi-flag-fill"></i></div>
+            <div class="stat-value">{{ admin_stats.pending_moderations or 0 }}</div>
+            <div class="stat-label">Empty Discussions</div>
+        </div>
+        <div class="stat-card stat-phishing">
+            <div class="stat-icon"><i class="bi bi-shield-exclamation"></i></div>
+            <div class="stat-value">{{ admin_stats.flagged_ips or 0 }}</div>
+            <div class="stat-label">Flagged IPs</div>
+        </div>
+    </div>
+
+
+  <div style="text-align:center;">
+        <h4> System Status</h4>
+    </div>
+     
+    <div class="stats-grid">
+        <div class="stat-card {% if admin_stats.server_status == 'Online' %}stat-benign{% elif admin_stats.server_status == 'Error' %}stat-phishing{% else %}stat-suspicious{% endif %}">
+            <div class="stat-icon"><i class="bi bi-activity"></i></div>
+            <div class="stat-value" style="font-size: 1.2rem;">{{ admin_stats.server_status or 'Unknown' }}</div>
+            <div class="stat-label">Server Status</div>
+        </div>
+        <div class="stat-card {% if admin_stats.database_status == 'Connected' %}stat-benign{% elif admin_stats.database_status == 'Error' %}stat-phishing{% else %}stat-suspicious{% endif %}">
+            <div class="stat-icon"><i class="bi bi-server"></i></div>
+            <div class="stat-value" style="font-size: 1.2rem;">{{ admin_stats.database_status or 'Unknown' }}</div>
+            <div class="stat-label">Database Status</div>
+        </div>
+        <div class="stat-card {% if admin_stats.api_services_status == 'Active' %}stat-benign{% elif admin_stats.api_services_status == 'Error' %}stat-phishing{% else %}stat-suspicious{% endif %}">
+            <div class="stat-icon"><i class="bi bi-cloud-check-fill"></i></div>
+            <div class="stat-value" style="font-size: 1.2rem;">{{ admin_stats.api_services_status or 'Unknown' }}</div>
+            <div class="stat-label">API Services</div>
+        </div>
+        <div class="stat-card {% if admin_stats.virustotal_status == 'Connected' %}stat-benign{% elif admin_stats.virustotal_status in ['Error', 'Disconnected'] %}stat-phishing{% else %}stat-suspicious{% endif %}">
+            <div class="stat-icon"><i class="bi bi-shield-check"></i></div>
+            <div class="stat-value" style="font-size: 1rem;">{{ admin_stats.virustotal_status or 'Unknown' }}</div>
+            <div class="stat-label">VirusTotal API</div>
+        </div>
+        <div class="stat-card {% if admin_stats.abuseipdb_status == 'Connected' %}stat-benign{% elif admin_stats.abuseipdb_status in ['Error', 'Disconnected'] %}stat-phishing{% else %}stat-suspicious{% endif %}">
+            <div class="stat-icon"><i class="bi bi-shield-fill-check"></i></div>
+            <div class="stat-value" style="font-size: 1rem;">{{ admin_stats.abuseipdb_status or 'Unknown' }}</div>
+            <div class="stat-label">AbuseIPDB API</div>
+        </div>
+        <div class="stat-card {% if admin_stats.llm_status == 'Running' %}stat-benign{% elif admin_stats.llm_status in ['Error', 'Disconnected'] %}stat-phishing{% else %}stat-suspicious{% endif %}">
+            <div class="stat-icon"><i class="bi bi-cpu-fill"></i></div>
+            <div class="stat-value" style="font-size: 1rem;">{{ admin_stats.llm_status or 'Unknown' }}</div>
+            <div class="stat-label">LLM Service</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-hdd-fill"></i></div>
+            <div class="stat-value">{{ admin_stats.storage_available or 'N/A' }}</div>
+            <div class="stat-label">Storage Used</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
+            <div class="stat-value" style="font-size: 0.9rem;">{{ admin_stats.last_backup or 'Never' }}</div>
+            <div class="stat-label">Last Activity</div>
+        </div>
+   
 </div>
 {% endmacro %}

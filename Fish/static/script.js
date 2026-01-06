@@ -1,3 +1,69 @@
+// -------========-------    Utility Functions    -------========-------
+
+/**
+ * Escape HTML special characters to prevent XSS attacks
+ * @param {string} str - The string to escape
+ * @returns {string} - The escaped string safe for HTML insertion
+ */
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// Check if returning from forum dialog login
+if (sessionStorage.getItem('returnToForumDialog')) {
+  const fileIndex = sessionStorage.getItem('forumDialogFileIndex');
+  sessionStorage.removeItem('returnToForumDialog');
+  sessionStorage.removeItem('forumDialogFileIndex');
+  window.returnToForumAfterPageLoad = true;
+  window.forumDialogFileIndexAfterPageLoad = parseInt(fileIndex, 10);
+}
+
+// -------========------- Forum Tag Filter Dropdown =======--------
+document.addEventListener("DOMContentLoaded", function() {
+  const tagFilter = document.getElementById("tag-filter");
+  const topicList = document.querySelector(".topic-list");
+  if (tagFilter && topicList) {
+    tagFilter.addEventListener("change", async function() {
+      const tag = tagFilter.value;
+      let url = "/Forum_Posts_By_Tag";
+      if (tag) url += `?tag=${encodeURIComponent(tag)}`;
+      try {
+        const resp = await fetch(url);
+        const data = await resp.json();
+        if (data.success) {
+          // Clear and repopulate topic list
+          topicList.innerHTML = "";
+          if (data.posts.length === 0) {
+            topicList.innerHTML = '<li class="topic-item"><em>No discussions found for this tag.</em></li>';
+          } else {
+            for (const [id, title, created, nr_comments] of data.posts) {
+              const li = document.createElement("li");
+              li.className = "topic-item";
+              li.value = id;
+              li.innerHTML = `<h2 class="discussion-title">${title}</h2><p class="topic-meta">Posted ${created} ago • ${nr_comments} replies</p>`;
+              li.addEventListener("click", ShowForum);
+              topicList.appendChild(li);
+            }
+          }
+        }
+      } catch (err) {
+        topicList.innerHTML = '<li class="topic-item"><em>Error loading discussions.</em></li>';
+      }
+    });
+  }
+  
+  // Check if returning from forum dialog login
+  if (window.returnToForumAfterPageLoad) {
+    window.returnToForumAfterPageLoad = false;
+    AskToCreateForum(window.forumDialogFileIndexAfterPageLoad);
+  }
+});
 // -------========-------    Sign Up    -------========-------
 
 let login = document.getElementById("LoginContainer");
@@ -158,7 +224,16 @@ if (Sign && SignIn && SignUp) {
     let SignInData = await SignInResponse.json();
 
     if (SignInData.success) {
-      window.open(window.location.href, "_self");
+      // Check if user is returning from forum dialog
+      if (window.returnToForumDialog) {
+        // Store in sessionStorage so it persists across page reload
+        sessionStorage.setItem('returnToForumDialog', 'true');
+        sessionStorage.setItem('forumDialogFileIndex', window.forumDialogFileIndex);
+        // Reload the page to update login state
+        window.location.reload();
+      } else {
+        window.open(window.location.href, "_self");
+      }
     } else {
       signinErrorDiv.innerHTML = `<strong>Error:</strong> ${SignInData.error || SignInData.message || "Incorect username or password"}`;
       signinErrorDiv.style.display = "block";
@@ -367,10 +442,14 @@ if (UpForm != null) {
       }
       return;
     }
+
+    // Ask about forum creation
+    askAboutForum = []
     
     // Validate file type and size
     for (let i = 0; i < fileInput.files.length; i++) {
       const file = fileInput.files[i];
+      askAboutForum.push(true)
       
       // Check file extension
       if (!file.name.endsWith('.eml')) {
@@ -548,7 +627,9 @@ if (UpForm != null) {
     // Update the header to show success - render first file and start its analysis
     if (data.success && window.uploadedFiles.length > 0) {
       renderFileAnalysis(0);
-      runFileAnalyses(0);
+      for (let i = 0; i < fileInput.files.length; i++) {
+        await runFileAnalyses(i);
+      }
     }
   };
 }
@@ -703,6 +784,9 @@ function displayCachedResults(fileIndex) {
   
   // Update the content area with cached results AND progress bars
   const contentArea = document.getElementById("analysisContent");
+  if (askAboutForum[fileIndex]) {
+    AskToCreateForum(fileIndex);
+  }
   if (contentArea) {
     contentArea.innerHTML = `
       <div class="row">
@@ -791,7 +875,10 @@ function renderFileAnalysis(fileIndex) {
 
     resultDiv.innerHTML = tabsHTML + `<div id="analysisContent"></div>`;
   }
-
+  
+  if (askAboutForum[0]) {
+    AskToCreateForum(0);
+  }
   // Update only the content area
   const contentArea = document.getElementById("analysisContent");
   if (contentArea) {
@@ -1116,6 +1203,82 @@ function reconstructAnalysisFromBackend(fileIndex, backendData) {
   
   // Display the reconstructed results
   displayCachedResults(fileIndex);
+}
+
+function AskToCreateForum(fileIndex) {
+  askAboutForum[fileIndex] = false;
+
+  const container = document.getElementById("result");
+  const isLoggedIn = !!document.getElementById("Logout_btn");
+  const yesDisabled = isLoggedIn ? '' : 'disabled';
+  
+  html = `<div id="AskCreateForum" class="centered backdrop">
+      <div id="AskForForumForm" class="centered colored-border">
+        <button id="CloseQuestion" type="button" class="close-btn">✕</button>
+        <h1 class="page-title">Get Community Feedback</h1>
+        <p>Would you like to share your email with the community?</p>
+        <p>To get a better understanding of what threats you might be facing, there is no place better our Forum.</p>
+        <p>Create a Forum post to see what to community has to say about your situation.</p>
+        <form>
+          <h3 class="section-header">Do You Want to Create a Forum post?</h2>
+          <div id="forumForm" class="form-check form-switch">
+            <label for="Yes"><input type="radio" id="Yes" value="Yes" name="CreateForum" class="form-check-input" ${yesDisabled} required>
+            Yes</label>
+
+            <label for="No"><input type="radio" id="No" value="No" name="CreateForum" class="form-check-input" required>
+            No</label>
+          </div>
+          ${!isLoggedIn ? '<p id="LoginWarning" style="color: #ff6b6b; margin-top: 1rem;"><strong>Note:</strong> You must be logged in to create a forum post. <a href="#" id="LoginLink" style="color: #ff6b6b; text-decoration: underline;">Log in here</a>.</p>' : ''}
+          <button type="submit" class="submit-btn" id="ForumSubmitBtn">Submit</button>
+        </form>
+      </div>
+    </div>`;
+  container.insertAdjacentHTML("beforebegin", html);
+
+  // Disable background scrolling
+  document.body.style.overflow = 'hidden';
+
+  document.getElementById("CloseQuestion").addEventListener("click", function() {
+    document.getElementById("AskCreateForum").remove();
+    document.body.style.overflow = '';
+  });
+  
+  // Add login link handler if user is not logged in
+  if (!isLoggedIn) {
+    const loginLink = document.getElementById("LoginLink");
+    if (loginLink) {
+      loginLink.addEventListener("click", function(e) {
+        e.preventDefault();
+        // Set flags to return to forum dialog after login
+        window.returnToForumDialog = true;
+        window.forumDialogFileIndex = fileIndex;
+        // Close the forum question and show login modal
+        document.getElementById("AskCreateForum").remove();
+        document.body.style.overflow = '';
+        document.getElementById("Login_btn").click();
+      });
+    }
+  }
+  
+  document.getElementById("AskCreateForum").getElementsByTagName("form")[0].onsubmit = async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const answer = formData.get("CreateForum");
+
+    if (answer == "Yes") {
+      if (!isLoggedIn) {
+        alert("You must be logged in to create a forum post.");
+        return;
+      }
+      Forum_Creator(e);
+      document.getElementById("AskCreateForum").remove();
+      document.body.style.overflow = '';
+    } else {
+      document.getElementById("AskCreateForum").remove();
+      document.body.style.overflow = '';
+    }
+  };
 }
 
 // -------========-------    Run File Analyses    -------========-------
@@ -2029,32 +2192,45 @@ function toggleSettings() {
 }
 
 // -------========-------    Forum Page    -------========-------
+const MAX_COMMENT_LENGTH = 2000;
 
 const newForum = document.getElementById("new-forum");
 const Forum = document.getElementById("forum-main");
 if (newForum) {
-  newForum.addEventListener("click", async function(e) {
-    try {
-      e.preventDefault();
-      const response = await fetch("/Forum_Creator", {
-        method: "POST"
-      });
-      const data = await response.json();
-      const page = document.body;
+  newForum.addEventListener("click", Forum_Creator);
+}
 
-      page.insertAdjacentHTML("afterbegin", data.obj);
-      document.getElementById("Close").addEventListener("click", DeletForumCreator);
-      document.getElementById("SubmitForum").onsubmit = CreateForum;
-      
-    } catch (err) {
-      console.error(err);
-      alert("An error occurred while conecting to the back end.");
-    }
-  });
+async function Forum_Creator(e) {
+  try {
+    e.preventDefault();
+    const response = await fetch("/Forum_Creator", {
+      method: "POST"
+    });
+    const data = await response.json();
+    const page = document.body;
 
-  let ForumPosts = document.getElementsByClassName("topic-item")
-  for (let i = 0; i < ForumPosts.length; i++) {
-    ForumPosts[i].addEventListener("click", ShowForum);
+    page.insertAdjacentHTML("afterbegin", data.obj);
+    document.getElementById("Close").addEventListener("click", DeletForumCreator);
+    document.getElementById("SubmitForum").onsubmit = CreateForum;
+    
+  } catch (err) {
+    console.error(err);
+    alert("An error occurred while conecting to the back end.");
+  }
+}
+
+let ForumPosts = document.getElementsByClassName("topic-item");
+for (let i = 0; i < ForumPosts.length; i++) {
+  ForumPosts[i].addEventListener("click", ShowForum);
+}
+
+// Check if there's a post_id parameter in the URL and auto-select it
+const urlParams = new URLSearchParams(window.location.search);
+const postIdParam = urlParams.get('post_id');
+if (postIdParam) {
+  const postElement = document.querySelector(`.topic-item[value="${postIdParam}"]`);
+  if (postElement) {
+    postElement.click();
   }
 }
 
@@ -2067,20 +2243,31 @@ async function CreateForum(e) {
   try {
     let ForumData = new FormData(e.target);
     const response = await fetch("/Forum_Creation", {
-      method: "POST", body: ForumData
+      method: "POST",
+      body: ForumData
     });
-    const data = await response.json();
-    const page = document.body;
 
-    
+    const data = await response.json();
+
+    DeletForumCreator();
+    if (window.location.pathname === "/Forum") {
+      location.reload();
+    }
+
   } catch (err) {
     console.error(err);
-    alert("An error occurred while conecting to the back end.");
+    alert("An error occurred while connecting to the back end.");
   }
 }
 
+
 async function ShowForum(e) {
   e.preventDefault()
+
+  document.querySelectorAll(".topic-item")
+  .forEach(i => i.classList.remove("active"));
+
+  this.classList.add("active");
 
   id = this.value;
   try {
@@ -2091,17 +2278,733 @@ async function ShowForum(e) {
     });
 
     const data = await response.json();
-    console.log(data["Forum"]);
-    Forum.children[0].innerHTML = `
-    <h2>` + data["Forum"][0] + `</h2>
-    <p>` + data["Forum"][1] + `</p>
+    
+    const user = data["user"];
+    const profilePicSrc = user.profile_picture 
+      ? `data:image/png;base64,${user.profile_picture}` 
+      : '/static/default_profile.png';
+    
+    // Escape user-controlled data to prevent XSS
+    const safeUsername = escapeHtml(user.username);
+    
+    const userInfoHTML = `
+      <div class="discussion-user-info">
+        <div class="user-avatar">
+          <img src="${profilePicSrc}" alt="${safeUsername}'s avatar">
+        </div>
+        <div class="user-details">
+          <span class="user-name">${safeUsername}</span>
+          <span class="user-label">Author</span>
+        </div>
+      </div>
     `;
     
+    const deleteButtonHTML = (data.is_owner || data.is_admin) ? `
+      <button class="delete-discussion-btn" data-discussion-id="${data.discussion_id}" title="Delete this discussion">
+        <span class="delete-label">Delete</span>
+        <i class="bi bi-trash"></i>
+      </button>
+    ` : '';
+
+    const tag = data["Forum"][4];
+    const tagHTML = tag
+      ? `<div class="discussion-tag"><span class="badge bg-secondary">${tag}</span></div>`
+      : "";
+    
+    // Build email modal if email data exists
+    let viewEmailButtonHTML = '';
+    let emailModalHTML = '';
+    if (data["email"] && data["email"].valid) {
+      const email = data["email"];
+      
+      // Escape all email metadata to prevent XSS
+      const safeFromName = escapeHtml(email.from_name);
+      const safeFromEmail = escapeHtml(email.from_email);
+      const safeSubject = escapeHtml(email.subject);
+      const safeDate = escapeHtml(email.date);
+      
+      // Build the "From" display safely
+      const fromDisplay = safeFromName 
+        ? `${safeFromName} &lt;${safeFromEmail}&gt;` 
+        : (safeFromEmail || 'Unknown');
+      
+      // Button to open the email modal
+      viewEmailButtonHTML = `
+        <button class="view-email-btn" title="View the email being discussed">
+          <i class="bi bi-envelope"></i>
+          <span>View Email</span>
+        </button>
+      `;
+      
+      emailModalHTML = `
+        <div id="EmailModal" class="email-modal" style="display: none;">
+          <div class="email-modal-backdrop"></div>
+          <div class="email-modal-content">
+            <div class="email-modal-header">
+              <button class="email-modal-close" title="Close">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+            <div class="email-metadata">
+              <div class="email-meta-row">
+                <span class="email-meta-label">From:</span>
+                <span class="email-meta-value">${fromDisplay}</span>
+              </div>
+              <div class="email-meta-row">
+                <span class="email-meta-label">Subject:</span>
+                <span class="email-meta-value">${safeSubject || 'No Subject'}</span>
+              </div>
+              <div class="email-meta-row">
+                <span class="email-meta-label">Date:</span>
+                <span class="email-meta-value">${safeDate || 'Unknown'}</span>
+              </div>
+            </div>
+            <div class="email-body-container">
+              <iframe 
+                class="email-iframe"
+                sandbox="allow-same-origin"
+                srcdoc=""
+              ></iframe>
+            </div>
+            <div class="email-warning">
+              ⚠️ Links in this email have been disabled for your safety. Hover over links to see their original URLs.
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Store email body for later use
+      window.currentEmailBody = email.html_body;
+    }
+    
+    // Escape forum title and body text
+    const safeTitle = escapeHtml(data["Forum"][0]);
+    const safeBody = escapeHtml(data["Forum"][1]);
+
+    Forum.children[0].innerHTML = `
+      <div class="discussion-header">
+        <div class="discussion-title-row">
+          <div>
+            <h2>${safeTitle}</h2>
+            ${tagHTML}
+          </div>
+          <div class="discussion-right-group">
+            ${viewEmailButtonHTML}
+            ${userInfoHTML}
+            ${deleteButtonHTML}
+          </div>
+        </div>
+      </div>
+      <div class="discussion-body">
+        <p>${safeBody}</p>
+      </div>
+      ${emailModalHTML}
+      <div class="comments-section">
+  <h3 class="comments-title">Comments</h3>
+
+  <div id="comments-root"></div>
+
+    ${data.is_logged_in ? `
+      <div class="new-comment-box">
+        <textarea
+          id="new-comment-text"
+          placeholder="Write a comment…"
+          rows="3"
+          maxlength="2000"
+        ></textarea>
+
+        <div class="comment-meta">
+          <span id="char-counter">0 / 2000</span>
+        </div>
+
+        <button id="post-comment-btn">Comment</button>
+      </div>
+    ` : `
+      <p class="login-hint">Log in to comment!</p>
+    `}
+</div>
+    `;
+await loadComments(id);
+
+
+    // Setup email modal handlers
+    const viewEmailBtn = Forum.querySelector(".view-email-btn");
+    if (viewEmailBtn) {
+      viewEmailBtn.addEventListener("click", function(e) {
+        e.preventDefault();
+        openEmailModal();
+      });
+    }
+
+    const delBtn = Forum.querySelector(".delete-discussion-btn");
+    if (delBtn) {
+      delBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        const discussionId = this.getAttribute("data-discussion-id");
+        openDeleteDiscussionModal(discussionId);
+      });
+    }
+
   } catch (err) {
     console.error(err);
     alert("An error occurred while conecting to the back end.");
   }
 }
+
+async function loadComments(discussionId) {
+const res = await fetch(`/comments/${discussionId}`, {
+  credentials: "same-origin"
+});
+  const data = await res.json();
+
+  if (!data.success) {
+    console.error("Failed to load comments");
+    return;
+  }
+
+  const tree = buildCommentTree(data.comments);
+  window.IS_LOGGED_IN = data.is_logged_in;
+  window.IS_ADMIN = data.is_admin;
+
+  document.getElementById("comments-root").innerHTML = `
+    ${renderComments(tree)}
+  `;
+}
+
+function renderComments(comments, depth = 0) {
+  const indent = depth > 0 ? 24 : 0;
+  return comments.map(comment => `
+    <div class="comment" style="margin-left: ${indent}px">
+
+      <img class="comment-avatar"
+           src="/profile-picture/${comment.user.id}">
+
+      <div class="comment-body">
+        <div class="comment-header">
+          <span class="comment-author">${escapeHtml( comment.user.username )}</span>
+          <span class="comment-time">${comment.created_at}</span>
+          ${!comment.user.can_post ? `<span class="banned-badge">🚫 Banned from commenting</span>` : ""}
+        </div>
+
+        <p class="comment-text" data-id="${comment.id}">
+          ${comment.text}
+        </p>
+
+        <textarea
+          class="edit-textarea"
+          data-id="${comment.id}"
+          style="display: none;"
+        >${comment.text}</textarea>
+
+
+        <div class="comment-actions">
+          ${window.IS_LOGGED_IN ? `
+            <button class="reply-btn" data-id="${comment.id}">Reply</button>
+          ` : ""}
+          ${comment.is_owner ? `
+            <button class="edit-comment-btn" data-id="${comment.id}">Edit</button>
+            <button class="save-comment-btn" data-id="${comment.id}" style="display:none;">Save</button>
+            <button class="cancel-edit-btn" data-id="${comment.id}" style="display:none;">Cancel</button>
+          ` : ""}
+          ${comment.can_delete ? `
+            <button class="delete-comment-btn" data-id="${comment.id}">Delete</button>
+          ` : ""}
+          ${window.IS_ADMIN && !comment.is_owner ? `
+            <button class="ban-user-btn" data-user-id="${comment.user.id}" data-username="${comment.user.username}" data-can-post="${comment.user.can_post}">
+              ${comment.user.can_post ? '🚫 Ban User' : '✅ Unban User'}
+            </button>
+          ` : ""}
+        </div>
+
+        <div class="reply-form-container"
+             id="reply-form-${comment.id}"></div>
+
+        ${comment.children?.length
+          ? `<div class="comment-children">
+               <div class="thread-connector"></div>
+               ${renderComments(comment.children, depth + 1)}
+             </div>`
+          : ""}
+
+        
+      </div>
+    </div>
+  `).join("");
+}
+
+document.addEventListener("click", function (e) {
+  if (!e.target.classList.contains("reply-btn")) return;
+
+  const id = e.target.dataset.id;
+  const container = document.getElementById(`reply-form-${id}`);
+
+  if (container.innerHTML !== "") {
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = `
+    <form class="reply-form">
+      <textarea
+        placeholder="Write a reply..."
+        maxlength="2000"
+        required></textarea>
+      <div class="comment-meta">
+        <span class="reply-char-counter">0 / 2000</span>
+      </div>
+
+      <button type="submit">Reply</button>
+    </form>
+  `;
+});
+
+document.addEventListener("click", async function (e) {
+  if (e.target.id !== "post-comment-btn") return;
+
+  const textEl = document.getElementById("new-comment-text");
+  if (!textEl) return;
+
+  const text = textEl.value.trim();
+
+  if (!text) return;
+
+  if (text.length > MAX_COMMENT_LENGTH) {
+    alert(`Your comment is too long. Maximum is ${MAX_COMMENT_LENGTH} characters.`);
+    return;
+  }
+
+  const discussionId = document
+    .querySelector(".topic-item.active")?.value;
+
+  if (!discussionId) return;
+
+  await fetch("/comment/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({
+      discussion_id: discussionId,
+      text: textEl.value,
+      parent_id: null
+    })
+  });
+
+  textEl.value = "";
+  await loadComments(discussionId);
+});
+
+document.addEventListener("submit", async function (e) {
+  if (!e.target.classList.contains("reply-form")) return;
+
+  e.preventDefault();
+
+  const textarea = e.target.querySelector("textarea");
+  const text = textarea.value.trim();
+  if (!text) return;
+
+  if (text.length > MAX_COMMENT_LENGTH) {
+    alert(`Reply is too long. Maximum is ${MAX_COMMENT_LENGTH} characters.`);
+  return;
+  }
+
+  const parentId = e.target.closest(".comment")
+    ?.querySelector(".reply-btn")?.dataset.id;
+
+  const discussionId = document
+    .querySelector(".topic-item.active")?.value;
+
+  if (!discussionId || !parentId) return;
+
+  await fetch("/comment/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({
+      discussion_id: discussionId,
+      parent_id: parentId,
+      text
+    })
+  });
+
+  textarea.value = "";
+  await loadComments(discussionId);
+});
+
+document.addEventListener("click", async function (e) {
+  if (!e.target.classList.contains("edit-comment-btn")) return;
+
+  const commentEl = e.target.closest(".comment");
+  if (!commentEl) return;
+
+  // prevent multiple edit forms
+  if (document.querySelector(".comment.editing")) return;
+
+  commentEl.classList.add("editing");
+
+  const textEl = commentEl.querySelector(".comment-text");
+  const originalText = textEl.textContent;
+
+  textEl.dataset.original = originalText;
+  textEl.innerHTML = `
+    <textarea
+      class="edit-textarea"
+      maxlength="${MAX_COMMENT_LENGTH}"
+    >${originalText}</textarea>
+
+    <div class="comment-meta">
+      <span class="edit-char-counter">
+        ${originalText.length} / ${MAX_COMMENT_LENGTH}
+      </span>
+    </div>
+
+    <div class="edit-actions">
+      <button class="save-edit-btn">Save</button>
+      <button class="cancel-edit-btn">Cancel</button>
+    </div>
+  `;
+});
+
+document.addEventListener("click", function (e) {
+  if (!e.target.classList.contains("cancel-edit-btn")) return;
+
+  const commentEl = e.target.closest(".comment");
+  if (!commentEl) return;
+
+  const textEl = commentEl.querySelector(".comment-text");
+  const originalText = textEl.dataset.original;
+  textEl.innerHTML = originalText;
+  delete textEl.dataset.original;
+  commentEl.classList.remove("editing");
+});
+
+document.addEventListener("click", async function (e) {
+  if (!e.target.classList.contains("save-edit-btn")) return;
+
+  const commentEl = e.target.closest(".comment");
+  if (!commentEl) return;
+
+  const textarea = commentEl.querySelector(".edit-textarea");
+  if (!textarea) return;
+
+  const newText = textarea.value.trim();
+  if (!newText) return;
+  if (newText.length > MAX_COMMENT_LENGTH) {
+  alert(`Edited comment is too long. Maximum is ${MAX_COMMENT_LENGTH} characters.`);
+  return;
+  }
+
+  const commentId = commentEl.querySelector(".edit-comment-btn")?.dataset.id;
+  if (!commentId) return;
+
+  const res = await fetch("/comment/edit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({
+      comment_id: commentId,
+      text: newText
+    })
+  });
+
+  const data = await res.json();
+  if (!data.success) {
+    alert("Failed to edit comment");
+    return;
+  }
+
+  // reload comments to stay in sync with DB
+  const discussionId = document
+    .querySelector(".topic-item.active")?.value;
+
+  if (discussionId) {
+    await loadComments(discussionId);
+  }
+});
+
+document.addEventListener("click", async function (e) {
+  if (!e.target.classList.contains("delete-comment-btn")) return;
+
+  const commentId = e.target.dataset.id;
+  if (!commentId) return;
+
+  const confirmDelete = confirm(
+    "Are you sure you want to delete this comment?"
+  );
+  if (!confirmDelete) return;
+
+  const res = await fetch("/comment/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ comment_id: commentId })
+  });
+
+  const data = await res.json();
+  if (!data.success) {
+    alert("Failed to delete comment");
+    return;
+  }
+
+  const discussionId = document
+    .querySelector(".topic-item.active")?.value;
+
+  if (discussionId) {
+    await loadComments(discussionId);
+  }
+});
+
+// Admin: Ban/Unban user from posting
+document.addEventListener("click", async function (e) {
+  if (!e.target.classList.contains("ban-user-btn")) return;
+
+  const userId = e.target.dataset.userId;
+  const username = e.target.dataset.username;
+  const canPost = e.target.dataset.canPost === "true";
+
+  if (!userId) return;
+
+  const action = canPost ? "ban" : "unban";
+  const confirmAction = confirm(
+    `Are you sure you want to ${action} ${username} from posting?`
+  );
+  if (!confirmAction) return;
+
+  const res = await fetch("/admin/toggle-user-posting", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ user_id: parseInt(userId) })
+  });
+
+  const data = await res.json();
+  if (!data.success) {
+    alert(data.error || "Failed to update user posting permission");
+    return;
+  }
+
+  alert(data.message);
+
+  // Reload comments to reflect the change
+  const discussionId = document
+    .querySelector(".topic-item.active")?.value;
+
+  if (discussionId) {
+    await loadComments(discussionId);
+  }
+});
+
+
+function buildCommentTree(flatComments) {
+  const map = {};
+  const roots = [];
+
+  flatComments.forEach(c => {
+    c.children = [];
+    map[c.id] = c;
+  });
+
+  flatComments.forEach(c => {
+    if (c.parent_id) {
+      map[c.parent_id]?.children.push(c);
+    } else {
+      roots.push(c);
+    }
+  });
+
+  return roots;
+}
+
+document.addEventListener("input", function (e) {
+  if (e.target.id !== "new-comment-text") return;
+
+  const counter = document.getElementById("char-counter");
+  if (!counter) return;
+
+  const len = e.target.value.length;
+  counter.textContent = `${len} / 2000`;
+
+  if (len > 2000) {
+    counter.classList.add("over-limit");
+  } else {
+    counter.classList.remove("over-limit");
+  }
+});
+
+document.addEventListener("input", function (e) {
+  if (!e.target.closest(".reply-form")) return;
+
+  const counter = e.target
+    .closest(".reply-form")
+    ?.querySelector(".reply-char-counter");
+
+  if (!counter) return;
+
+  const len = e.target.value.length;
+  counter.textContent = `${len} / ${MAX_COMMENT_LENGTH}`;
+
+  if (len > MAX_COMMENT_LENGTH) {
+    counter.classList.add("over-limit");
+  } else {
+    counter.classList.remove("over-limit");
+  }
+});
+
+document.addEventListener("input", function (e) {
+  if (!e.target.classList.contains("edit-textarea")) return;
+
+  const counter = e.target
+    .closest(".comment-text")
+    ?.querySelector(".edit-char-counter");
+
+  if (!counter) return;
+
+  const len = e.target.value.length;
+  counter.textContent = `${len} / ${MAX_COMMENT_LENGTH}`;
+
+  if (len > MAX_COMMENT_LENGTH) {
+    counter.classList.add("over-limit");
+  } else {
+    counter.classList.remove("over-limit");
+  }
+});
+
+// -------========-------    Email Modal Functions    -------========-------
+
+function openEmailModal() {
+  const modal = document.getElementById("EmailModal");
+  if (!modal) return;
+  
+  modal.style.display = "flex";
+  
+  // Set up the iframe content when modal opens
+  const iframe = modal.querySelector('.email-iframe');
+  if (iframe && window.currentEmailBody) {
+    const linkStyles = `
+      <style>
+        .neutralized-link {
+          color: #0066cc;
+          text-decoration: underline;
+          cursor: default;
+        }
+        .neutralized-link:hover {
+          color: #004499;
+        }
+        body {
+          font-family: Arial, sans-serif;
+          padding: 10px;
+          margin: 0;
+          background: white;
+          color: #333;
+        }
+      </style>
+    `;
+    iframe.srcdoc = linkStyles + window.currentEmailBody;
+  }
+  
+  // Set up close handlers
+  const closeBtn = modal.querySelector('.email-modal-close');
+  const backdrop = modal.querySelector('.email-modal-backdrop');
+  
+  if (closeBtn) {
+    closeBtn.onclick = closeEmailModal;
+  }
+  if (backdrop) {
+    backdrop.onclick = closeEmailModal;
+  }
+}
+
+function closeEmailModal() {
+  const modal = document.getElementById("EmailModal");
+  if (modal) {
+    modal.style.display = "none";
+  }
+}
+
+// -------========-------    Delete Discussion Modal Functions    -------========-------
+let pendingDeleteDiscussionId = null;
+
+function openDeleteDiscussionModal(discussionId) {
+  const modal = document.getElementById("DeleteDiscussionModal");
+  pendingDeleteDiscussionId = discussionId;
+  modal.style.display = "flex";
+}
+
+function closeDeleteDiscussionModal() {
+  const modal = document.getElementById("DeleteDiscussionModal");
+  modal.style.display = "none";
+  pendingDeleteDiscussionId = null;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+
+  const deleteDiscussionModal = document.getElementById("DeleteDiscussionModal");
+
+  if (deleteDiscussionModal) {
+    deleteDiscussionModal.addEventListener("click", function (event) {
+      if (event.target === deleteDiscussionModal) {
+        closeDeleteDiscussionModal();
+      }
+    });
+
+    const confirmDeleteDiscussionBtn = document.getElementById("confirmDeleteDiscussionBtn");
+
+    if (confirmDeleteDiscussionBtn) {
+      confirmDeleteDiscussionBtn.addEventListener("click", async function () {
+        if (!pendingDeleteDiscussionId) return;
+
+        confirmDeleteDiscussionBtn.disabled = true;
+        confirmDeleteDiscussionBtn.textContent = "Deleting...";
+
+        try {
+          const id = encodeURIComponent(pendingDeleteDiscussionId);
+          const resp = await fetch(`/Delete_Discussion/${id}`, {
+            method: "DELETE",
+            credentials: "same-origin"
+          });
+
+          let body;
+          try {
+            body = await resp.json();
+          } catch (err) {
+            console.error("Failed to parse delete response JSON", err);
+            alert("Failed to parse server response. See console for details.");
+            return;
+          }
+
+          if (resp.ok && body.success) {
+            closeDeleteDiscussionModal();
+            location.reload();
+          } else {
+            if (resp.status === 401) {
+              alert("You must be logged in to delete this discussion. Please log in and try again.");
+            } else if (resp.status === 404) {
+              alert("Discussion not found or you do not have permission to delete it.");
+            } else {
+              alert("Failed to delete discussion: " + (body.error || body.message || `status ${resp.status}`));
+            }
+          }
+
+        } catch (err) {
+          console.error("Delete discussion fetch error:", err);
+          alert("Network or server error while deleting discussion. See console for details.");
+        } finally {
+          confirmDeleteDiscussionBtn.disabled = false;
+          confirmDeleteDiscussionBtn.textContent = "Delete Discussion";
+        }
+      });
+    }
+  }
+
+  const deleteButtons = document.querySelectorAll(".delete-discussion-btn");
+  deleteButtons.forEach(btn => {
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      const discussionId = this.getAttribute("data-discussion-id");
+      openDeleteDiscussionModal(discussionId);
+    });
+  });
+
+});
 
 // -------========-------    Reanalyze Modal Functions    -------========-------
 let pendingReanalyzeId = null;
@@ -2317,6 +3220,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if (downloadSection) downloadSection.classList.add("hidden");
 
         // Start analysis for the single email
+        askAboutForum = [false];
         renderFileAnalysis(0);
         runFileAnalyses(0);
       }
