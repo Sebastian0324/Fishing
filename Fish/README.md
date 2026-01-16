@@ -94,6 +94,80 @@ python Server.py
 
 5. Access the application at `http://localhost:5000`
 
+## User Guide 
+This section describes how end users can interact with the application and explains the functionality of each page. 
+
+### Home Page
+The home page is the first page users see when visiting the website. From here users can:
+- Upload email files for analysis.
+- Choose whether the emails should be analyzed using AI by checking off an optional checkbox. 
+- View a description of the website and a tutorial, explaining the uploading process.
+  
+Unregistered users can upload emails and view general statistics, but must create an account to access personalized features such as the account page.
+
+### Forum Page
+The forum page allows users to:
+- View discussions
+- Read posts created by other users
+- Participate in discussions (requires a registered account)
+  
+### Statistics Page
+The statistics page presents insights based on uploaded emails and platform activity. 
+- **Unregistered users** can view general statistics, such as:
+  -- Registred users
+  -- Emails uploaded
+  -- Analyses completed
+  -- Phishing detected
+  -- Suspicious emails
+  -- Benign emails
+  -- Forum discussions
+  -- Community comments 
+- **Registered users** gain access to additional statistics, such as:
+  -- General statistics about the application
+  -- Frequent sender
+  -- Common subjects
+  -- Most commented
+
+### Account Page 
+
+#### Create Account
+To access account-specific features, users must create an account.
+1. Click the Login button.
+2. Select Sign-Up.
+3. Enter username and password.
+4. Submit form to create the account.
+   
+Once registered, users can log in and access their personal account page.  
+
+#### Account
+After logging in, users can access the account page. This page displays all emails uploaded by the user, including:
+- Email title
+- Analysis verdict
+- Upload date
+
+From this page, users can:
+- Reanalyze previously uploaded emails
+- Download the original email file and analysis results. 
+
+#### Account Settings 
+Users can access the account settings by clicking the **cogwheel icon** on the account page. 
+In the account settings, users can:
+- Change their password
+- Change their profile picture
+- Delete their account
+  
+When deleting their account users can choose between keeping all their uploaded emails on the platform or remove all user data from the system. 
+
+
+### About Us Page 
+The about us page provides information about:
+- The purpose and goals of the platform
+- How uploaded data is handled and protected
+- The use of AI in email analysis
+- The developers' intentions.
+  
+This page is intended to promote transparency and inform users about how the platform operates. 
+
 ## Usage
 
 ### Email Upload & Analysis
@@ -497,9 +571,9 @@ Check IP address reputation using AbuseIPDB
 - Session data is stored server-side in the `flask_session/` directory
 
 ## Threat Modelling 
-A lightweight threat modelling approach was used to identify potential security risks. Key assets, possible threat actors, and attack vectors were identofied, and appropriate mitigations were designed. 
+A lightweight threat modelling approach was used to identify potential security risks. Key assets, possible threat actors, and attack vectors were identified, and appropriate mitigations were designed. 
 
-### Assests
+### Assets
 - User credentials
 - Uploaded email files (.eml)
 - Application database (SQLite)
@@ -512,39 +586,39 @@ A lightweight threat modelling approach was used to identify potential security 
 - Automated bots attempting abuse (e.g., DoS)
 
 ### Data Protection Threats
-- **Threat**: An attacker gains unauthorized access to the database and retrives stored passwords.
+- **Threat**: An attacker gains unauthorized access to the database and retrieves stored passwords.
 - **Risk**: Account compromise and user impersonation.
 - **Mitigation**: All passwords shall be hashed and never stored in plain text.
 - **Threat**: Direct access to sensitive files via the web server.
 - **Risk**: Exposure of user data and system configuration.
-- **Mitigation**: Sensitive files shall be stored outside the web root with proper file premissions.
+- **Mitigation**: Sensitive files shall be stored outside the web root with proper file permissions.
 - **Threat**: Unauthorized access to uploaded email files.
 - **Risk**: Leakage of potentially sensitive email content.
 - **Mitigation**: Uploaded emails are stored securely and are only accessible to authorized users.
 
 ### Input Validation Threats
 - **Threat**: Injection attacks through user controlled-input
-- **Risk**: Data coruption, unauthorized access, or code exeution.
-- **Mitigation**: All user input will be validated and sanitized to reduxe SQL injections, XSS, and related attacks.
+- **Risk**: Data corruption, unauthorized access, or code execution.
+- **Mitigation**: All user input will be validated and sanitized to reduce SQL injections, XSS, and related attacks.
 - **Threat**: Upload of malicious or oversized files.
 - **Risk**: DoS or execution of unintended file types.
 - **Mitigation**: File uploads will be restricted by type (.eml) and size (1 MB per file).
   
 ### System Resilience Threats
-- **Threat**: Dos attacks via repeated or large requests
+- **Threat**: DoS attacks via repeated or large requests
 - **Risk**: Reduced system availability.
 - **Mitigation**: Upload size limits and basic rate limiting will be applied.
 - **Threat**: Information disclosure through error messages.
 - **Risk**: Attackers gain insight into system internals.
 - **Mitigation**: Error messages will avoid revealing sensitive implementation details.
   
-### Third-Party Intergration Threats
+### Third-Party Integration Threats
 - **Threat**: Leakage of API keys.
 - **Risk**: Abuse of third-party services.
-- **Mitigation**: API keys will be stored securley on the server-side
+- **Mitigation**: API keys will be stored securely on the server-side.
 - **Threat** MITM on API communication.
 - **Risk**: Data tampering or disclosure. 
-- **Mitigation**: All external API comminications will use HTTPS. 
+- **Mitigation**: All external API communications will use HTTPS. 
 
 ## Database
 
