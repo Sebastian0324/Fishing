@@ -1,34 +1,17 @@
-__pycache__/*
-Analysis/*
-data/*
-db/emails.db
-flask*
-static/__pycache__/*
-.env
-
-# Node modules
-node_modules/
-# Environment variables
-.env
-# Data directory
-Fish/data/
-
-# Python bytecode
+# Python bytecode and eggs
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.egg-info/
+.installed.cfg
+*.egg
+
 # Virtual environments
 venv/
 env/
 ENV/
 .venv
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-db/*.db
-Fish/db/
 
 # IDE and editor files
 .vscode/
@@ -36,9 +19,28 @@ Fish/db/
 *.swp
 *.swo
 *~
+
+# OS files
+Thumbs.db
 .DS_Store
-# Python distribution / packaging
-.Python
+
+# Environment variables
+.env
+
+# Database files
+*.db*
+*.sqlite
+*.sqlite3
+
+# Project-specific directories
+data/
+flask_session/
+
+# Flask application files
+instance/
+.webassets-cache
+
+# Build and distribution
 build/
 develop-eggs/
 dist/
@@ -51,24 +53,16 @@ parts/
 sdist/
 var/
 wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+
 # Testing
 .pytest_cache/
 .coverage
 htmlcov/
 .tox/
-# Flask
-instance/
-.webassets-cache
-Fish/flask_session/
 
 # Logs
 *.log
 logs/
-# OS files
-Thumbs.db
-.DS_Store
-Fish/.env
-/flask_session
+
+# Node modules
+node_modules/

@@ -1,0 +1,126 @@
+{% extends "form.html" %}
+{% block content %}
+    <div class="page-container">
+        <!-- Page Title -->
+        <h1 class="page-title">Welcome to Angler!</h1>
+
+        <div class="layout">
+            <!-- Left sidebar with Description -->
+            <aside class="sidebar" id="leftSidebar">
+                <div class="content-section" id="welcomeSection">
+                    <div class="welcome-header">
+                        <h2 class="section-header">Description</h2>
+                    </div>
+                    <div class="placeholder-content" id="descriptionContent">
+                        <p>This site helps you learn how to spot phishing emails and safely analyze suspicious messages. Upload a .eml file to see an automated analysis, read community findings, and learn practical tips to protect yourself.</p>
+                        <p>We believe learning from real examples is the best way to build strong habits. Your uploads stay private unless you choose to share, and the tools here are designed to teach, not to expose sensitive information.</p>
+                        <p>Ready to explore? Use the upload form to analyze an email and check the guide on the right for step-by-step instructions.</p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main content (upload form, analysis) -->
+            <main class="main-content">
+                <!-- Left Toggle Button -->
+                <button class="sidebar-toggle left-toggle" id="leftToggle" onclick="toggleSidebar('left')">
+                    <span id="leftToggleIcon">&lt;</span>
+                    <span class="toggle-text" id="leftToggleText">Description</span>
+                </button>
+
+                <!-- Right Toggle Button -->
+                <button class="sidebar-toggle right-toggle" id="rightToggle" onclick="toggleSidebar('right')">
+                    <span id="rightToggleIcon">&gt;</span>
+                    <span class="toggle-text" id="rightToggleText">How To</span>
+                </button>
+
+                <!-- Upload Form Section -->
+                 <div class="content-section upload-section">
+                    <div id="uploadForm">
+                        <h2 class="section-header">Upload & Analyze</h2>
+                        <div class="placeholder-content">
+                            <p class="placeholder-text">Drag &amp; drop or click to select <code>.eml</code> files for analysis.</p>
+                            <form method="post" enctype="multipart/form-data" action="/upload">
+
+                                <div id="uploadControls" class="upload-area">
+                                    <label for="dropBox" class="file-label" tabindex="0" aria-label="Upload .eml files">
+                                        <svg width="44" height="44" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M.5 9.5v2A1.5 1.5 0 002 13h12a1.5 1.5 0 001.5-1.5v-2" stroke="rgba(238,238,238,0.7)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 1v8" stroke="rgba(238,238,238,0.9)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M5 4l3-3 3 3" stroke="rgba(238,238,238,0.9)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                                        <span class="file-label-text">Drop files here or click to choose</span>
+                                        <span class="file-label-info">Accepted: .eml · Max 1MB per file · Up to 5 files</span>
+                                        <input type="file" class="file-input" name="file" accept=".eml" id="dropBox" multiple required aria-label="Choose .eml files to upload"/>
+                                    </label>
+
+                                    <!-- Selected files preview -->
+                                    <div id="selectedFiles" class="selected-files-container" aria-live="polite"></div>
+
+                                    <!-- Div for error messages before submit -->
+                                    <div id="SubmitError" class="error-container" role="alert" aria-atomic="true"></div>
+
+                                  
+
+                                    <div style="margin-top:1rem;display:flex;align-items:center;gap:1rem;justify-content:space-between;">
+                                        <div>
+                                            <div style="display:flex;align-items:center;gap:0.5rem;">
+                                                <input type="checkbox" class="form-check-input" id="useAI" name="use_ai" value="1">
+                                                <label class="form-check-label" for="useAI">Use AI summary (optional)</label>
+                                            </div>
+                                            <div style="margin-top:0.25rem;margin-left:1.5rem;font-size:0.85rem;color:rgba(238,238,238,0.7);">
+                                                Your data is anonymized before AI analysis. <a href="/AboutUs#ai-usage" style="color:rgba(100,150,255,0.9);text-decoration:underline;">Learn more about AI usage.</a>
+                                            </div>
+                                        </div>
+
+                                    
+                                            <button type="submit" id="submitButton" class="submit-btn" aria-label="Submit files for analysis">Start Analysis</button>
+                                        
+                                </div>
+ </div>
+
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Analysis Section - After Submit -->
+                    <div id="analysis" class="hidden">
+                        <div class="section-header">
+                            <h3>Analyzing Your Email</h3>
+                            <button id="ToUpload" type="reset" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </button>
+                        </div>
+                        
+                        <div class="analysis-section">
+                            
+                            <!-- Results Container -->
+                            <div id="result"></div>
+                            
+                            <!-- Download Button -->
+                            <div id="downloadSection" class="text-center mt-4 hidden">
+                                <button type="button" id="downloadButton" class="btn btn-success btn-lg">
+                                    <i class="bi bi-download"></i> Download Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Right sidebar with How To -->
+            <aside class="sidebar" id="rightSidebar">
+                <div class="content-section" id="howItWorksSection">
+                    <div class="welcome-header">
+                        <h2 class="section-header">How To</h2>
+                    </div>
+                    <div class="placeholder-content" id="howItWorksContent">
+                        <h3 style="margin-bottom: 1rem;">Step-by-Step Guide:</h3>
+                        <ol style="line-height: 1.8; margin-top: 0.5rem; padding-left: 1.2rem;">
+                            <li style="margin-bottom: 0.8rem;"><strong>Choose Your File:</strong> Click the "Choose Files" button and select one or more .eml files from your computer.</li>
+                            <li style="margin-bottom: 0.8rem;"><strong>Optional AI Analysis:</strong> Check the "Check submitted file with AI" box for enhanced phishing detection.</li>
+                            <li style="margin-bottom: 0.8rem;"><strong>Submit for Analysis:</strong> Click the blue "Submit" button to upload your email(s).</li>
+                            <li style="margin-bottom: 0.8rem;"><strong>Review Results:</strong> View the detailed report showing phishing indicators, sender info, links, and threat scores.</li>
+                            <li style="margin-bottom: 0.8rem;"><strong>Download Report:</strong> Download a comprehensive PDF report of the findings.</li>
+                        </ol>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+{% endblock %}
