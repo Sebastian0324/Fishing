@@ -496,6 +496,56 @@ Check IP address reputation using AbuseIPDB
 - Maximum 5 files can be uploaded simultaneously
 - Session data is stored server-side in the `flask_session/` directory
 
+## Threat Modelling 
+A lightweight threat modelling approach was used to identify potential security risks. Key assets, possible threat actors, and attack vectors were identofied, and appropriate mitigations were designed. 
+
+### Assests
+- User credentials
+- Uploaded email files (.eml)
+- Application database (SQLite)
+- External API keys (VirusTotal, AbuseIP)
+- System availability and integrity
+
+### Threat Actors
+- Unauthenticated external attackers
+- Authenticated, but malicious users
+- Automated bots attempting abuse (e.g., DoS)
+
+### Data Protection Threats
+- **Threat**: An attacker gains unauthorized access to the database and retrives stored passwords.
+- **Risk**: Account compromise and user impersonation.
+- **Mitigation**: All passwords shall be hashed and never stored in plain text.
+- **Threat**: Direct access to sensitive files via the web server.
+- **Risk**: Exposure of user data and system configuration.
+- **Mitigation**: Sensitive files shall be stored outside the web root with proper file premissions.
+- **Threat**: Unauthorized access to uploaded email files.
+- **Risk**: Leakage of potentially sensitive email content.
+- **Mitigation**: Uploaded emails are stored securely and are only accessible to authorized users.
+
+### Input Validation Threats
+- **Threat**: Injection attacks through user controlled-input
+- **Risk**: Data coruption, unauthorized access, or code exeution.
+- **Mitigation**: All user input will be validated and sanitized to reduxe SQL injections, XSS, and related attacks.
+- **Threat**: Upload of malicious or oversized files.
+- **Risk**: DoS or execution of unintended file types.
+- **Mitigation**: File uploads will be restricted by type (.eml) and size (1 MB per file).
+  
+### System Resilience Threats
+- **Threat**: Dos attacks via repeated or large requests
+- **Risk**: Reduced system availability.
+- **Mitigation**: Upload size limits and basic rate limiting will be applied.
+- **Threat**: Information disclosure through error messages.
+- **Risk**: Attackers gain insight into system internals.
+- **Mitigation**: Error messages will avoid revealing sensitive implementation details.
+  
+### Third-Party Intergration Threats
+- **Threat**: Leakage of API keys.
+- **Risk**: Abuse of third-party services.
+- **Mitigation**: API keys will be stored securley on the server-side
+- **Threat** MITM on API communication.
+- **Risk**: Data tampering or disclosure. 
+- **Mitigation**: All external API comminications will use HTTPS. 
+
 ## Database
 
 The project uses SQLite for data persistence. The database is automatically initialized on first run using the schema defined in `db/schema.sql`. The database supports:
