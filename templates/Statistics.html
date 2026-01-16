@@ -1,0 +1,160 @@
+{% extends "form.html" %}
+{% from "StatisticsMacro.html" import stats_cards, frequent_sender_cards, tag_cards, most_commented_cards, admin_info_cards %}
+{% block content %}{% if session.name %}
+     
+<div class="page-container">
+        <!-- Page Title -->
+       <h1 class="page-title">Statistics</h1>
+        <!-- Two Column Layout -->
+        <div class="statistics-layout">
+            <!-- Left Column: Topics List -->
+            <div class="statistics-sidebar">
+                <div class="content-section">
+                    <h2 class="section-header">Sort By</h2>
+                    <!-- Admin Dashboard Button -->
+                    
+                     {% if session.name == 'admin' %}
+                        <button class="sort-btn" data-target="admin">
+                            <div class="btn-content">
+                                <div class="btn-header">
+                                    <i class="bi bi-shield-lock-fill"></i>
+                                    <span>Admin Dashboard</span>
+                                </div>
+                                <span class="button-description">Access administrative Overview and system management</span>
+                            </div>
+                        </button>
+                        {% endif %}
+
+                    <div class="sort-buttons">
+                        <button class="sort-btn active" data-target="general">
+                            <div class="btn-content">
+                                <div class="btn-header">
+                                    <i class="bi bi-bar-chart-fill"></i> 
+                                    <span>General</span>
+                                </div>
+                                <span class="button-description">View general statistics about the application</span>
+                            </div>
+                        </button>
+
+                        <button class="sort-btn" data-target="senders">
+                            <div class="btn-content">
+                                <div class="btn-header">
+                                    <i class="bi bi-hdd-network-fill"></i>
+                                    <span>Frequent Sender</span>
+                                    {% if frequent_senders.dangerous_ips > 0 %}
+                                    <span class="badge badge-danger">{{ frequent_senders.dangerous_ips }}</span>
+                                    {% endif %}
+                                </div>
+                                <span class="button-description">View IP addresses that send the most emails - identify potential threats</span>
+                            </div>
+                        </button>
+
+                        <button class="sort-btn" data-target="subjects">
+                            <div class="btn-content">
+                                <div class="btn-header">
+                                    <i class="bi bi-envelope"></i>
+                                    <span>Common Subject</span>
+                                </div>
+                                <span class="button-description">Order the subjects by how commonly they are found in phishing emails</span>
+                            </div>
+                        </button>
+                        <button class="sort-btn" data-target="comments">
+                            <div class="btn-content">
+                                <div class="btn-header">
+                                    <i class="bi bi-chat-left-text"></i>
+                                    <span>Most Commented</span>
+                                </div>
+                                <span class="button-description">Search for forum post that have the most amount of comments</span>
+                            </div>
+                        </button>
+                        
+                       
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vertical Divider Line -->
+            <div class="column-divider"></div>
+
+            <!-- Right Column: Two Column Layout -->
+            <div class="dashboard-main">
+                <div class="content-section uploads-container">
+                    <div class="panel-title-container">
+                        <h3 class="panel-title" id="panel-title">General</h3>
+                    </div>
+                    
+                    <!-- General Statistics Panel (default/first shown) -->
+                    <div class="stats-panel active" data-panel="general">
+                        {{ stats_cards(stats) }}
+                    </div>
+
+                    <!-- Frequent Sender Panel -->
+                    <div class="stats-panel" data-panel="senders">
+                        {{ frequent_sender_cards(frequent_senders) }}
+                    </div>
+
+                    <!-- Admin Dashboard Panel -->
+                    {% if session.name == 'admin' %}
+                    <div class="stats-panel" data-panel="admin">
+                        {{ admin_info_cards(stats) }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Most Commented Panel -->
+                    <div class="stats-panel" data-panel="comments">
+                        {{ most_commented_cards(most_commented) }}
+                    </div>
+
+                    <!-- Common Subject Panel -->
+                    <div class="stats-panel" data-panel="subjects">
+                        {{ tag_cards(common_subjects) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+   </div>
+
+    <script>
+        (function() {
+            const buttons = document.querySelectorAll('.sort-btn');
+            const panels = document.querySelectorAll('.stats-panel');
+            const panelTitle = document.getElementById('panel-title');
+            
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const target = btn.getAttribute('data-target');
+                    const btnText = btn.querySelector('.btn-header span:nth-of-type(1)').textContent.trim();
+                    
+                    buttons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    panels.forEach(p => p.classList.toggle('active', p.getAttribute('data-panel') === target));
+                    
+                    // Update the panel title
+                    if (panelTitle) {
+                        panelTitle.textContent = btnText;
+                    }
+                });
+            });
+        })();
+
+        function viewForumPost(discussionId) {
+            // Navigate to Forum page with post_id parameter
+            window.location.href = `/Forum?post_id=${discussionId}`;
+        }
+    </script>
+
+{% else %}
+<div class="page-container">
+    <h1 class="page-title">Statistics Overview</h1>
+    
+    <div class="content-section">
+        <h2 class="section-header"></i> General Statistics</h2>
+        {{ stats_cards(stats) }}
+    </div>
+    
+    <div class="content-section" style="margin-top: 2rem; text-align: center;">
+        <p><strong>Want to see more?</strong> Create an account to access more metrics and contribute to our community.</p>
+        <button type="button" class="btn-signup" onclick="document.getElementById('LoginContainer').style.display = 'block';"><i class="bi bi-person-plus"></i> Sign Up Now</button>
+    </div>
+</div>
+{% endif %}{% endblock %}

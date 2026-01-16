@@ -88,9 +88,22 @@ https://www.abuseipdb.com/account/api#create-api-key <--
 ```
 
 4. Run the application:
+
+**Development Mode (Debug ON - with auto-reload):**
 ```bash
 python Server.py
 ```
+- Automatically reloads on code changes
+- Shows detailed error messages with interactive debugger
+- Best for active development and debugging
+
+**"Production" Mode (Debug OFF - without auto-reload):**
+```bash
+flask --app Server.py run
+```
+- No automatic reloads (manual restart required for code changes)
+- Cleaner error handling
+- Note: Flask's development server is not suitable for production. For production deployment, use a WSGI server like Gunicorn or Waitress instead.
 
 5. Access the application at `http://localhost:5000`
 
