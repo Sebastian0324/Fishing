@@ -631,7 +631,20 @@ A lightweight threat modelling approach was used to identify potential security 
 - **Mitigation**: API keys will be stored securely on the server-side.
 - **Threat** MITM on API communication.
 - **Risk**: Data tampering or disclosure. 
-- **Mitigation**: All external API communications will use HTTPS. 
+- **Mitigation**: All external API communications will use HTTPS.
+
+## Vulnerability Scnanning
+
+### Vulnerability Scanning Process
+Automated security and quality checks were performed using Google Lighthouse. Lighthose was used to assess aspects related to security best-practices and performance, such as the use of HTTPS, safe JavaScript practices, and common web configuration issues. Additionally, manual code review, functionality testing, and a lightweight threat modelling approach were used to evaluate authentication, file handling, API endpoints, and data storage. 
+
+### Summary of Identified Vulnerabilities 
+The Lighthouse analysis did not identify any crticial security misconfigurations but highlighted general best-practices typical for web applications. Manual reviews and threat modelling identified common web application risks, including input validation concerns and data exposure risks. A significant vulnerability was identified late in the final sprint related to the "Download Database" button: if a user chooses to download all emails on the platform, they will also download personal information of other users, as email files were not stripped of personal information prior to download. The current database uses SQLite, meaning users will only download their own local database with their own personal information. However, if this application were deployed at a larger scale, this could result in a major breach of user confidentiality. 
+
+### Actions Taken to Mitigate or Accept Identified Risks
+Most identified risks were mitigated through secure design and implementation choices, including strong password hashing, strict file upload limits, server-side session storage, input validation, and secure handling of API keys.
+The vulnerability associated with downloading unredacted email files was not mitigated within the project timeframe. This issue was discovered at the end of the final sprint, and remediation would require additional processing to redact or anonymize personal information before allowing downloads. The risk was documented and accepted as a known limitation and flaw of the current implementation.
+
 
 ## Database
 
